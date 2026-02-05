@@ -8,14 +8,13 @@ import {
   FloatButton,
 } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import { FaHome, FaUserPen } from "react-icons/fa";
-import { RxDashboard } from "react-icons/rx";
+import { FaHome, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import { BsBoxSeamFill } from "react-icons/bs";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import "./AdminSidebar.css";
 
 const { Header, Sider, Content } = Layout;
+const { SubMenu } = Menu; 
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -23,90 +22,89 @@ export default function AdminLayout() {
   const nav = useNavigate();
 
   return (
-    <div>
-      {" "}
-      <h1 style={{ color: "red" }}>ADMIN LAYOUT OK</h1>
-      <Outlet />
-    </div>
+    <Layout style={{ minHeight: "100vh" }}>
+      <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
+        <div
+          style={{
+            height: 64,
+            color: "#fff",
+            textAlign: "center",
+            lineHeight: "64px",
+            fontWeight: "bold",
+          }}
+        >
+          {collapsed ? "AD" : "ADMIN PANEL"}
+        </div>
 
-    // <Layout style={{ minHeight: "100vh" }}>
-    //   <Sider
-    //     collapsible
-    //     collapsed={collapsed}
-    //     trigger={null}
-    //     width={235}
-    //     theme="dark"
-    //   >
-    //     <div style={{ padding: 20, textAlign: "center", color: "white" }}>
-    //       {collapsed ? "AD" : "ADMIN PANEL"}
-    //     </div>
+        <Menu
+          theme="dark"
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          defaultOpenKeys={["product"]}
+        >
+          <Menu.Item
+            key="/admin"
+            icon={<FaHome />}
+            onClick={() => nav("/admin")}
+          >
+            Dashboard
+          </Menu.Item>
 
-    //     <Menu theme="dark" mode="inline" selectedKeys={[location.pathname]}>
-    //       <Menu.Item
-    //         key="/admin"
-    //         icon={<FaHome />}
-    //         onClick={() => nav("/admin")}
-    //       >
-    //         Trang chủ
-    //       </Menu.Item>
+          <SubMenu
+            key="product"
+            icon={<BsBoxSeamFill size={20} />}
+            title="Người dùng"
+          >
+            <Menu.Item
+              key="/admin/students"
+              icon={<FaUserGraduate />}
+              onClick={() => nav("/admin/students")}
+            >
+              Sinh viên
+            </Menu.Item>
 
-    //       <Menu.Item
-    //         key="/admin/students"
-    //         icon={<FaUserPen />}
-    //         onClick={() => nav("/admin/students")}
-    //       >
-    //         Sinh viên
-    //       </Menu.Item>
+            <Menu.Item
+              key="/admin/teachers"
+              icon={<FaChalkboardTeacher />}
+              onClick={() => nav("/admin/teachers")}
+            >
+              Giảng viên
+            </Menu.Item>
+          </SubMenu>
 
-    //       <Menu.Item
-    //         key="/admin/teachers"
-    //         icon={<RxDashboard />}
-    //         onClick={() => nav("/admin/teachers")}
-    //       >
-    //         Giảng viên
-    //       </Menu.Item>
-    //     </Menu>
-    //   </Sider>
+          <Menu.Item
+            key="/admin/hoc-ky"
+            icon={<FaHome />}
+            onClick={() => nav("/admin/hoc-ky")}
+          >
+            Học kỳ
+          </Menu.Item>
 
-    //   <Layout>
-    //     <Header
-    //       style={{
-    //         background: "#4E4336",
-    //         display: "flex",
-    //         alignItems: "center",
-    //         justifyContent: "space-between",
-    //         padding: "0 16px",
-    //       }}
-    //     >
-    //       <Button
-    //         type="text"
-    //         icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-    //         onClick={() => setCollapsed(!collapsed)}
-    //       />
+          <Menu.Item
+            key="/admin/phan-cong"
+            icon={<FaHome />}
+            onClick={() => nav("/admin/phan-cong")}
+          >
+            Phân công
+          </Menu.Item>
+        </Menu>
+      </Sider>
 
-    //       <Dropdown
-    //         menu={{
-    //           items: [
-    //             {
-    //               key: "logout",
-    //               label: "Đăng xuất",
-    //             },
-    //           ],
-    //         }}
-    //       >
-    //         <Space>
-    //           <Avatar />
-    //           <span style={{ color: "#fff" }}>Admin</span>
-    //         </Space>
-    //       </Dropdown>
-    //     </Header>
+      <Layout>
+        <Header style={{ background: "#4E4336" }}>
+          <Button
+            type="text"
+            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+          />
+        </Header>
 
-    //     <Content style={{ padding: 24 }}>
-    //       <Outlet />
-    //     </Content>
-    //   </Layout>
+        <Content style={{ padding: 24 }}>
+          <Outlet />
+        </Content>
+      </Layout>
 
-    //   <FloatButton.BackTop />
-    // </Layout>
+      <FloatButton.BackTop />
+    </Layout>
   );
 }
