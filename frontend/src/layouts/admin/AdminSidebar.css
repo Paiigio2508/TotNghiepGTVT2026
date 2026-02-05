@@ -1,0 +1,69 @@
+/* Sidebar container */
+.ps-sidebar-container {
+  color: white !important;
+  font-size: 18px;
+  background-color: transparent !important;
+}
+
+/* all menu item default */
+.ps-menu-button {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+/* hover effect all item */
+.ps-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffe100 !important;
+}
+
+/* active item (clicked) */
+.ps-menu-button.ps-active {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffe100 !important;
+  font-weight: bold !important;
+  border-left: 4px solid #ffe100 !important;
+}
+
+/* fix submenu children default to white */
+.ps-submenu-content {
+  background-color: transparent !important;
+}
+
+/* submenu children items */
+.ps-submenu-content .ps-menu-button {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+/* hover submenu children */
+.ps-submenu-content .ps-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffe100 !important;
+}
+
+/* active submenu children */
+.ps-submenu-content .ps-menu-button.ps-active {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #ffe100 !important;
+  font-weight: bold !important;
+  border-left: 4px solid #ffe100 !important;
+}
+
+/* icon size all */
+.ps-menu-icon {
+  font-size: 24px !important;
+}
+
+/* submenu arrow icon */
+.ps-submenu-expand-icon {
+  color: white !important;
+}
+
+/* fix footer link */
+.sidebar-footer a {
+  color: white !important;
+}
+.avatar-hover:hover {
+  cursor: pointer !important;
+}
