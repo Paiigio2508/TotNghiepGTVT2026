@@ -6,13 +6,14 @@ import TeacherManage from "./pages/admin/TeacherManage";
 import HocKyManage from "./pages/admin/HocKyManage";
 import NotFoud from "./pages/404/NotFoud";
 import PhanCongManage from "./pages/admin/PhanCongManage";
+import LoginPage from "./pages/LoginPage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/admin" replace />} />
-
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="students" element={<StudentManage />} />
