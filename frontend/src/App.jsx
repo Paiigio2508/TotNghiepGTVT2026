@@ -7,7 +7,7 @@ import HocKyManage from "./pages/admin/HocKyManage";
 import NotFoud from "./pages/404/NotFoud";
 import PhanCongManage from "./pages/admin/PhanCongManage";
 import LoginPage from "./pages/LoginPage";
-
+import "bootstrap/dist/css/bootstrap.min.css";
 export default function App() {
   return (
     <BrowserRouter>

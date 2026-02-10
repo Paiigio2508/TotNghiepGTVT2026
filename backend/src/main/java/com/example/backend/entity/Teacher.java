@@ -1,15 +1,14 @@
 package com.example.backend.entity;
 
-import com.example.backend.entity.base.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
+import java.util.UUID;
 
 @Entity
 @Table(name = "teachers")
-public class Teacher extends BaseEntity {
-
+public class Teacher {
+    @Id
+    private UUID id;
     private String teacherCode;
     private String fullName;
     private String department;

@@ -14,5 +14,7 @@ public class User extends BaseEntity {
     private String password;
     private String role;   // ADMIN, STUDENT, TEACHER
     private String email;
+    private String phone;
+    private String urlImage;
     private Integer status;
 }

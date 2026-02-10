@@ -14,7 +14,7 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const { Header, Sider, Content } = Layout;
-const { SubMenu } = Menu; 
+
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -41,53 +41,13 @@ export default function AdminLayout() {
           mode="inline"
           selectedKeys={[location.pathname]}
           defaultOpenKeys={["product"]}
-        >
-          <Menu.Item
-            key="/admin"
-            icon={<FaHome />}
-            onClick={() => nav("/admin")}
-          >
-            Dashboard
-          </Menu.Item>
-
-          <SubMenu
-            key="product"
-            icon={<BsBoxSeamFill size={20} />}
-            title="Người dùng"
-          >
-            <Menu.Item
-              key="/admin/students"
-              icon={<FaUserGraduate />}
-              onClick={() => nav("/admin/students")}
-            >
-              Sinh viên
-            </Menu.Item>
-
-            <Menu.Item
-              key="/admin/teachers"
-              icon={<FaChalkboardTeacher />}
-              onClick={() => nav("/admin/teachers")}
-            >
-              Giảng viên
-            </Menu.Item>
-          </SubMenu>
-
-          <Menu.Item
-            key="/admin/hoc-ky"
-            icon={<FaHome />}
-            onClick={() => nav("/admin/hoc-ky")}
-          >
-            Học kỳ
-          </Menu.Item>
-
-          <Menu.Item
-            key="/admin/phan-cong"
-            icon={<FaHome />}
-            onClick={() => nav("/admin/phan-cong")}
-          >
-            Phân công
-          </Menu.Item>
-        </Menu>
+          items={menuItems}
+          onClick={({ key }) => {
+            if (key.startsWith("/")) {
+              nav(key);
+            }
+          }}
+        />
       </Sider>
 
       <Layout>
@@ -99,7 +59,7 @@ export default function AdminLayout() {
           />
         </Header>
 
-        <Content style={{ padding: 24 }}>
+        <Content style={{ padding: 10 }}>
           <Outlet />
         </Content>
       </Layout>
@@ -108,3 +68,38 @@ export default function AdminLayout() {
     </Layout>
   );
 }
+
+const menuItems = [
+  {
+    key: "/admin",
+    icon: <FaHome />,
+    label: "Dashboard",
+  },
+  {
+    key: "product",
+    icon: <BsBoxSeamFill size={20} />,
+    label: "Người dùng",
+    children: [
+      {
+        key: "/admin/students",
+        icon: <FaUserGraduate />,
+        label: "Sinh viên",
+      },
+      {
+        key: "/admin/teachers",
+        icon: <FaChalkboardTeacher />,
+        label: "Giảng viên",
+      },
+    ],
+  },
+  {
+    key: "/admin/hoc-ky",
+    icon: <FaHome />,
+    label: "Học kỳ",
+  },
+  {
+    key: "/admin/phan-cong",
+    icon: <FaHome />,
+    label: "Phân công",
+  },
+];
