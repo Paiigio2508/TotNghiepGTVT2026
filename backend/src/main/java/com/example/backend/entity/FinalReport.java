@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "final_reports")
 public class FinalReport extends BaseEntity {
-
+    @Column(length = 1000)
     private String filePath;
     private LocalDateTime submitDate;
 

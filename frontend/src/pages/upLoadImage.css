@@ -1,0 +1,9 @@
+.custom-upload .ant-upload-select {
+  width: 180px !important;
+  height: 180px !important;
+}
+
+.custom-upload .ant-upload-list-item {
+  width: 180px !important;
+  height: 180px !important;
+}

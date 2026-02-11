@@ -1,0 +1,22 @@
+.form-header {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  height: 110px;
+}
+.form-header .ant-input{
+    width: 100%;
+    max-width: 500px;
+}
+/* Viền ngoài bảng */
+
+.custom-table .ant-table-thead > tr > th {
+  background-color: #041960;
+  color: white;
+}
+.custom-table .ant-table {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden; /* để bo góc đẹp */
+}

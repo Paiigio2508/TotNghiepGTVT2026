@@ -1,23 +1,52 @@
 import axios from "axios";
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL, // /api
-  withCredentials: true, // nếu dùng cookie / session
+const API_URL = "http://localhost:8080";
+
+/* ========================
+   LẤY TOKEN
+======================== */
+const getAccessToken = () => {
+  const userData = localStorage.getItem("userData");
+  if (!userData) return null;
+
+  try {
+    return JSON.parse(userData).accessToken;
+  } catch {
+    return null;
+  }
+};
+
+/* ========================
+   AXIOS INSTANCE
+======================== */
+export const request = axios.create({
+  baseURL: API_URL,
 });
 
-// Gắn JWT tự động
-api.interceptors.request.use(
+/* ========================
+   REQUEST INTERCEPTOR
+======================== */
+request.interceptors.request.use(
   (config) => {
-    const userData = localStorage.getItem("userData");
-    if (userData) {
-      const token = JSON.parse(userData).accessToken;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const token = getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-export default api;
+/* ========================
+   RESPONSE INTERCEPTOR
+======================== */
+request.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("userData");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);

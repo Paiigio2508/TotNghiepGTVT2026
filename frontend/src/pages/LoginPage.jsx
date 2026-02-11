@@ -1,31 +1,86 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import logo from "../assets/logo_login.png";
+import { AuthAPI } from "../api/AuthAPI";
+import { toast } from "react-toastify";
 
 function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
+
+const handleLogin = async (e) => {
+  e.preventDefault();
+
+  try {
+    const res = await AuthAPI.login({
+      username,
+      password,
+    });
+
+    const token = res.data;
+
+    // Decode JWT để lấy role
+    const payload = JSON.parse(atob(token.split(".")[1]));
+
+    // Lưu vào localStorage
+    localStorage.setItem(
+      "userData",
+      JSON.stringify({
+        accessToken: token,
+        role: payload.role,
+      })
+    );
+
+    const roleRoute = {
+      ADMIN: "/admin",
+      SINHVIEN: "/student",
+      GIANGVIEN: "/teacher",
+    };
+    toast.success("Đăng nhập thành công!");
+    navigate(roleRoute[payload.role] || "/login");
+  } catch (error) {
+    console.error(error);
+    alert("Sai tài khoản hoặc mật khẩu");
+  }
+};
+
 
   return (
     <div className="login-wrapper">
       <div className="login-box-wrapper">
-        {/* LOGO NẰM TRÊN CARD */}
         <img src={logo} className="logo-top" alt="logo" />
 
-        <div className="login-card">
+        <form className="login-card" onSubmit={handleLogin}>
           <h2 className="text-center">ĐĂNG NHẬP</h2>
 
+          {/* USERNAME */}
           <div className="input-group">
             <span>👤</span>
-            <input type="text" placeholder="Mã sinh viên" />
+            <input
+              type="text"
+              placeholder="Mã đăng nhập"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
           </div>
 
+          {/* PASSWORD */}
           <div className="input-group">
             <span>🔑</span>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="Mật khẩu"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <button
+              type="button"
               className="eye"
               onClick={() => setShowPassword(!showPassword)}
             >
@@ -38,18 +93,20 @@ function LoginPage() {
             <a href="#">Trợ giúp</a>
           </div>
 
-          <button className="login-btn">ĐĂNG NHẬP</button>
+          <button type="submit" className="login-btn">
+            ĐĂNG NHẬP
+          </button>
 
           <div className="divider">Hoặc đăng nhập</div>
 
-          <button className="ms-btn">
+          <button type="button" className="ms-btn">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/4/44/Microsoft_logo.svg"
               alt="ms"
             />
             Sign in using Microsoft
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

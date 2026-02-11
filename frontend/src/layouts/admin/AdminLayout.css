@@ -67,3 +67,14 @@
 .avatar-hover:hover {
   cursor: pointer !important;
 }
+.admin-content {
+  background: #ffffff;
+  padding: 16px;
+
+  border-radius: 8px;
+  min-height: 280px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+.menu-toggle-btn {
+  color: white;
+}

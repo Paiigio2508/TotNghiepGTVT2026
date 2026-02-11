@@ -14,7 +14,8 @@ public class InternshipTerm extends BaseEntity {
     private String name;
     private LocalDate startDate;
     private LocalDate endDate;
-
+    private String academicYear;
     @Column(columnDefinition = "TEXT")
     private String description;
+    private String status;
 }

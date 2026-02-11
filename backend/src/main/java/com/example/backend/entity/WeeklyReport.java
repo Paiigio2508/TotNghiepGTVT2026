@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 public class WeeklyReport extends BaseEntity {
 
     private Integer weekNo;
+    @Column( length = 1000)
     private String filePath;
     private LocalDateTime submitDate;
     private String status; // SUBMITTED, LATE

@@ -7,103 +7,338 @@ import {
   Space,
   Popconfirm,
   message,
+  Divider,
+  Image,
+  Row,
+  Col,
+  Tag
 } from "antd";
-import { useState } from "react";
-
+import { SyncOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
+import { RetweetOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { FaUserGraduate } from "react-icons/fa";
+import { StudentAPI } from "../../api/StudentAPI";
+import "./css/UserManage.css";
+import UpLoadImage from "../UpLoadImage"; 
+import { toast } from "react-toastify";
 export default function StudentManage() {
-  const [data, setData] = useState([
-    { id: 1, code: "SV001", name: "Nguyễn Văn A", className: "CNTT1" },
-    { id: 2, code: "SV002", name: "Trần Thị B", className: "CNTT2" },
-  ]);
-
+  const [data, setData] = useState([]); // data hiển thị
+  const [dataGoc, setDataGoc] = useState([]); // data gốc
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
   const [form] = Form.useForm();
 
+  /* =========================
+     LOAD DATA
+  ========================= */
+  const loadStudent = async () => {
+    try {
+      const res = await StudentAPI.getAll();
+      setData(res.data);
+      setDataGoc(res.data);
+    } catch (err) {
+      message.error("Tải danh sách sinh viên thất bại!");
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    loadStudent();
+  }, []);
+
+  //tìm kiếm
+  const handleSearch = (keyword) => {
+    if (!keyword || keyword.trim() === "") {
+      setData(dataGoc);
+      return;
+    }
+    const ketQua = dataGoc.filter(
+      (item) =>
+        item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.className?.toLowerCase().includes(keyword.toLowerCase()) ||
+        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+    );
+    setData(ketQua);
+  };
+
+  /* =========================
+     DELETE
+  ========================= */
+  const onDelete = async (id) => {
+    try {
+      await StudentAPI.deleteStudent(id);
+      toast.success("Cập nhật trạng thái thành công!");
+      loadStudent();
+    } catch (err) {
+      toast.error("Cập nhật trạng thái thất bại!");
+    }
+  };
+
+  /* =========================
+     EDIT
+  ========================= */
+  const onEdit = (record) => {
+    setEditing(record);
+    setImageUrl(record.urlImage); 
+    form.setFieldsValue(record);
+    setOpen(true);
+  };
+
+  /* =========================
+     SUBMIT
+  ========================= */
+  const onSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+          const payload = {
+            userCode: values.userCode,
+            fullName: values.name,
+            className: values.className,
+            phone: values.phone,
+            email: values.email,
+            urlImage: values.urlImage,
+          };
+
+      if (editing) {
+        await StudentAPI.updateStudent(editing.id, payload);
+            toast.success("Cập nhật thành công!");
+      } else {
+        await StudentAPI.createStudent(payload);
+         toast.success("Thêm thành công!");
+      }
+
+      setOpen(false);
+      form.resetFields();
+      setImageUrl(null);
+      setEditing(null);
+      loadStudent();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  /* =========================
+     COLUMNS
+  ========================= */
   const columns = [
-    { title: "Mã SV", dataIndex: "code" },
+    { title: "Mã SV", dataIndex: "userCode" },
+    {
+      title: "Ảnh",
+      dataIndex: "urlImage",
+      render: (url) => (
+        <Image
+          src={url}
+          width={70}
+          height={70}
+          style={{ objectFit: "cover", borderRadius: "50%" }}
+          fallback="https://via.placeholder.com/70"
+        />
+      ),
+    },
     { title: "Họ tên", dataIndex: "name" },
     { title: "Lớp", dataIndex: "className" },
+    { title: "Email", dataIndex: "email" },
+    { title: "SĐT", dataIndex: "phone" },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (status) => (
+        <>
+          {status == 0 ? (
+            <Tag color="#00cc00">Hoạt động</Tag>
+          ) : (
+            <Tag color="red">Thôi học</Tag>
+          )}
+        </>
+      ),
+    },
     {
       title: "Hành động",
       render: (_, record) => (
         <Space>
-          <Button onClick={() => onEdit(record)}>Sửa</Button>
+          <Button onClick={() => onEdit(record)} icon={<EditOutlined />}>
+            Sửa
+          </Button>
+
           <Popconfirm
-            title="Xóa sinh viên?"
+            title="Đổi trạng thái sinh viên?"
             onConfirm={() => onDelete(record.id)}
           >
-            <Button danger>Xóa</Button>
+    
+            <Button icon={<SyncOutlined />} danger>
+              {record.status == 0 ? "Dừng học" : "Tiếp tục"}
+            </Button>
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
-  const onAdd = () => {
-    setEditing(null);
-    form.resetFields();
-    setOpen(true);
-  };
-
-  const onEdit = (record) => {
-    setEditing(record);
-    form.setFieldsValue(record);
-    setOpen(true);
-  };
-
-  const onDelete = (id) => {
-    setData(data.filter((x) => x.id !== id));
-    message.success("Đã xóa");
-  };
-
-  const onSubmit = () => {
-    form.validateFields().then((values) => {
-      if (editing) {
-        setData(
-          data.map((x) => (x.id === editing.id ? { ...editing, ...values } : x))
-        );
-        message.success("Đã cập nhật");
-      } else {
-        setData([...data, { id: Date.now(), ...values }]);
-        message.success("Đã thêm");
-      }
-      setOpen(false);
-    });
-  };
-
   return (
     <>
-    
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={onAdd}>
+      <Divider titlePlacement="center">
+        <h2 className="fw-bold">
+          <FaUserGraduate /> Quản lý sinh viên
+        </h2>
+      </Divider>
+
+      {/* SEARCH */}
+      <div className="form-header">
+        <Form
+          form={form}
+          onValuesChange={(changedValues) =>
+            handleSearch(changedValues.timKiem)
+          }
+        >
+          <div className="d-flex justify-content-center gap-4">
+            <Form.Item label="Tìm kiếm" name="timKiem" className="ant-input">
+              <Input
+                maxLength={30}
+                placeholder="Mã / tên / SĐT..."
+                allowClear
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <Button
+                type="primary"
+                icon={<RetweetOutlined />}
+                onClick={() => {
+                  form.resetFields();
+                  setData(dataGoc);
+                }}
+              >
+                Làm mới
+              </Button>
+            </Form.Item>
+          </div>
+        </Form>
+      </div>
+
+      {/* ADD BUTTON */}
+      <Space className="float-end mt-4 mb-4">
+        <Button
+          type="primary"
+          onClick={() => {
+            setEditing(null);
+            form.resetFields();
+            setOpen(true);
+            setImageUrl(null);
+          }}
+        >
           Thêm sinh viên
         </Button>
       </Space>
 
-      <Table rowKey="id" columns={columns} dataSource={data} />
+      {/* TABLE */}
+      <Table
+        className="custom-table"
+        dataSource={data}
+        columns={columns}
+        rowKey="id"
+        pagination={{
+          showQuickJumper: true,
+          defaultPageSize: 5,
+        }}
+      />
 
+      {/* MODAL */}
       <Modal
         open={open}
         title={editing ? "Sửa sinh viên" : "Thêm sinh viên"}
         onCancel={() => setOpen(false)}
         onOk={onSubmit}
+        width={1000}
+        styles={{
+          body: {
+            maxHeight: "70vh",
+          },
+        }}
       >
-        <Form form={form} layout="vertical">
-          <Form.Item
-            name="code"
-            label="Mã sinh viên"
-            rules={[{ required: true }]}
-          >
-            <Input />
-          </Form.Item>
-          <Form.Item name="name" label="Họ tên" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="className" label="Lớp" rules={[{ required: true }]}>
-            <Input />
-          </Form.Item>
-        </Form>
+        <Row gutter={24}>
+          {/* BÊN TRÁI - UPLOAD ẢNH */}
+          <Col span={10} className="d-flex justify-content-center pt-5">
+            <UpLoadImage
+              className="custom-upload"
+              defaultImage={imageUrl}
+              onFileUpload={(url) => {
+                setImageUrl(url);
+                form.setFieldsValue({ urlImage: url });
+              }}
+            />
+          </Col>
+
+          {/* BÊN PHẢI - FORM */}
+          <Col span={14}>
+            <Form form={form} layout="vertical">
+              <Form.Item
+                name="userCode"
+                label="Mã sinh viên"
+                rules={[
+                  { required: true, message: "Không được để trống!" },
+                  {
+                    pattern: /^[0-9]{7}$/,
+                    message: "Mã sinh viên phải gồm đúng 7 chữ số!",
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="name"
+                label="Họ tên"
+                rules={[
+                  { required: true, message: "Không được để trống!" },
+                  {
+                    pattern: /^[A-Za-zÀ-ỹ\s]{2,}$/,
+                    message: "Họ tên không được chứa số hoặc ký tự đặc biệt!",
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="className"
+                label="Lớp"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: "Không được để trống!" },
+                  { type: "email", message: "Email không đúng định dạng!" },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+              <Form.Item
+                name="phone"
+                label="SĐT"
+                rules={[
+                  {
+                    pattern: /^0[0-9]{9}$/,
+                    message: "SĐT phải gồm 10 số và bắt đầu bằng 0!",
+                  },
+                ]}
+              >
+                <Input />
+              </Form.Item>
+
+              {/* Ẩn input urlImage vì đã dùng upload */}
+              <Form.Item name="urlImage" hidden>
+                <Input />
+              </Form.Item>
+            </Form>
+          </Col>
+        </Row>
       </Modal>
     </>
   );

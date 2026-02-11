@@ -2,9 +2,6 @@ import {
   Layout,
   Menu,
   Button,
-  Avatar,
-  Dropdown,
-  Space,
   FloatButton,
 } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
@@ -12,7 +9,7 @@ import { FaHome, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import { BsBoxSeamFill } from "react-icons/bs";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-
+import "./AdminLayout.css";
 const { Header, Sider, Content } = Layout;
 
 
@@ -22,7 +19,7 @@ export default function AdminLayout() {
   const nav = useNavigate();
 
   return (
-    <Layout style={{ minHeight: "100vh" }}>
+    <Layout className="layout" style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
         <div
           style={{
@@ -54,12 +51,13 @@ export default function AdminLayout() {
         <Header style={{ background: "#4E4336" }}>
           <Button
             type="text"
+            className="menu-toggle-btn"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
           />
         </Header>
 
-        <Content style={{ padding: 10 }}>
+        <Content className="admin-content">
           <Outlet />
         </Content>
       </Layout>

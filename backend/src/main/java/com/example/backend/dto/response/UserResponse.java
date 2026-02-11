@@ -1,10 +1,12 @@
 package com.example.backend.dto.response;
 
-public interface StudentResponse {
+import java.util.UUID;
 
-    String getId();
+public interface UserResponse {
 
-    String getStudentCode();
+    UUID getId();
+
+    String getUserCode();
 
     String getName();
 
@@ -15,6 +17,6 @@ public interface StudentResponse {
     String getPhone();
 
     String getUrlImage();
-
+    String getCreatedAt();
     Integer getStatus();
 }
