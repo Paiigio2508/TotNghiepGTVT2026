@@ -4,6 +4,7 @@ import com.example.backend.dto.request.UserRequest;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Teacher;
 import com.example.backend.entity.User;
+import com.example.backend.exception.AppException;
 import com.example.backend.repository.TeacherRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
@@ -12,9 +13,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,13 +25,30 @@ public class TeacherService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final EmailService emailService;
-    private  final Support support;
+    private final Support support;
+
+    // ================= GET ALL =================
     public List<UserResponse> getALL() {
         return teacherRepository.getALL();
     }
 
+    // ================= CREATE =================
     public void createTeacher(UserRequest request) {
+
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException("Email đã tồn tại");
+        }
+
+        if (userRepository.existsByPhone(request.getPhone())) {
+            throw new AppException("Số điện thoại đã tồn tại");
+        }
+
+        if (teacherRepository.existsByTeacherCode(request.getUserCode())) {
+            throw new AppException("Mã giảng viên đã tồn tại");
+        }
+
         String rawPassword = support.generatePassword();
+
         User user = new User();
         user.setUsername(request.getEmail());
         user.setEmail(request.getEmail());
@@ -40,46 +58,82 @@ public class TeacherService {
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
         user.setStatus(0);
+
         userRepository.save(user);
+
         Teacher teacher = new Teacher();
         teacher.setUser(user);
         teacher.setFullName(request.getFullName());
         teacher.setTeacherCode(request.getUserCode());
+
         teacherRepository.save(teacher);
-        emailService.sendAccountMail(request.getEmail(), request.getUserCode(), rawPassword);
+
+        try {
+            emailService.sendAccountMail(
+                    request.getEmail(),
+                    request.getUserCode(),
+                    rawPassword
+            );
+        } catch (Exception e) {
+            System.out.println("Gửi mail thất bại");
+        }
     }
 
+    // ================= UPDATE =================
     public void updateTeacher(String id, UserRequest request) {
 
-        // Tìm student theo id
         Teacher teacher = teacherRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên"));
+                .orElseThrow(() -> new AppException("Không tìm thấy giảng viên"));
 
         User user = teacher.getUser();
-        // ===== UPDATE USER =====
+
+        // CHECK EMAIL
+        Optional<User> emailUser = userRepository.findByEmail(request.getEmail());
+        if (emailUser.isPresent() &&
+                !emailUser.get().getId().equals(user.getId())) {
+            throw new AppException("Email đã tồn tại");
+        }
+
+        // CHECK PHONE
+        Optional<User> phoneUser = userRepository.findByPhone(request.getPhone());
+        if (phoneUser.isPresent() &&
+                !phoneUser.get().getId().equals(user.getId())) {
+            throw new AppException("Số điện thoại đã tồn tại");
+        }
+
+        // CHECK TEACHER CODE
+        Optional<Teacher> codeTeacher =
+                teacherRepository.findByTeacherCode(request.getUserCode());
+
+        if (codeTeacher.isPresent() &&
+                !codeTeacher.get().getId().equals(teacher.getId())) {
+            throw new AppException("Mã giảng viên đã tồn tại");
+        }
+
         user.setEmail(request.getEmail());
         user.setUsername(request.getEmail());
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
         user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
 
-        // ===== UPDATE STUDENT =====
         teacher.setFullName(request.getFullName());
         teacher.setTeacherCode(request.getUserCode());
+
+        userRepository.save(user);
         teacherRepository.save(teacher);
     }
 
+    // ================= DELETE =================
     public void deleteTeacher(String id) {
+
         Teacher teacher = teacherRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy sinh viên"));
+                .orElseThrow(() -> new AppException("Không tìm thấy giảng viên"));
+
         User user = teacher.getUser();
-        if (user.getStatus() == 0) {
-            user.setStatus(1);
-        } else {
-            user.setStatus(0);
-        }
+
+        user.setStatus(user.getStatus() == 0 ? 1 : 0);
         user.setUpdatedAt(LocalDateTime.now());
+
         userRepository.save(user);
     }
 }

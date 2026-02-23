@@ -17,11 +17,12 @@ import lombok.experimental.SuperBuilder;
 @Builder
 public class User extends BaseEntity {
 
-    @Column(unique = true)
     private String username;
     private String password;
     private String role;   // ADMIN, STUDENT, TEACHER
+    @Column(unique = true)
     private String email;
+    @Column(unique = true)
     private String phone;
     @Column(name = "url_image", length = 1000)
     private String urlImage;

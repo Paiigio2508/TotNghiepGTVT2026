@@ -81,37 +81,45 @@ export default function TeacherManage() {
   };
 
   /* ================= SUBMIT ================= */
-  const onSubmit = async () => {
-    try {
-      const values = await form.validateFields();
+const onSubmit = async () => {
+  try {
+    const values = await form.validateFields();
 
-      const payload = {
-        userCode: values.userCode,
-        fullName: values.name,
-        phone: values.phone,
-        email: values.email,
-        urlImage: values.urlImage,
-      };
+    const payload = {
+      userCode: values.userCode,
+      fullName: values.name,
+      phone: values.phone,
+      email: values.email,
+      urlImage: values.urlImage,
+    };
 
-      if (editing) {
-  
-        await TeacherAPI.updateTeacher(editing.id, payload);
-        toast.success("Cập nhật thành công!");
-      } else {
-        
-        await TeacherAPI.createTeacher(payload);
-        toast.success("Thêm thành công!");
-      }
+    let res;
 
-      setOpen(false);
-      form.resetFields();
-      setImageUrl(null);
-      setEditing(null);
-      loadTeacher();
-    } catch (err) {
-      console.error(err);
+    if (editing) {
+      res = await TeacherAPI.updateTeacher(editing.id, payload);
+    } else {
+      res = await TeacherAPI.createTeacher(payload);
     }
-  };
+
+    // 🔥 CHECK SUCCESS FLAG TỪ BE
+    if (res.data && res.data.success === false) {
+      toast.error(res.data.message);
+      return;
+    }
+
+    // ✅ Chỉ chạy khi thực sự thành công
+    toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
+
+    setOpen(false);
+    form.resetFields();
+    setImageUrl(null);
+    setEditing(null);
+    loadTeacher();
+
+  } catch (err) {
+    toast.error("Lỗi hệ thống!");
+  }
+};
 
   /* ================= COLUMNS ================= */
   const columns = [

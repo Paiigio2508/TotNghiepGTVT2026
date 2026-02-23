@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TeacherRepository extends JpaRepository<Teacher, String> {
@@ -15,4 +16,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, String> {
                          phone,url_image as urlImage ,created_at as createdAt ,status    from users u  join teachers s on u.id =s.user_id
             """, nativeQuery = true)
     List<UserResponse> getALL();
+    boolean existsByTeacherCode(String teacherCode);
+    Optional<Teacher> findByTeacherCode(String teacherCode);
 }

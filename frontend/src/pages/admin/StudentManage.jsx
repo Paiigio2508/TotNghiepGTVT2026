@@ -11,7 +11,7 @@ import {
   Image,
   Row,
   Col,
-  Tag
+  Tag,
 } from "antd";
 import { SyncOutlined } from "@ant-design/icons";
 import { EditOutlined } from "@ant-design/icons";
@@ -20,7 +20,7 @@ import { useState, useEffect } from "react";
 import { FaUserGraduate } from "react-icons/fa";
 import { StudentAPI } from "../../api/StudentAPI";
 import "./css/UserManage.css";
-import UpLoadImage from "../UpLoadImage"; 
+import UpLoadImage from "../UpLoadImage";
 import { toast } from "react-toastify";
 export default function StudentManage() {
   const [data, setData] = useState([]); // data hiển thị
@@ -29,7 +29,7 @@ export default function StudentManage() {
   const [editing, setEditing] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [form] = Form.useForm();
-
+  const [importFile, setImportFile] = useState(null);
   /* =========================
      LOAD DATA
   ========================= */
@@ -59,7 +59,7 @@ export default function StudentManage() {
         item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.className?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+        item.phone?.toLowerCase().includes(keyword.toLowerCase()),
     );
     setData(ketQua);
   };
@@ -82,7 +82,7 @@ export default function StudentManage() {
   ========================= */
   const onEdit = (record) => {
     setEditing(record);
-    setImageUrl(record.urlImage); 
+    setImageUrl(record.urlImage);
     form.setFieldsValue(record);
     setOpen(true);
   };
@@ -93,22 +93,32 @@ export default function StudentManage() {
   const onSubmit = async () => {
     try {
       const values = await form.validateFields();
-          const payload = {
-            userCode: values.userCode,
-            fullName: values.name,
-            className: values.className,
-            phone: values.phone,
-            email: values.email,
-            urlImage: values.urlImage,
-          };
+
+      const payload = {
+        userCode: values.userCode,
+        fullName: values.name,
+        className: values.className,
+        phone: values.phone,
+        email: values.email,
+        urlImage: values.urlImage,
+      };
+
+      let res;
 
       if (editing) {
-        await StudentAPI.updateStudent(editing.id, payload);
-            toast.success("Cập nhật thành công!");
+        res = await StudentAPI.updateStudent(editing.id, payload);
       } else {
-        await StudentAPI.createStudent(payload);
-         toast.success("Thêm thành công!");
+        res = await StudentAPI.createStudent(payload);
       }
+
+      // 🔥 Nếu backend trả success = false
+      if (res.data?.success === false) {
+        toast.error(res.data.message);
+        return;
+      }
+
+      // ✅ Thành công
+      toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
       setOpen(false);
       form.resetFields();
@@ -116,10 +126,30 @@ export default function StudentManage() {
       setEditing(null);
       loadStudent();
     } catch (err) {
-      console.error(err);
+      toast.error("Lỗi hệ thống!");
     }
   };
 
+const handleImport = async () => {
+  if (!importFile) {
+    toast.warning("Vui lòng chọn file!");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", importFile);
+
+  try {
+    await StudentAPI.importStudent(formData);
+    toast.success("Import thành công!");
+   for (let pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
+    loadStudent();
+  } catch (err) {
+    toast.error("Import thất bại!");
+  }
+};
   /* =========================
      COLUMNS
   ========================= */
@@ -167,7 +197,6 @@ export default function StudentManage() {
             title="Đổi trạng thái sinh viên?"
             onConfirm={() => onDelete(record.id)}
           >
-    
             <Button icon={<SyncOutlined />} danger>
               {record.status == 0 ? "Dừng học" : "Tiếp tục"}
             </Button>
@@ -218,8 +247,26 @@ export default function StudentManage() {
         </Form>
       </div>
 
-      {/* ADD BUTTON */}
       <Space className="float-end mt-4 mb-4">
+        {/* INPUT FILE ẨN */}
+        <input
+          type="file"
+          accept=".xlsx"
+          style={{ display: "none" }}
+          id="importFile"
+          onChange={(e) => setImportFile(e.target.files[0])}
+        />
+
+        {/* NÚT IMPORT */}
+        <Button onClick={() => document.getElementById("importFile").click()}>
+          Chọn file
+        </Button>
+
+        <Button type="primary" onClick={handleImport}>
+          Import
+        </Button>
+
+        {/* NÚT THÊM */}
         <Button
           type="primary"
           onClick={() => {
@@ -250,7 +297,7 @@ export default function StudentManage() {
         open={open}
         title={editing ? "Sửa sinh viên" : "Thêm sinh viên"}
         onCancel={() => setOpen(false)}
-        onOk={onSubmit}
+        footer={null}
         width={1000}
         styles={{
           body: {
@@ -273,7 +320,7 @@ export default function StudentManage() {
 
           {/* BÊN PHẢI - FORM */}
           <Col span={14}>
-            <Form form={form} layout="vertical">
+            <Form form={form} layout="vertical" onFinish={onSubmit}>
               <Form.Item
                 name="userCode"
                 label="Mã sinh viên"
@@ -336,6 +383,9 @@ export default function StudentManage() {
               <Form.Item name="urlImage" hidden>
                 <Input />
               </Form.Item>
+              <Button type="primary" htmlType="submit">
+                {editing ? "Cập nhật" : "Thêm"}
+              </Button>
             </Form>
           </Col>
         </Row>

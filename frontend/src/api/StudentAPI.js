@@ -13,4 +13,15 @@ export class StudentAPI {
   static deleteStudent = (id) => {
     return request.put(`/api/admin/student/updateTT/${id}`);
   };
+  static importStudent = (formData) => {
+  return request.post(
+    "/api/admin/student/import",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};
 }

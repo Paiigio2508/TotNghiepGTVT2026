@@ -1,4 +1,5 @@
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const API_URL = "http://localhost:8080";
 
@@ -43,10 +44,30 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+
+    if (status === 401) {
       localStorage.removeItem("userData");
+      toast.error("Phiên đăng nhập đã hết hạn!");
       window.location.href = "/login";
+      return Promise.reject(error);
     }
+
+    if (status === 409) {
+      toast.error(error.response?.data || "Dữ liệu đã tồn tại!");
+      return Promise.reject(error);   // 🔥 QUAN TRỌNG
+    }
+
+    if (status === 404) {
+      toast.error("Không tìm thấy dữ liệu!");
+      return Promise.reject(error);
+    }
+
+    if (status === 500) {
+      toast.error("Lỗi hệ thống!");
+      return Promise.reject(error);
+    }
+
     return Promise.reject(error);
   }
 );

@@ -15,6 +15,7 @@ public class Teacher {
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(columnDefinition = "CHAR(36)")
     private String id;
+    @Column(unique = true)
     private String teacherCode;
     private String fullName;
     private String department;

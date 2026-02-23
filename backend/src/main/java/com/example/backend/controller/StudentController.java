@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequiredArgsConstructor
 @RestController
@@ -25,7 +26,11 @@ public class StudentController {
         studentService.createStudent(request);
         return ResponseEntity.ok("Tạo sinh viên thành công");
     }
-
+    @PostMapping("/import")
+    public ResponseEntity<?> importStudent(@RequestParam("file") MultipartFile file) {
+        studentService.importStudent(file);
+        return ResponseEntity.ok("Import thành công");
+    }
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
             @PathVariable String id,
