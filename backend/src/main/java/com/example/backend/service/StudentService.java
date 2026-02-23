@@ -152,6 +152,8 @@ public class StudentService {
 
     public void importStudent(MultipartFile file) {
 
+        String defaultImage = "https://www.shutterstock.com/image-vector/default-avatar-social-media-display-600nw-2632690107.jpg";
+
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
             Sheet sheet = workbook.getSheetAt(0);
@@ -162,11 +164,15 @@ public class StudentService {
 
                 try {
                     UserRequest request = new UserRequest();
-                    request.setUserCode(row.getCell(0).getStringCellValue());
-                    request.setFullName(row.getCell(1).getStringCellValue());
-                    request.setClassName(row.getCell(2).getStringCellValue());
-                    request.setEmail(row.getCell(3).getStringCellValue());
-                    request.setPhone(row.getCell(4).getStringCellValue());
+
+                    request.setUserCode(support.getCellValue(row, 0));
+                    request.setFullName(support.getCellValue(row, 1));
+                    request.setClassName(support.getCellValue(row, 2));
+                    request.setEmail(support.getCellValue(row, 3));
+                    request.setPhone(support.getCellValue(row, 4));
+
+                    String image = support.getCellValue(row, 5);
+                    request.setUrlImage(image.isEmpty() ? defaultImage : image);
 
                     createStudent(request);
 
@@ -180,4 +186,5 @@ public class StudentService {
             throw new AppException("Import thất bại");
         }
     }
+
 }

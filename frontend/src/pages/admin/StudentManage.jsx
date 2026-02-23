@@ -130,26 +130,23 @@ export default function StudentManage() {
     }
   };
 
-const handleImport = async () => {
-  if (!importFile) {
-    toast.warning("Vui lòng chọn file!");
-    return;
-  }
+  const handleImport = async () => {
+    if (!importFile) {
+      toast.warning("Vui lòng chọn file!");
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append("file", importFile);
+    const formData = new FormData();
+    formData.append("file", importFile);
 
-  try {
-    await StudentAPI.importStudent(formData);
-    toast.success("Import thành công!");
-   for (let pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
-    loadStudent();
-  } catch (err) {
-    toast.error("Import thất bại!");
-  }
-};
+    try {
+      const res = await StudentAPI.importStudent(formData);
+      toast.success(res.data);
+      loadStudent();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Import thất bại");
+    }
+  };
   /* =========================
      COLUMNS
   ========================= */

@@ -1,5 +1,6 @@
 package com.example.backend.util;
 
+import org.apache.poi.ss.usermodel.Row;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
@@ -15,5 +16,12 @@ public class Support {
         }
 
         return password.toString();
+    }
+    public String getCellValue(Row row, int index) {
+        if (row.getCell(index) == null) {
+            return "";
+        }
+
+        return row.getCell(index).toString().trim();
     }
 }
