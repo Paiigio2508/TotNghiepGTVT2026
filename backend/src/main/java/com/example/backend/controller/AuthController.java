@@ -53,7 +53,8 @@ public class AuthController {
                         "accessToken", token,
                         "username", user.getUsername(),
                         "role", user.getRole(),
-                        "avatar", user.getUrlImage() == null ? "" : user.getUrlImage()
+                        "avatar", user.getUrlImage() == null ? "" : user.getUrlImage(),
+                            "userId",user.getId()
                 )
         );
     }

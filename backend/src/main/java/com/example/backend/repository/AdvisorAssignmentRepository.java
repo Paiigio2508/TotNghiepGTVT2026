@@ -12,33 +12,37 @@ import java.util.List;
 
 public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssignment, String> {
     boolean existsByStudentIdAndTermId(String studentId, String termId);
+
     @Query(value = """
-        SELECT
-            s.student_code AS studentCode,
-            s.full_name AS fullName,
-            s.class_name as className,
-            t.full_name AS teacherName
-        FROM advisor_assignments a
-        JOIN students s ON a.student_id = s.id
-        JOIN teachers t ON a.teacher_id = t.id
-        where a.term_id =:term_id order by s.student_code
-        
-            """, nativeQuery = true)
+            SELECT
+                s.student_code AS studentCode,
+                s.full_name AS fullName,
+                s.class_name as className,
+                t.full_name AS teacherName
+            FROM advisor_assignments a
+            JOIN students s ON a.student_id = s.id
+            JOIN teachers t ON a.teacher_id = t.id
+            where a.term_id =:term_id order by s.student_code
+                    
+                """, nativeQuery = true)
     List<InternshipTermResponse> getALLSVPhanCong(@PathVariable String term_id);
+
     @Query(value = """
-        SELECT s.id AS id,
-               s.studentCode AS StudentCode,
-               s.name AS name,
-               s.email AS email,
-               s.phone AS phone,
-//               s.gender AS gender,
-               s.class_name AS className,
-               s.major AS major
-        FROM advisor_assignment aa
-        JOIN student s ON aa.student_id = s.id
-        WHERE aa.teacher_id = :teacherId
-        AND aa.internship_term_id = :termId
-    """, nativeQuery = true)
+            SELECT s.id AS id,
+                   s.student_code AS studentCode,
+                   s.full_name AS name,
+                   email AS email,
+                   u.phone AS phone,
+                   u.url_image as urlImage,
+                   u.gender AS gender,
+                   s.class_name AS className,
+                   s.major AS major
+            FROM advisor_assignments aa
+            JOIN students s ON aa.student_id = s.id
+            JOIN users u ON u.id = s.user_id
+            WHERE aa.teacher_id = :teacherId
+                    AND aa.term_id = :termId
+                """, nativeQuery = true)
     List<StudentProjection> findStudentsByTeacherAndTerm(
             String teacherId,
             String termId

@@ -65,7 +65,7 @@ public class StudentService {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
-
+        user.setGender(request.getGender());
 
         userRepository.save(user);
 
@@ -126,7 +126,7 @@ public class StudentService {
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
         user.setUpdatedAt(LocalDateTime.now());
-
+        user.setGender(request.getGender());
         userRepository.save(user);
 
         student.setFullName(request.getFullName());
@@ -165,11 +165,12 @@ public class StudentService {
 
                     request.setUserCode(support.getCellValue(row, 0));
                     request.setFullName(support.getCellValue(row, 1));
-                    request.setClassName(support.getCellValue(row, 2));
-                    request.setEmail(support.getCellValue(row, 3));
-                    request.setPhone(support.getCellValue(row, 4));
+                    request.setGender(support.getCellValue(row, 2));
+                    request.setClassName(support.getCellValue(row, 3));
+                    request.setEmail(support.getCellValue(row, 4));
+                    request.setPhone(support.getCellValue(row, 5));
 
-                    String image = support.getCellValue(row, 5);
+                    String image = support.getCellValue(row, 6);
                     request.setUrlImage(image.isEmpty() ? defaultImage : image);
 
                     createStudent(request);

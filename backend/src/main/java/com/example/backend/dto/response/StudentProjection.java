@@ -4,9 +4,11 @@ public interface StudentProjection {
     String getId();
     String getStudentCode();
     String getName();
+    String getUrlImage();
+    String getGender();
     String getEmail();
     String getPhone();
-    String getGioiTinh();
+
     String getClassName();
     String getMajor();
 }

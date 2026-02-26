@@ -11,7 +11,8 @@ import {
   Image,
   Row,
   Col,
-  Tag
+  Tag,
+  Radio,
 } from "antd";
 import { RetweetOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -55,7 +56,7 @@ export default function TeacherManage() {
       (item) =>
         item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+        item.phone?.toLowerCase().includes(keyword.toLowerCase()),
     );
 
     setData(result);
@@ -81,45 +82,45 @@ export default function TeacherManage() {
   };
 
   /* ================= SUBMIT ================= */
-const onSubmit = async () => {
-  try {
-    const values = await form.validateFields();
+  const onSubmit = async () => {
+    try {
+      const values = await form.validateFields();
 
-    const payload = {
-      userCode: values.userCode,
-      fullName: values.name,
-      phone: values.phone,
-      email: values.email,
-      urlImage: values.urlImage,
-    };
+      const payload = {
+        userCode: values.userCode,
+        fullName: values.name,
+        phone: values.phone,
+        email: values.email,
+        urlImage: values.urlImage,
+        gender: values.gender,
+      };
 
-    let res;
+      let res;
 
-    if (editing) {
-      res = await TeacherAPI.updateTeacher(editing.id, payload);
-    } else {
-      res = await TeacherAPI.createTeacher(payload);
+      if (editing) {
+        res = await TeacherAPI.updateTeacher(editing.id, payload);
+      } else {
+        res = await TeacherAPI.createTeacher(payload);
+      }
+
+      // 🔥 CHECK SUCCESS FLAG TỪ BE
+      if (res.data && res.data.success === false) {
+        toast.error(res.data.message);
+        return;
+      }
+
+      // ✅ Chỉ chạy khi thực sự thành công
+      toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
+
+      setOpen(false);
+      form.resetFields();
+      setImageUrl(null);
+      setEditing(null);
+      loadTeacher();
+    } catch (err) {
+      toast.error("Lỗi hệ thống!");
     }
-
-    // 🔥 CHECK SUCCESS FLAG TỪ BE
-    if (res.data && res.data.success === false) {
-      toast.error(res.data.message);
-      return;
-    }
-
-    // ✅ Chỉ chạy khi thực sự thành công
-    toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
-
-    setOpen(false);
-    form.resetFields();
-    setImageUrl(null);
-    setEditing(null);
-    loadTeacher();
-
-  } catch (err) {
-    toast.error("Lỗi hệ thống!");
-  }
-};
+  };
 
   /* ================= COLUMNS ================= */
   const columns = [
@@ -138,6 +139,16 @@ const onSubmit = async () => {
       ),
     },
     { title: "Họ tên", dataIndex: "name" },
+    {
+      title: "Giới tính",
+      dataIndex: "gender",
+      render: (gender) =>
+        gender === "Nam" ? (
+          <Tag color="blue">Nam</Tag>
+        ) : (
+          <Tag color="pink">Nữ</Tag>
+        ),
+    },
     { title: "Email", dataIndex: "email" },
     { title: "SĐT", dataIndex: "phone" },
     {
@@ -159,7 +170,7 @@ const onSubmit = async () => {
         <Space>
           <Button onClick={() => onEdit(record)}>Cập nhật</Button>
           <Popconfirm
-            title="Xóa giảng viên?"
+            title="Cập nhật giảng viên?"
             onConfirm={() => onDelete(record.id)}
           >
             <Button danger>UpdateTT</Button>
@@ -275,7 +286,18 @@ const onSubmit = async () => {
               >
                 <Input />
               </Form.Item>
-
+              <Form.Item
+                name="gender"
+                label="Giới tính"
+                rules={[
+                  { required: true, message: "Vui lòng chọn giới tính!" },
+                ]}
+              >
+                <Radio.Group>
+                  <Radio value="Nam">Nam</Radio>
+                  <Radio value="Nữ">Nữ</Radio>
+                </Radio.Group>
+              </Form.Item>
               <Form.Item
                 name="email"
                 label="Email"

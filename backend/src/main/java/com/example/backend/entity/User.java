@@ -24,6 +24,7 @@ public class User extends BaseEntity {
     private String email;
     @Column(unique = true)
     private String phone;
+    private String gender;
     @Column(name = "url_image", length = 1000)
     private String urlImage;
 

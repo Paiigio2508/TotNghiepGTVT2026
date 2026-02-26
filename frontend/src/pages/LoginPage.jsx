@@ -36,7 +36,7 @@ const handleLogin = async (e) => {
       password,
     });
 
-    const { accessToken, username: userName, role, avatar } = res.data;
+    const { accessToken, username: userName, role, avatar,userId } = res.data;
 
     localStorage.setItem(
       "userData",
@@ -45,6 +45,7 @@ const handleLogin = async (e) => {
         role,
         username: userName,
         avatar,
+        userId
       })
     );
 

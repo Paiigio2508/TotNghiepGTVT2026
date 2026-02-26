@@ -9,6 +9,7 @@ public interface UserResponse {
     String getUserCode();
 
     String getName();
+    String getGender();
 
     String getClassName();
 

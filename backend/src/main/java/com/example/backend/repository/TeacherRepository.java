@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface TeacherRepository extends JpaRepository<Teacher, String> {
     @Query(value = """
             select s.id as id, teacher_code as userCode, full_name as name, email,
-                         phone,url_image as urlImage ,created_at as createdAt ,s.status    from users u  join teachers s on u.id =s.user_id order by  createdAt
+                         phone,url_image as urlImage ,created_at as createdAt,gender,s.status    from users u  join teachers s on u.id =s.user_id order by createdAt
             """, nativeQuery = true)
     List<UserResponse> getALL();
 

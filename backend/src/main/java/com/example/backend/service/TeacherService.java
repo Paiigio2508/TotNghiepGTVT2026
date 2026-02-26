@@ -57,8 +57,7 @@ public class TeacherService {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
-
-
+        user.setGender(request.getGender());
         userRepository.save(user);
 
         Teacher teacher = new Teacher();
@@ -115,7 +114,7 @@ public class TeacherService {
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
         user.setUpdatedAt(LocalDateTime.now());
-
+        user.setGender(request.getGender());
         teacher.setFullName(request.getFullName());
         teacher.setTeacherCode(request.getUserCode());
 

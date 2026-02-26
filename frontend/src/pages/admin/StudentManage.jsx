@@ -13,10 +13,10 @@ import {
   Col,
   Tag,
   Upload,
+  Radio,
 } from "antd";
 
 import {
-  SyncOutlined,
   EditOutlined,
   RetweetOutlined,
   UploadOutlined,
@@ -71,7 +71,7 @@ export default function StudentManage() {
         item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.className?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+        item.phone?.toLowerCase().includes(keyword.toLowerCase()),
     );
 
     setData(ketQua);
@@ -114,6 +114,7 @@ export default function StudentManage() {
         phone: values.phone,
         email: values.email,
         urlImage: values.urlImage,
+        gender: values.gender, 
       };
 
       let res;
@@ -182,6 +183,16 @@ export default function StudentManage() {
       ),
     },
     { title: "Họ tên", dataIndex: "name" },
+    {
+      title: "Giới tính",
+      dataIndex: "gender",
+      render: (gender) =>
+        gender === "Nam" ? (
+          <Tag color="blue">Nam</Tag>
+        ) : (
+          <Tag color="pink">Nữ</Tag>
+        ),
+    },
     { title: "Lớp", dataIndex: "className" },
     { title: "Email", dataIndex: "email" },
     { title: "SĐT", dataIndex: "phone" },
@@ -349,7 +360,18 @@ export default function StudentManage() {
               >
                 <Input />
               </Form.Item>
-
+              <Form.Item
+                name="gender"
+                label="Giới tính"
+                rules={[
+                  { required: true, message: "Vui lòng chọn giới tính!" },
+                ]}
+              >
+                <Radio.Group>
+                  <Radio value="Nam">Nam</Radio>
+                  <Radio value="Nữ">Nữ</Radio>
+                </Radio.Group>
+              </Form.Item>
               <Form.Item
                 name="className"
                 label="Lớp"
@@ -366,10 +388,18 @@ export default function StudentManage() {
                 <Input />
               </Form.Item>
 
-              <Form.Item name="phone" label="SĐT">
+               <Form.Item
+                name="phone"
+                label="SĐT"
+                rules={[
+                  {
+                    pattern: /^0[0-9]{9}$/,
+                    message: "SĐT phải gồm 10 số và bắt đầu bằng 0!",
+                  },
+                ]}
+              >
                 <Input />
               </Form.Item>
-
               <Form.Item name="urlImage" hidden>
                 <Input />
               </Form.Item>
