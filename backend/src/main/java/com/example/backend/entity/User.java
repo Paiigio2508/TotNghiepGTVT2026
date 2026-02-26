@@ -26,5 +26,5 @@ public class User extends BaseEntity {
     private String phone;
     @Column(name = "url_image", length = 1000)
     private String urlImage;
-    private Integer status;
+
 }

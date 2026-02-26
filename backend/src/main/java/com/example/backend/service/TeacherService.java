@@ -57,7 +57,7 @@ public class TeacherService {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
-        user.setStatus(0);
+
 
         userRepository.save(user);
 
@@ -65,7 +65,7 @@ public class TeacherService {
         teacher.setUser(user);
         teacher.setFullName(request.getFullName());
         teacher.setTeacherCode(request.getUserCode());
-
+        teacher.setStatus(0);
         teacherRepository.save(teacher);
 
         try {
@@ -128,12 +128,10 @@ public class TeacherService {
 
         Teacher teacher = teacherRepository.findById(id)
                 .orElseThrow(() -> new AppException("Không tìm thấy giảng viên"));
-
+        teacher.setStatus(teacher.getStatus() == 0 ? 1 : 0);
         User user = teacher.getUser();
-
-        user.setStatus(user.getStatus() == 0 ? 1 : 0);
         user.setUpdatedAt(LocalDateTime.now());
-
+        teacherRepository.save(teacher);
         userRepository.save(user);
     }
 }

@@ -9,7 +9,7 @@ export class TeacherAPI {
   static updateTeacher = (id, data) => {
     return request.put(`/api/admin/teacher/${id}`, data);
   };
-  static deleteTeacher = (id) => {
+  static updateTT = (id) => {
     return request.put(`/api/admin/teacher/updateTT/${id}`);
   };
 }

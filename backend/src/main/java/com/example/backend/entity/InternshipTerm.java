@@ -1,13 +1,16 @@
 package com.example.backend.entity;
 
 import com.example.backend.entity.base.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.example.backend.util.status.TermStatus;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "internship_terms")
 public class InternshipTerm extends BaseEntity {
 
@@ -17,5 +20,6 @@ public class InternshipTerm extends BaseEntity {
     private String academicYear;
     @Column(columnDefinition = "TEXT")
     private String description;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private TermStatus status;
 }

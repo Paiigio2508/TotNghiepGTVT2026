@@ -8,8 +8,8 @@ import com.example.backend.exception.AppException;
 import com.example.backend.repository.StudentRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
+import com.example.backend.util.status.StudentStatus;
 import com.example.backend.util.Support;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -65,7 +65,7 @@ public class StudentService {
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
-        user.setStatus(0);
+
 
         userRepository.save(user);
 
@@ -75,7 +75,7 @@ public class StudentService {
         student.setClassName(request.getClassName());
         student.setStudentCode(request.getUserCode());
         student.setMajor("CNTT");
-
+        student.setStatus(StudentStatus.DU_DIEU_KIEN);
         studentRepository.save(student);
 
         // Gửi mail (không làm crash)
@@ -141,12 +141,10 @@ public class StudentService {
 
         Student student = studentRepository.findById(id)
                 .orElseThrow(() -> new AppException("Không tìm thấy sinh viên"));
-
+        student.setStatus(student.getStatus()== StudentStatus.DU_DIEU_KIEN?StudentStatus.KHONG_DU_DIEU_KIEN:StudentStatus.DU_DIEU_KIEN);
         User user = student.getUser();
-
-        user.setStatus(user.getStatus() == 0 ? 1 : 0);
         user.setUpdatedAt(LocalDateTime.now());
-
+        studentRepository.save(student);
         userRepository.save(user);
     }
 

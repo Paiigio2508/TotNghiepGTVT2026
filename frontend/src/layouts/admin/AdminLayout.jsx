@@ -1,22 +1,28 @@
+import { Layout, Menu, Button, FloatButton } from "antd";
 import {
-  Layout,
-  Menu,
-  Button,
-  FloatButton,
-} from "antd";
-import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
 import { FaHome, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
 import { BsBoxSeamFill } from "react-icons/bs";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
-const { Header, Sider, Content } = Layout;
 
+const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const nav = useNavigate();
+
+  const handleLogout = () => {
+    if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
+      localStorage.removeItem("userData");
+      nav("/login", { replace: true });
+    }
+  };
 
   return (
     <Layout className="layout" style={{ minHeight: "100vh" }}>
@@ -48,13 +54,33 @@ export default function AdminLayout() {
       </Sider>
 
       <Layout>
-        <Header style={{ background: "#4E4336" }}>
+        <Header
+          style={{
+            background: "#4E4336",
+            height: "48px",
+            lineHeight: "48px",
+            padding: "0 16px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
           <Button
             type="text"
             className="menu-toggle-btn"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             onClick={() => setCollapsed(!collapsed)}
           />
+
+          {/* 🔥 Logout Button */}
+          <Button
+            type="primary"
+            danger
+            icon={<LogoutOutlined />}
+            onClick={handleLogout}
+          >
+            Đăng xuất
+          </Button>
         </Header>
 
         <Content className="admin-content">
@@ -93,11 +119,6 @@ const menuItems = [
   {
     key: "/admin/hoc-ky",
     icon: <FaHome />,
-    label: "Học kỳ",
-  },
-  {
-    key: "/admin/phan-cong",
-    icon: <FaHome />,
-    label: "Phân công",
+    label: "Học kỳ thực tập",
   },
 ];

@@ -1,17 +1,15 @@
 package com.example.backend.controller;
 
+import com.example.backend.entity.InternshipTerm;
 import com.example.backend.service.InternshipTermService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/admin/term")
+@RequestMapping("/api/admin/internship-terms")
 @CrossOrigin("http://localhost:5173")
 public class InternshipTermController {
     @Autowired
@@ -20,4 +18,18 @@ public class InternshipTermController {
     public ResponseEntity<?> getALL() {
         return ResponseEntity.ok(internshipTermService.getALL());
     }
+
+    // Thêm mới
+    @PostMapping
+    public ResponseEntity<?> create(@RequestBody InternshipTerm term) {
+        return ResponseEntity.ok(internshipTermService.create(term));
+    }
+
+    // Cập nhật
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(@PathVariable String id,
+                                    @RequestBody InternshipTerm term) {
+        return ResponseEntity.ok(internshipTermService.update(id, term));
+    }
+
 }

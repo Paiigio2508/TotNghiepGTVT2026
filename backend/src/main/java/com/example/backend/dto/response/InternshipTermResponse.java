@@ -8,7 +8,7 @@ public interface InternshipTermResponse {
 
     String getName();
 
-    String getYear();          // academic_year as year
+    String getAcademicYear();          // academic_year as year
 
     String getDescription();
 
@@ -16,7 +16,10 @@ public interface InternshipTermResponse {
 
     LocalDate getEndDate();    // end_date as endDate
 
-    Integer getStatus();
-
+    String getStatus();
     LocalDateTime getCreatedAt();
+    String getStudentCode();
+    String getFullName();
+    String getClassName();
+    String getTeacherName();
 }

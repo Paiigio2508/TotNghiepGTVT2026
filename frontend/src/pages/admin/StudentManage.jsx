@@ -12,24 +12,34 @@ import {
   Row,
   Col,
   Tag,
+  Upload,
 } from "antd";
-import { SyncOutlined } from "@ant-design/icons";
-import { EditOutlined } from "@ant-design/icons";
-import { RetweetOutlined } from "@ant-design/icons";
+
+import {
+  SyncOutlined,
+  EditOutlined,
+  RetweetOutlined,
+  UploadOutlined,
+  CloseCircleOutlined,
+  CheckCircleOutlined,
+} from "@ant-design/icons";
+
 import { useState, useEffect } from "react";
 import { FaUserGraduate } from "react-icons/fa";
 import { StudentAPI } from "../../api/StudentAPI";
 import "./css/UserManage.css";
 import UpLoadImage from "../UpLoadImage";
 import { toast } from "react-toastify";
+
 export default function StudentManage() {
-  const [data, setData] = useState([]); // data hiển thị
-  const [dataGoc, setDataGoc] = useState([]); // data gốc
+  const [data, setData] = useState([]);
+  const [dataGoc, setDataGoc] = useState([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
   const [form] = Form.useForm();
   const [importFile, setImportFile] = useState(null);
+
   /* =========================
      LOAD DATA
   ========================= */
@@ -40,7 +50,6 @@ export default function StudentManage() {
       setDataGoc(res.data);
     } catch (err) {
       message.error("Tải danh sách sinh viên thất bại!");
-      console.error(err);
     }
   };
 
@@ -48,19 +57,23 @@ export default function StudentManage() {
     loadStudent();
   }, []);
 
-  //tìm kiếm
+  /* =========================
+     SEARCH
+  ========================= */
   const handleSearch = (keyword) => {
     if (!keyword || keyword.trim() === "") {
       setData(dataGoc);
       return;
     }
+
     const ketQua = dataGoc.filter(
       (item) =>
         item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.className?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase()),
+        item.phone?.toLowerCase().includes(keyword.toLowerCase())
     );
+
     setData(ketQua);
   };
 
@@ -111,13 +124,11 @@ export default function StudentManage() {
         res = await StudentAPI.createStudent(payload);
       }
 
-      // 🔥 Nếu backend trả success = false
       if (res.data?.success === false) {
         toast.error(res.data.message);
         return;
       }
 
-      // ✅ Thành công
       toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
       setOpen(false);
@@ -130,6 +141,9 @@ export default function StudentManage() {
     }
   };
 
+  /* =========================
+     IMPORT EXCEL
+  ========================= */
   const handleImport = async () => {
     if (!importFile) {
       toast.warning("Vui lòng chọn file!");
@@ -142,11 +156,13 @@ export default function StudentManage() {
     try {
       const res = await StudentAPI.importStudent(formData);
       toast.success(res.data);
+      setImportFile(null);
       loadStudent();
     } catch (err) {
       toast.error(err.response?.data?.message || "Import thất bại");
     }
   };
+
   /* =========================
      COLUMNS
   ========================= */
@@ -172,15 +188,12 @@ export default function StudentManage() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      render: (status) => (
-        <>
-          {status == 0 ? (
-            <Tag color="#00cc00">Hoạt động</Tag>
-          ) : (
-            <Tag color="red">Thôi học</Tag>
-          )}
-        </>
-      ),
+      render: (status) =>
+        status == "DU_DIEU_KIEN" ? (
+          <Tag color="#00cc00">Đủ điều kiện</Tag>
+        ) : (
+          <Tag color="red">Không đủ điều kiện</Tag>
+        ),
     },
     {
       title: "Hành động",
@@ -194,8 +207,20 @@ export default function StudentManage() {
             title="Đổi trạng thái sinh viên?"
             onConfirm={() => onDelete(record.id)}
           >
-            <Button icon={<SyncOutlined />} danger>
-              {record.status == 0 ? "Dừng học" : "Tiếp tục"}
+            <Button
+              icon={
+                record.status === "DU_DIEU_KIEN" ? (
+                  <CloseCircleOutlined />
+                ) : (
+                  <CheckCircleOutlined />
+                )
+              }
+              type={record.status === "DU_DIEU_KIEN" ? "default" : "primary"}
+              danger={record.status === "DU_DIEU_KIEN"}
+            >
+              {record.status === "DU_DIEU_KIEN"
+                ? "Không đủ điều kiện"
+                : "Đủ điều kiện"}
             </Button>
           </Popconfirm>
         </Space>
@@ -225,6 +250,7 @@ export default function StudentManage() {
                 maxLength={30}
                 placeholder="Mã / tên / SĐT..."
                 allowClear
+                className="w-100"
               />
             </Form.Item>
 
@@ -244,26 +270,24 @@ export default function StudentManage() {
         </Form>
       </div>
 
+      {/* IMPORT + ADD */}
       <Space className="float-end mt-4 mb-4">
-        {/* INPUT FILE ẨN */}
-        <input
-          type="file"
+        <Upload
           accept=".xlsx"
-          style={{ display: "none" }}
-          id="importFile"
-          onChange={(e) => setImportFile(e.target.files[0])}
-        />
-
-        {/* NÚT IMPORT */}
-        <Button onClick={() => document.getElementById("importFile").click()}>
-          Chọn file
-        </Button>
+          maxCount={1}
+          beforeUpload={(file) => {
+            setImportFile(file);
+            return false; // không upload tự động
+          }}
+          onRemove={() => setImportFile(null)}
+        >
+          <Button icon={<UploadOutlined />}>Chọn file Excel</Button>
+        </Upload>
 
         <Button type="primary" onClick={handleImport}>
           Import
         </Button>
 
-        {/* NÚT THÊM */}
         <Button
           type="primary"
           onClick={() => {
@@ -296,17 +320,10 @@ export default function StudentManage() {
         onCancel={() => setOpen(false)}
         footer={null}
         width={1000}
-        styles={{
-          body: {
-            maxHeight: "70vh",
-          },
-        }}
       >
         <Row gutter={24}>
-          {/* BÊN TRÁI - UPLOAD ẢNH */}
           <Col span={10} className="d-flex justify-content-center pt-5">
             <UpLoadImage
-              className="custom-upload"
               defaultImage={imageUrl}
               onFileUpload={(url) => {
                 setImageUrl(url);
@@ -315,19 +332,12 @@ export default function StudentManage() {
             />
           </Col>
 
-          {/* BÊN PHẢI - FORM */}
           <Col span={14}>
             <Form form={form} layout="vertical" onFinish={onSubmit}>
               <Form.Item
                 name="userCode"
                 label="Mã sinh viên"
-                rules={[
-                  { required: true, message: "Không được để trống!" },
-                  {
-                    pattern: /^[0-9]{7}$/,
-                    message: "Mã sinh viên phải gồm đúng 7 chữ số!",
-                  },
-                ]}
+                rules={[{ required: true }, { pattern: /^[0-9]{7}$/ }]}
               >
                 <Input />
               </Form.Item>
@@ -335,13 +345,7 @@ export default function StudentManage() {
               <Form.Item
                 name="name"
                 label="Họ tên"
-                rules={[
-                  { required: true, message: "Không được để trống!" },
-                  {
-                    pattern: /^[A-Za-zÀ-ỹ\s]{2,}$/,
-                    message: "Họ tên không được chứa số hoặc ký tự đặc biệt!",
-                  },
-                ]}
+                rules={[{ required: true }]}
               >
                 <Input />
               </Form.Item>
@@ -353,33 +357,23 @@ export default function StudentManage() {
               >
                 <Input />
               </Form.Item>
+
               <Form.Item
                 name="email"
                 label="Email"
-                rules={[
-                  { required: true, message: "Không được để trống!" },
-                  { type: "email", message: "Email không đúng định dạng!" },
-                ]}
-              >
-                <Input />
-              </Form.Item>
-              <Form.Item
-                name="phone"
-                label="SĐT"
-                rules={[
-                  {
-                    pattern: /^0[0-9]{9}$/,
-                    message: "SĐT phải gồm 10 số và bắt đầu bằng 0!",
-                  },
-                ]}
+                rules={[{ required: true }, { type: "email" }]}
               >
                 <Input />
               </Form.Item>
 
-              {/* Ẩn input urlImage vì đã dùng upload */}
+              <Form.Item name="phone" label="SĐT">
+                <Input />
+              </Form.Item>
+
               <Form.Item name="urlImage" hidden>
                 <Input />
               </Form.Item>
+
               <Button type="primary" htmlType="submit">
                 {editing ? "Cập nhật" : "Thêm"}
               </Button>

@@ -1,15 +1,12 @@
 import { request } from "./axios";
 export class TermAPI {
   static getAll = () => {
-    return request.get("/api/admin/term");
+    return request.get("/api/admin/internship-terms");
   };
-  static createTeacher = (data) => {
-    return request.post("/api/admin/teacher", data);
+  static create= (data) => {
+    return request.post("/api/admin/internship-terms", data);
   };
-  static updateTeacher = (id, data) => {
-    return request.put(`/api/admin/teacher/${id}`, data);
-  };
-  static deleteTeacher = (id) => {
-    return request.put(`/api/admin/teacher/updateTT/${id}`);
+  static update = (id, data) => {
+    return request.put(`/api/admin/internship-terms/${id}`, data);
   };
 }

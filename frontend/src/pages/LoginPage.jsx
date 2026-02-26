@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./LoginPage.css";
 import logo from "../assets/logo_login.png";
@@ -12,6 +12,21 @@ function LoginPage() {
 
   const navigate = useNavigate();
 
+  // 🔥 Nếu đã login rồi thì tự redirect
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem("userData"));
+
+    if (userData) {
+      const roleRoute = {
+        ADMIN: "/admin",
+        GIANGVIEN: "/teacher",
+        SINHVIEN: "/student",
+      };
+
+      navigate(roleRoute[userData.role] || "/login", { replace: true });
+    }
+  }, [navigate]);
+
 const handleLogin = async (e) => {
   e.preventDefault();
 
@@ -21,33 +36,33 @@ const handleLogin = async (e) => {
       password,
     });
 
-    const token = res.data;
+    const { accessToken, username: userName, role, avatar } = res.data;
 
-    // Decode JWT để lấy role
-    const payload = JSON.parse(atob(token.split(".")[1]));
-
-    // Lưu vào localStorage
     localStorage.setItem(
       "userData",
       JSON.stringify({
-        accessToken: token,
-        role: payload.role,
+        accessToken,
+        role,
+        username: userName,
+        avatar,
       })
     );
 
+    toast.success("Đăng nhập thành công!");
+
     const roleRoute = {
       ADMIN: "/admin",
-      SINHVIEN: "/student",
       GIANGVIEN: "/teacher",
+      SINHVIEN: "/student",
     };
-    toast.success("Đăng nhập thành công!");
-    navigate(roleRoute[payload.role] || "/login");
+console.log("ROLE:", role);
+console.log("FULL RESPONSE:", res.data);
+    navigate(roleRoute[role] || "/login", { replace: true });
   } catch (error) {
     console.error(error);
     alert("Sai tài khoản hoặc mật khẩu");
   }
 };
-
 
   return (
     <div className="login-wrapper">
@@ -57,7 +72,6 @@ const handleLogin = async (e) => {
         <form className="login-card" onSubmit={handleLogin}>
           <h2 className="text-center">ĐĂNG NHẬP</h2>
 
-          {/* USERNAME */}
           <div className="input-group">
             <span>👤</span>
             <input
@@ -69,7 +83,6 @@ const handleLogin = async (e) => {
             />
           </div>
 
-          {/* PASSWORD */}
           <div className="input-group">
             <span>🔑</span>
             <input

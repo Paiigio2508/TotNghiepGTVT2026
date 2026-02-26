@@ -64,7 +64,7 @@ export default function TeacherManage() {
   /* ================= DELETE ================= */
   const onDelete = async (id) => {
     try {
-      await TeacherAPI.deleteTeacher(id);
+      await TeacherAPI.updateTT(id);
       toast.success("Cập nhật giảng viên thành công!");
       loadTeacher();
     } catch {
@@ -157,12 +157,12 @@ const onSubmit = async () => {
       title: "Hành động",
       render: (_, record) => (
         <Space>
-          <Button onClick={() => onEdit(record)}>Sửa</Button>
+          <Button onClick={() => onEdit(record)}>Cập nhật</Button>
           <Popconfirm
             title="Xóa giảng viên?"
             onConfirm={() => onDelete(record.id)}
           >
-            <Button danger>Xóa</Button>
+            <Button danger>UpdateTT</Button>
           </Popconfirm>
         </Space>
       ),

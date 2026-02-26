@@ -1,11 +1,9 @@
 package com.example.backend.entity;
 
-import com.example.backend.entity.base.BaseEntity;
+import com.example.backend.util.status.StudentStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -24,4 +22,6 @@ public class Student {
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @Enumerated(EnumType.STRING)
+    private StudentStatus status;
 }

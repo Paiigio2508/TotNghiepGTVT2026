@@ -23,4 +23,5 @@ public class Teacher {
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+    private Integer status;
 }

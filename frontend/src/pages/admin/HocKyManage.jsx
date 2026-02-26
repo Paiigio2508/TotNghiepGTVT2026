@@ -5,18 +5,18 @@ import {
   Form,
   Input,
   Space,
-  Popconfirm,
   Divider,
   message,
   Tag,
 } from "antd";
+import { useNavigate } from "react-router-dom";
 import { RetweetOutlined, EditOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
 import { FaHome } from "react-icons/fa";
 import { TermAPI } from "../../api/TermAPI";
 import { DatePicker } from "antd";
 import dayjs from "dayjs";
-// import "./css/UserManage.css";
+import { toast } from "react-toastify";
 
 export default function HocKyManage() {
   const [data, setData] = useState([]);
@@ -24,13 +24,14 @@ export default function HocKyManage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form] = Form.useForm();
-
+  const navigate = useNavigate();
   /* ================= LOAD ================= */
   const loadHocKy = async () => {
     try {
       const res = await TermAPI.getAll();
       setData(res.data);
       setDataGoc(res.data);
+      // console.log(res.data);
     } catch (err) {
       message.error("Tải danh sách học kỳ thất bại!");
     }
@@ -50,7 +51,7 @@ export default function HocKyManage() {
     const result = dataGoc.filter(
       (item) =>
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.year?.toLowerCase().includes(keyword.toLowerCase())
+        item.academicYear?.toLowerCase().includes(keyword.toLowerCase())
     );
 
     setData(result);
@@ -70,7 +71,11 @@ export default function HocKyManage() {
   /* ================= EDIT ================= */
   const onEdit = (record) => {
     setEditing(record);
-    form.setFieldsValue(record);
+    form.setFieldsValue({
+      ...record,
+      startDate: dayjs(record.startDate),
+      endDate: dayjs(record.endDate),
+    });
     setOpen(true);
   };
 
@@ -84,21 +89,46 @@ export default function HocKyManage() {
         startDate: values.startDate.format("YYYY-MM-DD"),
         endDate: values.endDate.format("YYYY-MM-DD"),
       };
+
+      let res;
+
       if (editing) {
-        await TermAPI.update(editing.id, values);
-        message.success("Cập nhật thành công!");
+        res = await TermAPI.update(editing.id, payload);
       } else {
-        console.log(payload);
-        // await TermAPI.create(payload);
-        message.success("Thêm thành công!");
+        res = await TermAPI.create(payload);
       }
+
+      console.log("Response từ BE:", res.data);
+
+      // 👇 CHECK success ở đây
+      if (res.data.success === false) {
+        toast.error(res.data.message);
+        return; // DỪNG LUÔN, không hiện success
+      }
+
+      toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
       setOpen(false);
       form.resetFields();
       setEditing(null);
       loadHocKy();
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi hệ thống:", err);
+      toast.error("Không kết nối được server!");
+    }
+  };
+
+  /* ================= STATUS ================= */
+  const renderStatus = (status) => {
+    switch (status) {
+      case "SAP_DIEN_RA":
+        return <Tag color="blue">Sắp diễn ra</Tag>;
+      case "DANG_DIEN_RA":
+        return <Tag color="green">Đang diễn ra</Tag>;
+      case "KET_THUC":
+        return <Tag color="red">Kết thúc</Tag>;
+      default:
+        return <Tag>Không xác định</Tag>;
     }
   };
 
@@ -108,10 +138,9 @@ export default function HocKyManage() {
       title: "Tên học kỳ",
       dataIndex: "name",
     },
-
     {
       title: "Năm học",
-      dataIndex: "year",
+      dataIndex: "academicYear",
     },
     {
       title: "Mô tả",
@@ -128,24 +157,35 @@ export default function HocKyManage() {
     {
       title: "Trạng thái",
       dataIndex: "status",
-      render: (status) =>
-        status === 0 ? (
-          <Tag color="green">Đang hoạt động</Tag>
-        ) : (
-          <Tag color="red">Đã khóa</Tag>
-        ),
+      render: renderStatus,
     },
     {
       title: "Hành động",
+      width: 150,
       render: (_, record) => (
         <Space>
-          <Button icon={<EditOutlined />} onClick={() => onEdit(record)}>
-            Sửa
+          <Button
+            danger
+            size="small"
+            onClick={() =>
+              navigate(`/admin/assignments/${record.id}`, {
+                state: { term: record },
+              })
+            }
+          >
+            Phân công
           </Button>
 
-          <Popconfirm title="Xóa học kỳ?" onConfirm={() => onDelete(record.id)}>
-            <Button danger>Xóa</Button>
-          </Popconfirm>
+          <Button
+            icon={<EditOutlined />}
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(record);
+            }}
+          >
+            Sửa
+          </Button>
         </Space>
       ),
     },
@@ -227,27 +267,27 @@ export default function HocKyManage() {
             label="Tên học kỳ"
             rules={[{ required: true, message: "Không được để trống!" }]}
           >
-            <Input placeholder="Ví dụ: Học kỳ 1" />
+            <Input />
           </Form.Item>
 
           <Form.Item
-            name="year"
+            name="academicYear"
             label="Năm học"
             rules={[
-              { required: true, message: "Không được để trống!" },
+              { required: true },
               {
                 pattern: /^[0-9]{4}-[0-9]{4}$/,
                 message: "Định dạng năm phải dạng 2024-2025",
               },
             ]}
           >
-            <Input placeholder="Ví dụ: 2024-2025" />
+            <Input />
           </Form.Item>
 
           <Form.Item
             name="startDate"
             label="Ngày bắt đầu"
-            rules={[{ required: true, message: "Chọn ngày bắt đầu!" }]}
+            rules={[{ required: true }]}
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
@@ -257,7 +297,7 @@ export default function HocKyManage() {
             label="Ngày kết thúc"
             dependencies={["startDate"]}
             rules={[
-              { required: true, message: "Chọn ngày kết thúc!" },
+              { required: true },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   const start = getFieldValue("startDate");
@@ -275,7 +315,7 @@ export default function HocKyManage() {
           </Form.Item>
 
           <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} placeholder="Nhập mô tả học kỳ..." />
+            <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>

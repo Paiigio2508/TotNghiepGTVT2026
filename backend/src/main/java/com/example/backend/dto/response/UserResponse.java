@@ -18,5 +18,5 @@ public interface UserResponse {
 
     String getUrlImage();
     String getCreatedAt();
-    Integer getStatus();
+    String getStatus();
 }
