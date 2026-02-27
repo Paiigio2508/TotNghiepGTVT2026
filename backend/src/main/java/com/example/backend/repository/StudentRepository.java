@@ -17,7 +17,7 @@ public interface StudentRepository extends JpaRepository<Student, String> {
              url_image as urlImage ,created_at as createdAt ,s.status  from users u join students s on u.id =s.user_id order by  createdAt
             """, nativeQuery = true)
     List<UserResponse> getALLSTUDENT();
-
+    Optional<Student> findByUser_Id(String userId);
     boolean existsByStudentCode(String studentCode);
 
     Optional<Student> findByStudentCode(String studentCode);

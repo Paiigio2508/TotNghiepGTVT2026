@@ -31,7 +31,7 @@ export default function HocKyManage() {
       const res = await TermAPI.getAll();
       setData(res.data);
       setDataGoc(res.data);
-      // console.log(res.data);
+
     } catch (err) {
       message.error("Tải danh sách học kỳ thất bại!");
     }
@@ -57,17 +57,6 @@ export default function HocKyManage() {
     setData(result);
   };
 
-  /* ================= DELETE ================= */
-  const onDelete = async (id) => {
-    try {
-      await TermAPI.delete(id);
-      message.success("Xóa thành công!");
-      loadHocKy();
-    } catch (err) {
-      message.error("Xóa thất bại!");
-    }
-  };
-
   /* ================= EDIT ================= */
   const onEdit = (record) => {
     setEditing(record);
@@ -75,6 +64,9 @@ export default function HocKyManage() {
       ...record,
       startDate: dayjs(record.startDate),
       endDate: dayjs(record.endDate),
+      registrationDeadline: record.registrationDeadline
+        ? dayjs(record.registrationDeadline)
+        : null,
     });
     setOpen(true);
   };
@@ -88,6 +80,7 @@ export default function HocKyManage() {
         ...values,
         startDate: values.startDate.format("YYYY-MM-DD"),
         endDate: values.endDate.format("YYYY-MM-DD"),
+        registrationDeadline: values.registrationDeadline.format("YYYY-MM-DD"),
       };
 
       let res;
@@ -97,8 +90,6 @@ export default function HocKyManage() {
       } else {
         res = await TermAPI.create(payload);
       }
-
-      console.log("Response từ BE:", res.data);
 
       // 👇 CHECK success ở đây
       if (res.data.success === false) {
@@ -141,6 +132,10 @@ export default function HocKyManage() {
     {
       title: "Năm học",
       dataIndex: "academicYear",
+    },
+    {
+      title: "Hạn đăng ký đề tài",
+      dataIndex: "registrationDeadline",
     },
     {
       title: "Mô tả",
@@ -260,6 +255,7 @@ export default function HocKyManage() {
         title={editing ? "Sửa học kỳ" : "Thêm học kỳ"}
         onCancel={() => setOpen(false)}
         onOk={onSubmit}
+        centered
       >
         <Form form={form} layout="vertical">
           <Form.Item
@@ -313,7 +309,39 @@ export default function HocKyManage() {
           >
             <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
           </Form.Item>
+          <Form.Item
+            name="registrationDeadline"
+            label="Hạn đăng ký đề tài"
+            rules={[
+              { required: true, message: "Vui lòng chọn hạn đăng ký!" },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  const start = getFieldValue("startDate");
+                  const end = getFieldValue("endDate");
 
+                  if (!value || !start || !end) {
+                    return Promise.resolve();
+                  }
+
+                  if (value.isBefore(start)) {
+                    return Promise.reject(
+                      new Error("Hạn đăng ký phải sau ngày bắt đầu!")
+                    );
+                  }
+
+                  if (value.isAfter(end)) {
+                    return Promise.reject(
+                      new Error("Hạn đăng ký phải trước ngày kết thúc!")
+                    );
+                  }
+
+                  return Promise.resolve();
+                },
+              }),
+            ]}
+          >
+            <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+          </Form.Item>
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea rows={3} />
           </Form.Item>

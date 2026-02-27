@@ -13,8 +13,8 @@ import java.util.Optional;
 @Repository
 public interface InternshipTermRepository extends JpaRepository<InternshipTerm, String> {
     @Query(value = """
-          SELECT id,name,academic_year as academicYear, description,start_date as startDate, end_date as endDate ,
-           status,created_at as createdAt FROM internship_terms order by createdAt;
+         SELECT id,name,academic_year as academicYear, description,start_date as startDate, end_date as endDate,
+        registration_deadline as registrationDeadline ,status,created_at as createdAt FROM internship_terms order by createdAt desc;
             """, nativeQuery = true)
     List<InternshipTermResponse> getALL();
     Optional<InternshipTerm> findByNameAndAcademicYear(String name, String academicYear);

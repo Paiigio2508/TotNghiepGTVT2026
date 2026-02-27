@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.response.InternshipStudentView;
 import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.StudentProjection;
 import com.example.backend.dto.response.TeacherProjection;
@@ -105,5 +106,10 @@ public class AdvisorAssignmentService {
             // tăng số lượng của giảng viên đó lên
             counts.set(minIndex, counts.get(minIndex) + 1);
         }
+    }
+
+    //student layout
+    public List<InternshipStudentView> findInternshipInfoByStudentId(String studentId) {
+        return advisorAssignmentRepository.findInternshipInfoByStudentId(studentId);
     }
 }

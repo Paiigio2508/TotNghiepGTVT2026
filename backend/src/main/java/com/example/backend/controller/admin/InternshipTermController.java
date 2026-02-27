@@ -1,4 +1,4 @@
-package com.example.backend.controller;
+package com.example.backend.controller.admin;
 
 import com.example.backend.entity.InternshipTerm;
 import com.example.backend.service.InternshipTermService;
@@ -14,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 public class InternshipTermController {
     @Autowired
     InternshipTermService internshipTermService;
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<?> getALL() {
         return ResponseEntity.ok(internshipTermService.getALL());
     }
 
     // Thêm mới
-    @PostMapping
+    @PostMapping()
     public ResponseEntity<?> create(@RequestBody InternshipTerm term) {
         return ResponseEntity.ok(internshipTermService.create(term));
     }

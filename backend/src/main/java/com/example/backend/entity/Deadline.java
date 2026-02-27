@@ -1,10 +1,7 @@
 package com.example.backend.entity;
 
 import com.example.backend.entity.base.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -15,7 +12,7 @@ public class Deadline extends BaseEntity {
     private Integer weekNo;
     private LocalDateTime dueDate;
 
-    @ManyToOne
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    @OneToOne
+    @JoinColumn(name = "advisor_assignment_id")
+    private AdvisorAssignment advisorAssignment;
 }

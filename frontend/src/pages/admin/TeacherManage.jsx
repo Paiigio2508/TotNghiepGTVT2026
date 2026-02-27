@@ -255,6 +255,7 @@ export default function TeacherManage() {
         onCancel={() => setOpen(false)}
         onOk={onSubmit}
         width={1000}
+        centered
       >
         <Row gutter={24}>
           {/* Upload ảnh */}

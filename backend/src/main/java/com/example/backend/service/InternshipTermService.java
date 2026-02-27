@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -23,12 +24,21 @@ public class InternshipTermService {
     // thêm mới
     public InternshipTerm create(InternshipTerm term) {
 
-        // 1. Kiểm tra ngày hợp lệ
+        // 1. Kiểm tra ngày bắt đầu - kết thúc
         if (term.getStartDate().isAfter(term.getEndDate())) {
             throw new AppException("Ngày bắt đầu phải trước ngày kết thúc");
         }
 
-        // 2. Kiểm tra trùng học kỳ trong cùng năm học
+        // 2. Kiểm tra hạn đăng ký nằm trong khoảng thời gian học kỳ
+        if (term.getRegistrationDeadline().isBefore(term.getStartDate())) {
+            throw new AppException("Hạn đăng ký phải sau ngày bắt đầu");
+        }
+
+        if (term.getRegistrationDeadline().isAfter(term.getEndDate())) {
+            throw new AppException("Hạn đăng ký phải trước ngày kết thúc");
+        }
+
+        // 3. Kiểm tra trùng học kỳ
         if (internshipTermRepository
                 .findByNameAndAcademicYear(term.getName(), term.getAcademicYear())
                 .isPresent()) {
@@ -36,15 +46,13 @@ public class InternshipTermService {
             throw new AppException("Học kỳ đã tồn tại trong năm học này!");
         }
 
-        // 3. Tự động tính status theo ngày hiện tại
+        // 4. Tính status
         LocalDate today = LocalDate.now();
 
         if (today.isBefore(term.getStartDate())) {
             term.setStatus(TermStatus.SAP_DIEN_RA);
-
         } else if (!today.isAfter(term.getEndDate())) {
             term.setStatus(TermStatus.DANG_DIEN_RA);
-
         } else {
             term.setStatus(TermStatus.KET_THUC);
         }
@@ -60,7 +68,13 @@ public class InternshipTermService {
         if (newTerm.getStartDate().isAfter(newTerm.getEndDate())) {
             throw new AppException("Ngày bắt đầu phải trước ngày kết thúc");
         }
+        if (newTerm.getRegistrationDeadline().isBefore(newTerm.getStartDate())) {
+            throw new AppException("Hạn đăng ký phải sau ngày bắt đầu");
+        }
 
+        if (newTerm.getRegistrationDeadline().isAfter(newTerm.getEndDate())) {
+            throw new AppException("Hạn đăng ký phải trước ngày kết thúc");
+        }
         internshipTermRepository
                 .findByNameAndAcademicYear(newTerm.getName(), newTerm.getAcademicYear())
                 .ifPresent(existing -> {
@@ -72,8 +86,10 @@ public class InternshipTermService {
         term.setName(newTerm.getName());
         term.setStartDate(newTerm.getStartDate());
         term.setEndDate(newTerm.getEndDate());
+        term.setRegistrationDeadline(newTerm.getRegistrationDeadline());
         term.setAcademicYear(newTerm.getAcademicYear());
         term.setDescription(newTerm.getDescription());
+        term.setUpdatedAt(LocalDateTime.now());
 
         return internshipTermRepository.save(term);
     }

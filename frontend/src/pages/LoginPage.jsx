@@ -56,8 +56,6 @@ const handleLogin = async (e) => {
       GIANGVIEN: "/teacher",
       SINHVIEN: "/student",
     };
-console.log("ROLE:", role);
-console.log("FULL RESPONSE:", res.data);
     navigate(roleRoute[role] || "/login", { replace: true });
   } catch (error) {
     console.error(error);

@@ -9,7 +9,7 @@ public interface InternshipTermResponse {
     String getName();
 
     String getAcademicYear();          // academic_year as year
-
+    String getRegistrationDeadline();
     String getDescription();
 
     LocalDate getStartDate();  // start_date as startDate

@@ -21,7 +21,6 @@ export default function PhanCongManage() {
     try {
       const res = await AssignmentsAPI.getAllsvDuDK(termId);
       setStudentData(res.data);
-      console.log(res.data);
     } catch (err) {
       message.error("Tải danh sách giảng viên thất bại!");
     }
@@ -30,7 +29,6 @@ export default function PhanCongManage() {
     try {
       const res = await AssignmentsAPI.getAllGV(termId);
       setTeacherData(res.data);
-      console.log(res.data);
     } catch (err) {
       message.error("Tải danh sách giảng viên thất bại!");
     }

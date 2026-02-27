@@ -1,4 +1,4 @@
-package com.example.backend.controller;
+package com.example.backend.controller.admin;
 
 import com.example.backend.dto.request.UserRequest;
 import com.example.backend.service.TeacherService;

@@ -14,10 +14,5 @@ public class FinalReport extends BaseEntity {
     private String comment;
 
     @ManyToOne
-    @JoinColumn(name = "student_id")
-    private Student student;
-
-    @ManyToOne
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    private AdvisorAssignment advisorAssignment;
 }

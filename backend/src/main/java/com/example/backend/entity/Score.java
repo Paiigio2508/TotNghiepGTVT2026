@@ -14,10 +14,6 @@ public class Score extends BaseEntity {
     private String note;
 
     @OneToOne
-    @JoinColumn(name = "student_id")
-    private Student student;
-
-    @ManyToOne
-    @JoinColumn(name = "topic_id")
-    private Topic topic;
+    @JoinColumn(name = "advisor_assignment_id")
+    private AdvisorAssignment advisorAssignment;
 }

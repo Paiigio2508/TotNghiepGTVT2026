@@ -331,6 +331,7 @@ export default function StudentManage() {
         onCancel={() => setOpen(false)}
         footer={null}
         width={1000}
+        centered
       >
         <Row gutter={24}>
           <Col span={10} className="d-flex justify-content-center pt-5">
@@ -388,7 +389,7 @@ export default function StudentManage() {
                 <Input />
               </Form.Item>
 
-               <Form.Item
+              <Form.Item
                 name="phone"
                 label="SĐT"
                 rules={[

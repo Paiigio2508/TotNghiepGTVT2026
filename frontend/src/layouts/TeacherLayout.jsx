@@ -7,7 +7,7 @@ import {
 import { FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-
+import { IoIosListBox } from "react-icons/io";
 const { Header, Sider, Content } = Layout;
 
 export default function TeacherLayout() {
@@ -123,5 +123,10 @@ const teacherMenu = [
     key: "/teacher/students",
     icon: <FaUserGraduate />,
     label: "Sinh viên hướng dẫn",
+  },
+  {
+    key: "/teacher/topics",
+    icon: <IoIosListBox />,
+    label: "Danh sách đề tài",
   },
 ];

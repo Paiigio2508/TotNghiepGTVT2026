@@ -13,6 +13,8 @@ export class AssignmentsAPI {
     return request.get(`/api/admin/assignments/assigned/${id}`);
   };
   static getStudentsByTerm = (teacherId, termId) => {
-  return request.get(`/api/teacher/assignments/students/${teacherId}/${termId}`);
-};
+    return request.get(
+      `/api/teacher/assignments/students/${teacherId}/${termId}`
+    );
+  };
 }
