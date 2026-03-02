@@ -30,8 +30,8 @@ public class AdvisorAssignment extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "term_id", nullable = false)
     private InternshipTerm term;
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "topic_id")
+    @OneToOne
+    @JoinColumn(name = "topic_id", unique = true)
     private Topic topic;
     @Column(nullable = false)
     private LocalDate assignedDate;

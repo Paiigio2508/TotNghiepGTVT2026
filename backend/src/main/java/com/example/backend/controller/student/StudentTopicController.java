@@ -4,6 +4,7 @@ import com.example.backend.dto.request.TopicRequest;
 import com.example.backend.entity.Topic;
 import com.example.backend.service.TopicService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,8 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
 public class StudentTopicController {
-
-    private final TopicService topicService;
+    @Autowired
+   TopicService topicService;
 
     // Lấy danh sách đề tài của chính mình
     @GetMapping("/topic/{userId}")

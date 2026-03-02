@@ -35,4 +35,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, String> {
                  GROUP BY t.id, t.full_name
             """, nativeQuery = true)
     List<TeacherProjection> findTeachersForAssignment(@PathVariable String term_id);
+    @Query(value = """
+        SELECT * FROM teachers t
+        WHERE t.user_id = :userId
+    """, nativeQuery = true)
+    Optional<Teacher> findByUserId(@Param("userId") String userId);
 }

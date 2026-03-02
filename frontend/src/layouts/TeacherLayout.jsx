@@ -129,4 +129,9 @@ const teacherMenu = [
     icon: <IoIosListBox />,
     label: "Danh sách đề tài",
   },
+  {
+    key: "/teacher/deadlines",
+    icon: <IoIosListBox />,
+    label: "Danh sách deadlines",
+  },
 ];

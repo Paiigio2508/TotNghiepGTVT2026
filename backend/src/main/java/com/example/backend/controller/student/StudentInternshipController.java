@@ -2,6 +2,7 @@ package com.example.backend.controller.student;
 
 import com.example.backend.service.AdvisorAssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,7 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
 public class StudentInternshipController {
-    private final AdvisorAssignmentService service;
+    @Autowired
+   AdvisorAssignmentService service;
 
     @GetMapping("/{studentId}")
     public ResponseEntity<?> getInternship(@PathVariable String studentId) {

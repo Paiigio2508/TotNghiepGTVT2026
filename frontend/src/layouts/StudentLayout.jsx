@@ -124,4 +124,9 @@ const teacherMenu = [
     icon: <FaUserGraduate />,
     label: "Đăng ký đề tài",
   },
+  {
+    key: "/student/deadlines",
+    icon: <FaUserGraduate />,
+    label: "Deadlines",
+  },
 ];

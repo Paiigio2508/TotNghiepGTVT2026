@@ -23,6 +23,9 @@ import StudentLayout from "./layouts/StudentLayout";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import TopicManage from "./pages/teacher/TopicManage";
 import TopicRegister from "./pages/student/TopicRegister";
+import DeadlineManage from "./pages/teacher/DeadLineMange";
+import StudentDeadlineList from "./pages/student/StudentDeadlineList";
+import StudentDeadlineDetail from "./pages/student/StudentDeadlineDetail";
 
 export default function App() {
   return (
@@ -54,12 +57,18 @@ export default function App() {
             <Route path="/teacher" element={<TeacherLayout />}>
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
+              <Route path="deadlines" element={<DeadlineManage />} />
             </Route>
           </Route>
           <Route element={<RequireRole roles={["SINHVIEN"]} />}>
             <Route path="/student" element={<StudentLayout />}>
               <Route index element={<StudentDashboard />} />
               <Route path="topic" element={<TopicRegister />} />
+              <Route path="deadlines" element={<StudentDeadlineList />} />
+              <Route
+                path="deadlines/:deadlineId"
+                element={<StudentDeadlineDetail />}
+              />
             </Route>
           </Route>
           {/* 404 */}
