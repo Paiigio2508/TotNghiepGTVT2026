@@ -18,4 +18,6 @@ public interface InternshipTermRepository extends JpaRepository<InternshipTerm, 
             """, nativeQuery = true)
     List<InternshipTermResponse> getALL();
     Optional<InternshipTerm> findByNameAndAcademicYear(String name, String academicYear);
+
+
 }

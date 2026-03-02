@@ -8,12 +8,12 @@ import jakarta.persistence.*;
 @Table(name = "scores")
 public class Score extends BaseEntity {
 
-    private Float score;
+    private Double score;
 
     @Column(columnDefinition = "TEXT")
     private String note;
 
     @OneToOne
-    @JoinColumn(name = "advisor_assignment_id")
+    @JoinColumn(name = "advisor_assignment_id", unique = true)
     private AdvisorAssignment advisorAssignment;
 }

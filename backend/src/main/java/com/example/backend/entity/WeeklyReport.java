@@ -1,5 +1,6 @@
 package com.example.backend.entity;
 import com.example.backend.entity.base.BaseEntity;
+import com.example.backend.util.status.WeeklyReportStatus;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -12,11 +13,16 @@ public class WeeklyReport extends BaseEntity {
     @Column( length = 1000)
     private String filePath;
     private LocalDateTime submitDate;
-    private String status; // SUBMITTED, LATE
+
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 
     @ManyToOne
     private AdvisorAssignment advisorAssignment;
+    @ManyToOne
+    @JoinColumn(name = "deadline_id")
+    private Deadline deadline;
+    @Enumerated(EnumType.STRING)
+    private WeeklyReportStatus status; // SUBMITTED, LATE
 }

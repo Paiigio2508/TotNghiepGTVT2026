@@ -121,4 +121,9 @@ const menuItems = [
     icon: <FaHome />,
     label: "Học kỳ thực tập",
   },
+  {
+    key: "/admin/topic",
+    icon: <FaHome />,
+    label: "Danh sách đề tài",
+  },
 ];

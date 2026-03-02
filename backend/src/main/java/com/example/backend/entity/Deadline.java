@@ -10,9 +10,19 @@ import java.time.LocalDateTime;
 public class Deadline extends BaseEntity {
 
     private Integer weekNo;
+
+    private String title;
+
+    @Column(length = 500)
+    private String description;
+
     private LocalDateTime dueDate;
 
-    @OneToOne
-    @JoinColumn(name = "advisor_assignment_id")
-    private AdvisorAssignment advisorAssignment;
+    @ManyToOne
+    @JoinColumn(name = "internship_term_id")
+    private InternshipTerm internshipTerm;
+
+    @ManyToOne
+    @JoinColumn(name = "teacher_id")
+    private Teacher teacher;
 }

@@ -38,7 +38,7 @@ export default function StudentDashboard() {
 
         // Nếu backend trả array → lấy phần tử đầu
         const result = Array.isArray(res.data) ? res.data[0] : res.data;
-
+        console.log(result);
         setData(result || null);
       } catch (err) {
         message.error("Tải dữ liệu thất bại!");
@@ -187,21 +187,38 @@ return (
       </Col>
 
       {/* TRẠNG THÁI ĐỀ TÀI - FULL */}
+      {/* TRẠNG THÁI ĐỀ TÀI - FULL */}
       <Col span={24}>
         <Card
           title="📚 Trạng thái đề tài"
           hoverable
           className="shadow-md rounded-xl text-center"
         >
-          <Title level={4}>Bạn chưa đăng ký đề tài</Title>
+          {!data?.topicName ? (
+            <>
+              <Title level={4}>Bạn chưa đăng ký đề tài</Title>
 
-          <Text type="secondary">Vui lòng đăng ký đề tài trước hạn.</Text>
+              <Text type="secondary">Vui lòng đăng ký đề tài trước hạn.</Text>
 
-          <div className="mt-4">
-            <Button type="primary" size="large">
-              Đăng ký đề tài
-            </Button>
-          </div>
+              <div className="mt-4">
+                <Button
+                  type="primary"
+                  size="large"
+                  href="http://localhost:5173/student/topic"
+                >
+                  Đăng ký đề tài
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <Title level={4}>{data.topicName}</Title>
+
+              <Text type="secondary">
+                {data.topicDescription || "Không có mô tả"}
+              </Text>
+            </>
+          )}
         </Card>
       </Col>
     </Row>

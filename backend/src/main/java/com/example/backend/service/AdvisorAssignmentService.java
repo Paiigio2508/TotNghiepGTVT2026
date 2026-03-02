@@ -4,10 +4,7 @@ import com.example.backend.dto.response.InternshipStudentView;
 import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.StudentProjection;
 import com.example.backend.dto.response.TeacherProjection;
-import com.example.backend.entity.AdvisorAssignment;
-import com.example.backend.entity.InternshipTerm;
-import com.example.backend.entity.Student;
-import com.example.backend.entity.Teacher;
+import com.example.backend.entity.*;
 import com.example.backend.repository.AdvisorAssignmentRepository;
 import com.example.backend.repository.InternshipTermRepository;
 import com.example.backend.repository.StudentRepository;
@@ -111,5 +108,17 @@ public class AdvisorAssignmentService {
     //student layout
     public List<InternshipStudentView> findInternshipInfoByStudentId(String studentId) {
         return advisorAssignmentRepository.findInternshipInfoByStudentId(studentId);
+    }
+    @Transactional
+    public void assignTopic(String studentId, String termId, Topic topic) {
+
+        AdvisorAssignment assignment =
+                advisorAssignmentRepository
+                        .findByStudentIdAndTermId(studentId, termId)
+                        .orElseThrow(() ->
+                                new RuntimeException("Không tìm thấy phân công")
+                        );
+
+        assignment.setTopic(topic);
     }
 }

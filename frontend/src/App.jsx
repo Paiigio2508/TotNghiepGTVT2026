@@ -11,7 +11,7 @@ import StudentManage from "./pages/admin/StudentManage";
 import TeacherManage from "./pages/admin/TeacherManage";
 import HocKyManage from "./pages/admin/HocKyManage";
 import PhanCongManage from "./pages/admin/PhanCongManage";
-
+import TopicManageAdmin from "./pages/admin/TopicManage";
 //layout giảng viên
 import TeacherLayout from "./layouts/TeacherLayout";
 import StudentList from "./pages/teacher/StudentList";
@@ -45,6 +45,7 @@ export default function App() {
               <Route path="teachers" element={<TeacherManage />} />
               <Route path="hoc-ky" element={<HocKyManage />} />
               <Route path="assignments/:termId" element={<PhanCongManage />} />
+              <Route path="topic" element={<TopicManageAdmin />} />
             </Route>
           </Route>
 

@@ -1,128 +1,171 @@
 import {
   Table,
-  Button,
-  Modal,
-  Form,
   Input,
-  Space,
-  Popconfirm,
   Divider,
-  Row,
-  Col,
-  InputNumber,
+  Space,
+  Select,
   message,
+  Button,
+  Tag,
 } from "antd";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaBook } from "react-icons/fa";
+import { TermAPI } from "../../api/TermAPI";
+import { TopicAPI } from "../../api/TopicAPI";
+import { toast } from "react-toastify";
 
-const { TextArea } = Input;
+const { Option } = Select;
 
 export default function TopicManage() {
   const [data, setData] = useState([]);
-  const [dataGoc, setDataGoc] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [form] = Form.useForm();
+  const [terms, setTerms] = useState([]);
+  const [selectedTerm, setSelectedTerm] = useState(null);
+  const [teacherId, setTeacherId] = useState(null);
+  const [statusFilter, setStatusFilter] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
-  // 🔥 Giảng viên local (fix cứng)
-  const teacherLocal = {
-    id: 1,
-    name: "Nguyễn Văn A",
+  /* ================= LẤY USER ================= */
+  useEffect(() => {
+    const userData = localStorage.getItem("userData");
+    if (userData) {
+      const parsed = JSON.parse(userData);
+      setTeacherId(parsed.userId);
+    }
+  }, []);
+
+  /* ================= LOAD TERM ================= */
+  useEffect(() => {
+    loadInternShipTerm();
+  }, []);
+
+  const loadInternShipTerm = async () => {
+    try {
+      const res = await TermAPI.getAllTermForTeacherLayout();
+      setTerms(res.data);
+      if (res.data.length > 0) {
+        setSelectedTerm(res.data[0].id);
+      }
+    } catch {
+      message.error("Tải danh sách học kỳ thất bại!");
+    }
   };
 
-  /* ================= SEARCH ================= */
-  const handleSearch = (keyword) => {
-    if (!keyword || keyword.trim() === "") {
-      setData(dataGoc);
+  /* ================= LOAD TOPIC ================= */
+  const loadTopics = async (teacherId, termId) => {
+    try {
+      const res = await TopicAPI.findTopicsByTeacherAndTerm(teacherId, termId);
+      setData(res.data || []);
+    } catch {
+      message.error("Tải danh sách đề tài thất bại!");
+      setData([]);
+    }
+  };
+
+  useEffect(() => {
+    if (teacherId && selectedTerm) {
+      loadTopics(teacherId, selectedTerm);
+    }
+  }, [teacherId, selectedTerm]);
+
+  const handleTermChange = async (value) => {
+    setSelectedTerm(value);
+    if (!value || !teacherId) {
+      setData([]);
       return;
     }
-
-    const result = dataGoc.filter(
-      (item) =>
-        item.title?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.description?.toLowerCase().includes(keyword.toLowerCase())
-    );
-
-    setData(result);
+    await loadTopics(teacherId, value);
   };
 
-  /* ================= SUBMIT ================= */
-  const onSubmit = async () => {
+  /* ================= APPROVE / REJECT ================= */
+  const handleApprove = async (record) => {
     try {
-      const values = await form.validateFields();
-
-      const payload = {
-        id: editing ? editing.id : Date.now(),
-        title: values.title,
-        description: values.description,
-        maxStudents: values.maxStudents,
-
-        // truyền thẳng giảng viên local
-        teacher: {
-          id: teacherLocal.id,
-          name: teacherLocal.name,
-        },
-      };
-
-      if (editing) {
-        const updated = data.map((item) =>
-          item.id === editing.id ? payload : item
-        );
-        setData(updated);
-        setDataGoc(updated);
-        message.success("Cập nhật thành công!");
-      } else {
-        const newData = [...data, payload];
-        setData(newData);
-        setDataGoc(newData);
-        message.success("Thêm thành công!");
-      }
-
-      setOpen(false);
-      form.resetFields();
-      setEditing(null);
-    } catch (err) {
-      message.error("Vui lòng kiểm tra lại dữ liệu!");
+      await TopicAPI.approveTopic(record.id);
+      toast.success("Đã chấp nhận đề tài!");
+      loadTopics(teacherId, selectedTerm);
+    } catch {
+      toast.error("Lỗi khi chấp nhận!");
     }
   };
 
-  /* ================= DELETE ================= */
-  const onDelete = (id) => {
-    const newData = data.filter((item) => item.id !== id);
-    setData(newData);
-    setDataGoc(newData);
-    message.success("Xóa thành công!");
+  const handleReject = async (record) => {
+    try {
+      await TopicAPI.rejectTopic(record.id);
+      toast.success("Đã từ chối đề tài!");
+      loadTopics(teacherId, selectedTerm);
+    } catch {
+      toast.error("Từ chối thất bại!");
+    }
   };
 
-  /* ================= EDIT ================= */
-  const onEdit = (record) => {
-    setEditing(record);
-    form.setFieldsValue(record);
-    setOpen(true);
+  /* ================= FILTER + SEARCH ================= */
+  const filteredData = data.filter((item) => {
+    const matchStatus = statusFilter ? item.status === statusFilter : true;
+
+    const lowerKeyword = searchKeyword.toLowerCase();
+
+    const matchSearch = searchKeyword
+      ? item.studentCode?.toLowerCase().includes(lowerKeyword) ||
+        item.fullName?.toLowerCase().includes(lowerKeyword) ||
+        item.title?.toLowerCase().includes(lowerKeyword)
+      : true;
+
+    return matchStatus && matchSearch;
+  });
+
+  /* ================= STATUS TAG ================= */
+  const renderStatusTag = (status) => {
+    const statusMap = {
+      PENDING: { text: "Chờ duyệt", color: "gold" },
+      APPROVED_BY_TEACHER: { text: "GV đã duyệt", color: "blue" },
+      REJECTED_BY_TEACHER: { text: "GV đã từ chối", color: "red" },
+      APPROVED_BY_ADMIN: { text: "Admin đã duyệt", color: "green" },
+      CANCELLED_BY_STUDENT: { text: "SV đã hủy", color: "default" },
+    };
+
+    const current = statusMap[status] || {
+      text: status,
+      color: "default",
+    };
+
+    return <Tag color={current.color}>{current.text}</Tag>;
   };
 
   /* ================= COLUMNS ================= */
   const columns = [
+    { title: "Mã SV", dataIndex: "studentCode" },
+    { title: "Tên sinh viên", dataIndex: "fullName" },
     { title: "Tên đề tài", dataIndex: "title" },
     { title: "Mô tả", dataIndex: "description" },
-    { title: "Số SV tối đa", dataIndex: "maxStudents" },
     {
-      title: "Giảng viên",
-      render: (_, record) => record.teacher?.name,
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (status) => renderStatusTag(status),
     },
     {
       title: "Hành động",
-      render: (_, record) => (
-        <Space>
-          <Button onClick={() => onEdit(record)}>Sửa</Button>
-          <Popconfirm
-            title="Bạn có chắc muốn xóa?"
-            onConfirm={() => onDelete(record.id)}
-          >
-            <Button danger>Xóa</Button>
-          </Popconfirm>
-        </Space>
-      ),
+      render: (_, record) => {
+        const isLocked = record.status === "APPROVED_BY_ADMIN";
+
+        return (
+          <Space>
+            <Button
+              type="primary"
+              disabled={isLocked}
+              onClick={() => handleApprove(record)}
+            >
+              Chấp nhận
+            </Button>
+
+            <Button
+              danger
+              disabled={isLocked}
+              onClick={() => handleReject(record)}
+            >
+              Từ chối
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -130,105 +173,50 @@ export default function TopicManage() {
     <>
       <Divider>
         <h2 className="fw-bold">
-          <FaBook /> Quản lý đề tài
+          <FaBook /> Danh sách đề tài sinh viên
         </h2>
       </Divider>
 
-      {/* SEARCH */}
-      <div className="form-header">
-        <Form
-          onValuesChange={(changedValues) =>
-            handleSearch(changedValues.timKiem)
-          }
+      <Space style={{ marginBottom: 16 }}>
+        <Select
+          value={selectedTerm}
+          style={{ width: 250 }}
+          onChange={handleTermChange}
         >
-          <div className="d-flex justify-content-center gap-4">
-            <Form.Item label="Tìm kiếm" name="timKiem">
-              <Input
-                maxLength={50}
-                placeholder="Tên đề tài / Mô tả..."
-                allowClear
-              />
-            </Form.Item>
+          {terms.map((term) => (
+            <Option key={term.id} value={term.id}>
+              {term.name}
+            </Option>
+          ))}
+        </Select>
 
-            <Form.Item>
-              <Button
-                type="primary"
-                onClick={() => {
-                  setData(dataGoc);
-                }}
-              >
-                Làm mới
-              </Button>
-            </Form.Item>
-          </div>
-        </Form>
-      </div>
-
-      {/* ADD BUTTON */}
-      <Space className="mb-4 mt-3">
-        <Button
-     
-          type="primary"
-          onClick={() => {
-            setEditing(null);
-            form.resetFields();
-            setOpen(true);
-          }}
+        <Select
+          placeholder="Lọc trạng thái"
+          style={{ width: 200 }}
+          allowClear
+          onChange={(value) => setStatusFilter(value)}
         >
-          Thêm đề tài
-        </Button>
+          <Option value="PENDING">Chờ duyệt</Option>
+          <Option value="APPROVED_BY_TEACHER">GV đã duyệt</Option>
+          <Option value="REJECTED_BY_TEACHER">GV đã từ chối</Option>
+          <Option value="APPROVED_BY_ADMIN">Admin đã duyệt</Option>
+          <Option value="CANCELLED_BY_STUDENT">SV đã hủy</Option>
+        </Select>
+
+        <Input.Search
+          placeholder="Tìm sinh viên hoặc đề tài..."
+          allowClear
+          onSearch={(value) => setSearchKeyword(value)}
+          style={{ width: 300 }}
+        />
       </Space>
 
-      {/* TABLE */}
       <Table
-        dataSource={data}
+        dataSource={filteredData}
         columns={columns}
         rowKey="id"
-        pagination={{
-          showQuickJumper: true,
-          defaultPageSize: 5,
-        }}
+        pagination={{ pageSize: 5 }}
       />
-
-      {/* MODAL */}
-      <Modal
-        open={open}
-        title={editing ? "Sửa đề tài" : "Thêm đề tài"}
-        onCancel={() => setOpen(false)}
-        onOk={onSubmit}
-        width={700}
-        centered
-      >
-        <Row gutter={24}>
-          <Col span={24}>
-            <Form form={form} layout="vertical">
-              <Form.Item
-                name="title"
-                label="Tên đề tài"
-                rules={[{ required: true, message: "Không được để trống!" }]}
-              >
-                <Input />
-              </Form.Item>
-
-              <Form.Item
-                name="description"
-                label="Mô tả"
-                rules={[{ required: true, message: "Không được để trống!" }]}
-              >
-                <TextArea rows={4} />
-              </Form.Item>
-
-              <Form.Item
-                name="maxStudents"
-                label="Số lượng sinh viên tối đa"
-                rules={[{ required: true, message: "Không được để trống!" }]}
-              >
-                <InputNumber min={1} style={{ width: "100%" }} />
-              </Form.Item>
-            </Form>
-          </Col>
-        </Row>
-      </Modal>
     </>
   );
 }

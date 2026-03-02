@@ -20,4 +20,6 @@ public interface InternshipStudentView {
     String getStudentPhone();
     String getStartDate();
     String getEndDate();
+    String getTopicName();
+    String getTopicDescription();
 }
