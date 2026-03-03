@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import com.example.backend.dto.response.ChatRoomProjection;
 import com.example.backend.entity.ChatMessage;
 import com.example.backend.entity.ChatRoom;
 import com.example.backend.entity.Student;
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-
+import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
@@ -62,17 +63,10 @@ public class ChatRestController {
         Teacher teacher = teacherRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Teacher not found"));
 
-        List<ChatRoom> rooms =
+        List<ChatRoomProjection> rooms =
                 chatRoomService.getRoomByTeacher(teacher.getId());
 
-        return ResponseEntity.ok(
-                Map.of(
-                        "success", true,
-                        "data", rooms.stream()
-                                .map(r -> Map.of("id", r.getId()))
-                                .toList()
-                )
-        );
+        return ResponseEntity.ok(rooms);   // TRẢ THẲNG
     }
     @GetMapping("/{roomId}")
     public ResponseEntity<?> getMessagesByRoom(@PathVariable String roomId) {

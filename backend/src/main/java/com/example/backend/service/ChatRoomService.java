@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.response.ChatRoomProjection;
 import com.example.backend.entity.ChatRoom;
 import com.example.backend.repository.ChatRoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,10 +20,10 @@ public class ChatRoomService {
                 .findByAdvisorAssignment_Student_Id(studentId)
                 .orElse(null);
     }
-    public List<ChatRoom> getRoomByTeacher(String teacherId) {
+    public List<ChatRoomProjection> getRoomByTeacher(String teacherId) {
 
         return chatRoomRepository
-                .findByAdvisorAssignment_Teacher_Id(teacherId);
+                .findRoomsByTeacherId(teacherId);
 
     }
 }
