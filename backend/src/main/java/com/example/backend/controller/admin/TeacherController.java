@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/teacher")
 @CrossOrigin("http://localhost:5173")
 public class TeacherController {
-    @Autowired
-    TeacherService teacherService;
+
+    private final  TeacherService teacherService;
 
     @GetMapping
     public ResponseEntity<?> getALL() {

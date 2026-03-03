@@ -131,9 +131,47 @@ export default function TopicManage() {
   };
 
   /* ================= COLUMNS ================= */
+  const sortedData = [...filteredData].sort((a, b) =>
+    a.studentCode.localeCompare(b.studentCode)
+  );
   const columns = [
-    { title: "Mã SV", dataIndex: "studentCode" },
-    { title: "Tên sinh viên", dataIndex: "fullName" },
+    {
+      title: "Mã SV",
+      dataIndex: "studentCode",
+      render: (value, record, index) => {
+        const currentIndex = sortedData.findIndex(
+          (item) => item.id === record.id
+        );
+
+        if (
+          currentIndex === 0 ||
+          sortedData[currentIndex - 1].studentCode !== record.studentCode
+        ) {
+          return value;
+        }
+
+        return null;
+      },
+    },
+{
+  title: "Tên sinh viên",
+  dataIndex: "fullName",
+  render: (value, record) => {
+
+    const currentIndex = sortedData.findIndex(
+      item => item.id === record.id
+    );
+
+    if (
+      currentIndex === 0 ||
+      sortedData[currentIndex - 1].studentCode !== record.studentCode
+    ) {
+      return value;
+    }
+
+    return null;
+  },
+},
     { title: "Tên đề tài", dataIndex: "title" },
     { title: "Mô tả", dataIndex: "description" },
     {
@@ -144,13 +182,13 @@ export default function TopicManage() {
     {
       title: "Hành động",
       render: (_, record) => {
-        const isLocked = record.status === "APPROVED_BY_ADMIN";
+        const isStudentLocked = studentsLocked.has(record.studentCode);
 
         return (
           <Space>
             <Button
               type="primary"
-              disabled={isLocked}
+              disabled={isStudentLocked}
               onClick={() => handleApprove(record)}
             >
               Chấp nhận
@@ -158,7 +196,7 @@ export default function TopicManage() {
 
             <Button
               danger
-              disabled={isLocked}
+              disabled={isStudentLocked}
               onClick={() => handleReject(record)}
             >
               Từ chối
@@ -168,7 +206,11 @@ export default function TopicManage() {
       },
     },
   ];
-
+  const studentsLocked = new Set(
+    data
+      .filter((item) => item.status === "APPROVED_BY_ADMIN")
+      .map((item) => item.studentCode)
+  );
   return (
     <>
       <Divider>

@@ -12,9 +12,10 @@ import {
 } from "antd";
 import { UploadOutlined, FileTextOutlined } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import { DeadlineAPI } from "../../api/DeadlineAPI";
+import { WeeklyReportAPI } from "../../api/WeeklyReportAPI";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -27,30 +28,44 @@ export default function StudentDeadlineDetail() {
   const [deadline, setDeadline] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fileList, setFileList] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    const loadDetail = async () => {
-      try {
-        const res = await DeadlineAPI.getDeadlineDetailForStudent(
-          deadlineId,
-          userId
-        );
-        setDeadline(res.data);
-      } catch {
-        message.error("Tải chi tiết thất bại!");
-      } finally {
-        setLoading(false);
-      }
-    };
+  // ✅ dùng useCallback để tránh recreate function
+  const loadDetail = useCallback(async () => {
+    try {
+      setLoading(true);
 
-    loadDetail();
+      const res = await DeadlineAPI.getDeadlineDetailForStudent(
+        deadlineId,
+        userId
+      );
+
+      console.log("Reloaded:", res.data);
+
+      // force re-render
+      setDeadline({ ...res.data });
+    } catch (err) {
+      console.log(err);
+      message.error("Tải chi tiết thất bại!");
+    } finally {
+      setLoading(false);
+    }
   }, [deadlineId, userId]);
 
-  if (loading) return <Spin />;
+  useEffect(() => {
+    if (deadlineId && userId) {
+      loadDetail();
+    }
+  }, [loadDetail]);
+
+  if (loading) return <Spin size="large" />;
 
   if (!deadline) return <div>Không tìm thấy deadline</div>;
 
   const isExpired = dayjs().isAfter(dayjs(deadline.dueDate));
+
+ const alreadySubmitted =
+   deadline.status === "SUBMITTED" || deadline.status === "LATE" || isExpired;
 
   const getStatusTag = () => {
     if (deadline.status === "SUBMITTED") return <Tag color="green">Đã nộp</Tag>;
@@ -62,13 +77,34 @@ export default function StudentDeadlineDetail() {
     return <Tag color="blue">Chưa nộp</Tag>;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (fileList.length === 0) {
       message.warning("Chọn file trước khi nộp!");
       return;
     }
 
-    message.success("Demo: Nộp bài thành công");
+    try {
+      setSubmitting(true);
+
+      const formData = new FormData();
+      formData.append("file", fileList[0]);
+      formData.append("deadlineId", deadlineId);
+      formData.append("userId", userId);
+
+      await WeeklyReportAPI.submitWeeklyReport(formData);
+
+      message.success("Nộp bài thành công!");
+
+      // reload data
+      await loadDetail();
+
+      setFileList([]);
+    } catch (error) {
+      console.log(error);
+      message.error("Nộp bài thất bại!");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -107,8 +143,11 @@ export default function StudentDeadlineDetail() {
                 return false;
               }}
               onRemove={() => setFileList([])}
+              disabled={alreadySubmitted}
             >
-              <Button icon={<UploadOutlined />}>Chọn file</Button>
+              <Button icon={<UploadOutlined />} disabled={alreadySubmitted}>
+                Chọn file
+              </Button>
             </Upload>
 
             <Button
@@ -116,6 +155,8 @@ export default function StudentDeadlineDetail() {
               block
               style={{ marginTop: 16 }}
               onClick={handleSubmit}
+              loading={submitting}
+              disabled={alreadySubmitted}
             >
               Nộp bài
             </Button>

@@ -4,7 +4,7 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { FaHome, FaUserGraduate } from "react-icons/fa";
+import { FaBookDead, FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
@@ -116,17 +116,17 @@ export default function StudentLayout() {
 const teacherMenu = [
   {
     key: "/student",
-    icon: <FaHome />,
-    label: "Dashboard",
+    icon: <FaUserGraduate />,
+    label: "Thông tin",
   },
   {
     key: "/student/topic",
-    icon: <FaUserGraduate />,
+    icon: <FaHome />,
     label: "Đăng ký đề tài",
   },
   {
     key: "/student/deadlines",
-    icon: <FaUserGraduate />,
+    icon: <FaBookDead />,
     label: "Deadlines",
   },
 ];

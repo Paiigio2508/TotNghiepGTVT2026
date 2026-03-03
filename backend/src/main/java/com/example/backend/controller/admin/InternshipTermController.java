@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/internship-terms")
 @CrossOrigin("http://localhost:5173")
 public class InternshipTermController {
-    @Autowired
-    InternshipTermService internshipTermService;
+
+    private final   InternshipTermService internshipTermService;
     @GetMapping()
     public ResponseEntity<?> getALL() {
         return ResponseEntity.ok(internshipTermService.getALL());

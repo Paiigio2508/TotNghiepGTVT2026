@@ -18,4 +18,18 @@ export class DeadlineAPI {
   static getDeadlineDetailForStudent = (deadlineId, userId) => {
     return request.get(`/api/student/deadlines/${deadlineId}/${userId}`);
   };
+  static getTeacherReports = (deadlineId, userId) => {
+    return request.get("/api/teacher/reports", {
+      params: {
+        deadlineId,
+        userId: userId,
+      },
+    });
+  };
+  static downloadAllReports = (deadlineId, userId) => {
+    return request.get("/api/teacher/download-all", {
+      params: { deadlineId, userId },
+      responseType: "blob",
+    });
+  };
 }

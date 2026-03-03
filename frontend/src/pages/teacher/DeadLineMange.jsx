@@ -28,7 +28,11 @@ export default function DeadlineManage() {
   const [terms, setTerms] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [open, setOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [reportData, setReportData] = useState([]);
+  const [selectedDeadline, setSelectedDeadline] = useState(null);
   const [form] = Form.useForm();
   const [editing, setEditing] = useState(null);
 
@@ -41,7 +45,6 @@ export default function DeadlineManage() {
       try {
         const res = await TermAPI.getAllTermForTeacherLayout();
         setTerms(res.data);
-
         if (res.data.length > 0) {
           setSelectedTerm(res.data[0].id);
         }
@@ -49,107 +52,151 @@ export default function DeadlineManage() {
         message.error("Tải danh sách học kỳ thất bại!");
       }
     };
-
     loadTerms();
   }, []);
 
   /* ================= LOAD DEADLINE ================= */
-const loadDeadlines = async () => {
-  if (!selectedTerm || !userId) return;
+  const loadDeadlines = async () => {
+    if (!selectedTerm || !userId) return;
 
-  try {
-    setLoading(true);
-    const res = await DeadlineAPI.getAll(selectedTerm, userId);
-
-    console.log("Deadline response:", res.data);
-
-    // 🔥 đảm bảo luôn là array
-    setData(Array.isArray(res.data) ? res.data : []);
-  } catch {
-    message.error("Tải deadline thất bại!");
-    setData([]);
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      setLoading(true);
+      const res = await DeadlineAPI.getAll(selectedTerm, userId);
+      setData(Array.isArray(res.data) ? res.data : []);
+    } catch {
+      message.error("Tải deadline thất bại!");
+      setData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadDeadlines();
   }, [selectedTerm, userId]);
 
-  /* ================= SUBMIT ================= */
-const onSubmit = async () => {
+  /* ================= LOAD REPORTS ================= */
+const loadReports = async (deadline) => {
   try {
-    const values = await form.validateFields();
+    setLoadingReport(true);
 
-    const payload = {
-      weekNo: values.weekNo,
-      title: values.title,
-      description: values.description,
-      dueDate: values.dueDate.format("YYYY-MM-DDTHH:mm:ss"),
-      internshipTermId: values.internshipTermId,
-    };
+    const res = await DeadlineAPI.getTeacherReports(
+      deadline.id,
+      userId
+    );
 
-    if (editing) {
-      await DeadlineAPI.updateDeadline(editing.id, payload, userId);
-      toast.success("Cập nhật thành công!");
-    } else {
-      await DeadlineAPI.createDeadline(payload, userId);
-      toast.success("Tạo thành công!");
-    }
+    console.log("Report API response:", res.data);
 
-    setOpen(false);
-    setEditing(null);
-    form.resetFields();
-    loadDeadlines();
-  } catch {
-    message.error("Lỗi hệ thống!");
+    // 🔥 đảm bảo luôn là array
+    const safeData = Array.isArray(res.data) ? res.data : res.data?.data || [];
+
+    setReportData(safeData);
+    setSelectedDeadline(deadline);
+    setViewOpen(true);
+  } catch (error) {
+    console.log(error);
+    message.error("Tải danh sách sinh viên thất bại!");
+    setReportData([]);
+  } finally {
+    setLoadingReport(false);
   }
 };
+  /* ================= SUBMIT ================= */
+  const onSubmit = async () => {
+    try {
+      const values = await form.validateFields();
 
-  const selectedTermName =
-    terms.find((term) => term.id === selectedTerm)?.name || "";
+      const payload = {
+        weekNo: values.weekNo,
+        title: values.title,
+        description: values.description,
+        dueDate: values.dueDate.format("YYYY-MM-DDTHH:mm:ss"),
+        internshipTermId: values.internshipTermId,
+      };
 
-  /* ================= COLUMNS ================= */
- const columns = [
-   { title: "Tuần", dataIndex: "weekNo" },
-   { title: "Tiêu đề", dataIndex: "title" },
-   { title: "Mô tả", dataIndex: "description" },
-   {
-     title: "Hạn nộp",
-     dataIndex: "dueDate",
-     render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
-   },
-   {
-     title: "Hành động",
-     render: (_, record) => (
-       <Button
-         onClick={() => {
-           setEditing(record);
-           form.setFieldsValue({
-             ...record,
-             dueDate: dayjs(record.dueDate),
-             internshipTermId: selectedTerm,
-           });
-           setOpen(true);
-         }}
-       >
-         Sửa
-       </Button>
-     ),
-   },
- ];
+      if (editing) {
+        await DeadlineAPI.updateDeadline(editing.id, payload, userId);
+        toast.success("Cập nhật thành công!");
+      } else {
+        await DeadlineAPI.createDeadline(payload, userId);
+        toast.success("Tạo thành công!");
+      }
+
+      setOpen(false);
+      setEditing(null);
+      form.resetFields();
+      loadDeadlines();
+    } catch {
+      message.error("Lỗi hệ thống!");
+    }
+  };
+
+  const columns = [
+    { title: "Tuần", dataIndex: "weekNo" },
+    { title: "Tiêu đề", dataIndex: "title" },
+    { title: "Mô tả", dataIndex: "description" },
+    {
+      title: "Hạn nộp",
+      dataIndex: "dueDate",
+      render: (date) => dayjs(date).format("DD/MM/YYYY HH:mm"),
+    },
+    {
+      title: "Hành động",
+      render: (_, record) => (
+        <Space>
+          <Button
+            onClick={() => {
+              setEditing(record);
+              form.setFieldsValue({
+                ...record,
+                dueDate: dayjs(record.dueDate),
+                internshipTermId: selectedTerm,
+              });
+              setOpen(true);
+            }}
+          >
+            Sửa
+          </Button>
+
+          <Button type="primary" onClick={() => loadReports(record)}>
+            Xem
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+const handleDownloadAll = async () => {
+  try {
+    const res = await DeadlineAPI.downloadAllReports(selectedDeadline.id,userId);
+
+    // 🔥 tạo blob đúng cách
+    const blob = new Blob([res.data], {
+      type: "application/zip",
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Week_${selectedDeadline.weekNo}_Reports.zip`;
+
+    document.body.appendChild(link);
+    link.click();
+
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.log(error);
+    message.error("Download thất bại!");
+  }
+};
   return (
     <>
       <Divider>
-        <Title level={3}>
-          Quản lý Deadline{" "}
-          {selectedTermName && <Tag color="green">{selectedTermName}</Tag>}
-        </Title>
+        <Title level={3}>Quản lý Deadline</Title>
         <Text type="secondary">Tổng deadline: {data.length}</Text>
       </Divider>
 
-      {/* SELECT TERM */}
       <Row justify="space-between" className="mb-3">
         <Col>
           <Select
@@ -179,7 +226,6 @@ const onSubmit = async () => {
         </Col>
       </Row>
 
-      {/* TABLE */}
       <Table
         rowKey="id"
         dataSource={data}
@@ -189,7 +235,7 @@ const onSubmit = async () => {
         pagination={{ pageSize: 6 }}
       />
 
-      {/* MODAL */}
+      {/* CREATE / EDIT MODAL */}
       <Modal
         open={open}
         title="Tạo Deadline"
@@ -198,19 +244,11 @@ const onSubmit = async () => {
         centered
       >
         <Form form={form} layout="vertical">
-          <Form.Item
-            name="weekNo"
-            label="Tuần"
-            rules={[{ required: true, message: "Nhập tuần!" }]}
-          >
+          <Form.Item name="weekNo" label="Tuần" rules={[{ required: true }]}>
             <Input type="number" min={1} />
           </Form.Item>
 
-          <Form.Item
-            name="title"
-            label="Tiêu đề"
-            rules={[{ required: true, message: "Nhập tiêu đề!" }]}
-          >
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
 
@@ -221,7 +259,7 @@ const onSubmit = async () => {
           <Form.Item
             name="dueDate"
             label="Hạn nộp"
-            rules={[{ required: true, message: "Chọn hạn nộp!" }]}
+            rules={[{ required: true }]}
           >
             <DatePicker
               showTime
@@ -234,7 +272,7 @@ const onSubmit = async () => {
             name="internshipTermId"
             label="Kỳ thực tập"
             initialValue={selectedTerm}
-            rules={[{ required: true, message: "Chọn kỳ!" }]}
+            rules={[{ required: true }]}
           >
             <Select>
               {terms.map((term) => (
@@ -245,6 +283,47 @@ const onSubmit = async () => {
             </Select>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* VIEW REPORT MODAL */}
+      <Modal
+        open={viewOpen}
+        title={`Danh sách sinh viên - Tuần ${selectedDeadline?.weekNo}`}
+        onCancel={() => setViewOpen(false)}
+        footer={null}
+        width={800}
+      >
+        <Button 
+        className="float-end"
+          type="primary"
+          style={{ marginBottom: 16 }}
+          onClick={handleDownloadAll}
+        >
+          Download tất cả
+        </Button>
+
+        <Table
+          rowKey="studentId"
+          loading={loadingReport}
+          dataSource={reportData}
+          pagination={false}
+          columns={[
+            {
+              title: "Sinh viên",
+              dataIndex: "studentName",
+            },
+            {
+              title: "Trạng thái",
+              render: (_, record) => {
+                if (record.status === "SUBMITTED")
+                  return <Tag color="green">Đã nộp</Tag>;
+                if (record.status === "LATE")
+                  return <Tag color="orange">Nộp trễ</Tag>;
+                return <Tag color="blue">Chưa nộp</Tag>;
+              },
+            },
+          ]}
+        />
       </Modal>
     </>
   );

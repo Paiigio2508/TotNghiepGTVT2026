@@ -41,4 +41,5 @@ public interface StudentRepository extends JpaRepository<Student, String> {
                 )
             """, nativeQuery = true)
     List<Student> getALLSVDuDieuKien(String termId);
+
 }

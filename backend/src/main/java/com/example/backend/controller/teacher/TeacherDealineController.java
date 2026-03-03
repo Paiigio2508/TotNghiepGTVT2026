@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
 public class TeacherDealineController {
-    @Autowired
-    DeadlineService deadlineService;
+
+    private final DeadlineService deadlineService;
     @GetMapping("/{internshipTermId}/{userId}")
     public ResponseEntity<?> getDeadlinesByTeacher(
             @PathVariable String internshipTermId,

@@ -13,8 +13,8 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/admin/student")
 @CrossOrigin("http://localhost:5173")
 public class StudentController {
-    @Autowired
-    StudentService studentService;
+
+    private final StudentService studentService;
 
     @GetMapping
     public ResponseEntity<?> getALL() {

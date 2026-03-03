@@ -14,8 +14,8 @@ import java.util.List;
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
 public class StudentTopicController {
-    @Autowired
-   TopicService topicService;
+
+    private final TopicService topicService;
 
     // Lấy danh sách đề tài của chính mình
     @GetMapping("/topic/{userId}")

@@ -1,6 +1,8 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.DeadlineRequest;
+import com.example.backend.dto.response.DeadlineProjection;
+import com.example.backend.dto.response.TeacherWeeklyReportProjection;
 import com.example.backend.entity.Deadline;
 import com.example.backend.entity.InternshipTerm;
 import com.example.backend.entity.Teacher;
@@ -86,12 +88,26 @@ public class DeadlineService {
 
         return deadlineRepository.save(deadline);
     }
-    public List<Deadline> getDeadlinesForStudent(String userId) {
+    public List<DeadlineProjection> getDeadlinesForStudent(String userId) {
         return deadlineRepository.findDeadlinesByStudentUserId(userId);
     }
-    public Deadline getDeadlineDetailForStudent(String deadlineId, String userId) {
+    public DeadlineProjection getDeadlineDetailForStudent(String deadlineId, String userId) {
         return deadlineRepository
                 .findDeadlineDetailForStudent(deadlineId, userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy deadline"));
+    }
+
+    public List<TeacherWeeklyReportProjection> getReportsByWeekAndDeadline(
+            String deadlineId,
+            String userId
+    ) {
+
+        if (deadlineId == null || userId == null) {
+            throw new IllegalArgumentException("Thiếu tham số!");
+        }
+
+        return deadlineRepository.findReportsByWeekAndDeadline(
+                 deadlineId, userId
+        );
     }
 }

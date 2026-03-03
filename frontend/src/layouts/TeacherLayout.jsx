@@ -4,7 +4,7 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { FaHome, FaUserGraduate } from "react-icons/fa";
+import { FaBookDead, FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { IoIosListBox } from "react-icons/io";
@@ -131,7 +131,7 @@ const teacherMenu = [
   },
   {
     key: "/teacher/deadlines",
-    icon: <IoIosListBox />,
+    icon: <FaBookDead />,
     label: "Danh sách deadlines",
   },
 ];

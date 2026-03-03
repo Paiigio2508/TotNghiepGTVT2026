@@ -32,6 +32,7 @@ useEffect(() => {
 
   if (userId) loadDeadlines();
 }, [userId]);
+  console.log(deadlines);
   const getStatusTag = (status, dueDate) => {
     const isExpired = dayjs().isAfter(dayjs(dueDate));
 

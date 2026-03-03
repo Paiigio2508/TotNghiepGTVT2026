@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @CrossOrigin("http://localhost:5173")
 public class StudentInternshipController {
-    @Autowired
-   AdvisorAssignmentService service;
+
+    private final  AdvisorAssignmentService service;
 
     @GetMapping("/{studentId}")
     public ResponseEntity<?> getInternship(@PathVariable String studentId) {

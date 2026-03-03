@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/admin/topic")
 @CrossOrigin("http://localhost:5173")
 public class AdminTopicController {
-    @Autowired
-    TopicService topicService;
+
+    private final TopicService topicService;
     @GetMapping("/{termId}")
     public ResponseEntity<?> findTopicsbyTerm(
             @PathVariable String termId) {

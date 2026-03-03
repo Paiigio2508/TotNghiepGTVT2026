@@ -12,8 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/teacher/topic")
 @CrossOrigin("http://localhost:5173")
 public class TeacherTopicController {
-    @Autowired
-    TopicService topicService;
+    private final TopicService topicService;
     @GetMapping("/{userID}/{termId}")
     public ResponseEntity<?> findTopicsByTeacherAndTerm(
                                                         @PathVariable String userID,

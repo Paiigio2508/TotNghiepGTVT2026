@@ -204,7 +204,7 @@ export default function TopicRegister() {
       </div>
 
       {/* ADD BUTTON */}
-      <Space className="mb-4 mt-3">
+      <Space className="mb-4 mt-3 float-end">
         <Button
           type="primary"
           disabled={hasApproved}
