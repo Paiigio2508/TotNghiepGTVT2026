@@ -1,5 +1,6 @@
 package com.example.backend.exception;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,7 +10,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 🔥 BẮT LỖI CUSTOM
     @ExceptionHandler(AppException.class)
     public ResponseEntity<?> handleAppException(AppException ex) {
         return ResponseEntity.ok(
@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 🔥 PHÒNG TRƯỜNG HỢP DB UNIQUE (race condition)
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<?> handleDataIntegrity(DataIntegrityViolationException ex) {
         return ResponseEntity.ok(
@@ -31,9 +30,15 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 🔥 LỖI KHÁC
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception ex) {
+    public ResponseEntity<?> handleException(Exception ex,
+                                             HttpServletRequest request) {
+
+        // 🔥 Nếu là WebSocket thì không xử lý ở đây
+        if (request.getRequestURI().startsWith("/ws")) {
+            return null; // để Spring xử lý mặc định
+        }
+
         return ResponseEntity.ok(
                 Map.of(
                         "success", false,

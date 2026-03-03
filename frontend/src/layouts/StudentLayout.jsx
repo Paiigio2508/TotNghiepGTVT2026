@@ -5,16 +5,21 @@ import {
   LogoutOutlined,
 } from "@ant-design/icons";
 import { FaBookDead, FaHome, FaUserGraduate } from "react-icons/fa";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import ChatWidget from "../components/ChatWidget";
+import { ChatAPI } from "../api/ChatAPI";
 
 const { Header, Sider, Content } = Layout;
 
 export default function StudentLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [roomId, setRoomId] = useState(null); // 👈 thêm dòng này
+
   const location = useLocation();
   const nav = useNavigate();
   const userData = JSON.parse(localStorage.getItem("userData"));
+
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
       localStorage.removeItem("userData");
@@ -22,6 +27,27 @@ export default function StudentLayout() {
     }
   };
 
+  useEffect(() => {
+    if (!userData?.userId) return;
+
+    const fetchRoom = async () => {
+      try {
+        const res = await ChatAPI.getRoomByStudent(userData.userId);
+
+        console.log("Room trả về:", res.data);
+        console.log("FULL RESPONSE:", JSON.stringify(res.data, null, 2));
+        if (res.data.success && res.data.data) {
+          setRoomId(res.data.data.id);
+        } else {
+          setRoomId(null);
+        }
+      } catch (err) {
+        console.error("Lỗi API:", err.response?.data || err.message);
+      }
+    };
+
+    fetchRoom();
+  }, [userData]);
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
@@ -105,6 +131,9 @@ export default function StudentLayout() {
 
         <Content style={{ padding: 16 }}>
           <Outlet />
+
+          {/* 👇 Chỉ render khi có roomId */}
+          {roomId && <ChatWidget roomId={roomId} />}
         </Content>
       </Layout>
 

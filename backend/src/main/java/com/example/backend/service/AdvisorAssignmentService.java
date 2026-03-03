@@ -5,10 +5,7 @@ import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.StudentProjection;
 import com.example.backend.dto.response.TeacherProjection;
 import com.example.backend.entity.*;
-import com.example.backend.repository.AdvisorAssignmentRepository;
-import com.example.backend.repository.InternshipTermRepository;
-import com.example.backend.repository.StudentRepository;
-import com.example.backend.repository.TeacherRepository;
+import com.example.backend.repository.*;
 import com.example.backend.util.status.TermStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,8 +21,9 @@ public class AdvisorAssignmentService {
     private final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
     private final InternshipTermRepository termRepository;
-    private final AdvisorAssignmentRepository advisorAssignmentRepository;
 
+    private final AdvisorAssignmentRepository advisorAssignmentRepository;
+    private final ChatRoomRepository chatRoomRepository;
     public List<Student> getStudentsForAssignment(String termId) {
 
         InternshipTerm term = termRepository.findById(termId)
@@ -97,8 +95,11 @@ public class AdvisorAssignmentService {
             assignment.setTeacher(teacher);
             assignment.setTerm(term);
             assignment.setAssignedDate(LocalDate.now());
-
             advisorAssignmentRepository.save(assignment);
+            ChatRoom chatRoom= new ChatRoom();
+            chatRoom.setAdvisorAssignment(assignment);
+            chatRoomRepository.save(chatRoom);
+
 
             // tăng số lượng của giảng viên đó lên
             counts.set(minIndex, counts.get(minIndex) + 1);

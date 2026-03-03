@@ -26,9 +26,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getServletPath();
+        String path = request.getRequestURI();
 
-        // ✅ Bỏ qua login
+        // 🔥 BỎ QUA WebSocket hoàn toàn
+        if (path.startsWith("/ws")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Bỏ qua login
         if (path.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
@@ -60,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception e) {
-                // tránh crash hệ thống
+                // không làm gì
             }
         }
 
