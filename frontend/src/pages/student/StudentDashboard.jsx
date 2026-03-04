@@ -38,7 +38,6 @@ export default function StudentDashboard() {
 
         // Nếu backend trả array → lấy phần tử đầu
         const result = Array.isArray(res.data) ? res.data[0] : res.data;
-        console.log(result);
         setData(result || null);
       } catch (err) {
         message.error("Tải dữ liệu thất bại!");

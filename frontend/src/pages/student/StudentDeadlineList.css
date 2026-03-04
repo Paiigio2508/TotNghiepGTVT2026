@@ -1,0 +1,79 @@
+.deadline-container {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.deadline-card {
+  margin-bottom: 20px;
+  border-radius: 14px;
+  border: none;
+  padding: 4px;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.deadline-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.deadline-report {
+  border-left: 5px solid #1677ff;
+}
+
+.deadline-announcement {
+  border-left: 5px solid #ff4d4f;
+  background: #fff1f0;
+}
+
+.deadline-row {
+  display: flex;
+  align-items: center;
+}
+
+.deadline-content {
+  flex: 1;
+  margin-left: 16px;
+}
+
+.deadline-header {
+  font-size: 18px;
+}
+
+.deadline-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #0958d9;
+  margin-top: 4px;
+}
+
+.deadline-desc {
+  font-size: 15px;
+  color: #434343;
+  margin-top: 6px;
+  word-break: break-all;
+}
+
+.deadline-date {
+  font-size: 14px;
+  color: #8c8c8c;
+  margin-top: 6px;
+}
+
+.deadline-status {
+  margin-top: 8px;
+}
+
+.deadline-menu {
+  font-size: 20px;
+  color: #666;
+  cursor: pointer;
+}
+
+.report-icon {
+  background-color: #2e7d32;
+}
+
+.announcement-icon {
+  background-color: #ff4d4f;
+}

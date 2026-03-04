@@ -8,8 +8,9 @@ public interface DeadlineProjection {
         String getId();
 
         String getTitle();
-
-
+        String getType();
+        String getFileUrl();
+        String getOriginalFileName();
         Integer getWeekNo();
 
         LocalDateTime getDueDate();

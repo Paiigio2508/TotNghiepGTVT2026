@@ -66,7 +66,7 @@ public class ChatRestController {
         List<ChatRoomProjection> rooms =
                 chatRoomService.getRoomByTeacher(teacher.getId());
 
-        return ResponseEntity.ok(rooms);   // TRẢ THẲNG
+        return ResponseEntity.ok(rooms);
     }
     @GetMapping("/{roomId}")
     public ResponseEntity<?> getMessagesByRoom(@PathVariable String roomId) {

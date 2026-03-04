@@ -26,6 +26,7 @@ import TopicRegister from "./pages/student/TopicRegister";
 import DeadlineManage from "./pages/teacher/DeadLineMange";
 import StudentDeadlineList from "./pages/student/StudentDeadlineList";
 import StudentDeadlineDetail from "./pages/student/StudentDeadlineDetail";
+import DeadlineReports from "./pages/teacher/DeadlineReports";
 
 export default function App() {
   return (
@@ -58,6 +59,10 @@ export default function App() {
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />
+              <Route
+                path="/teacher/deadline/:deadlineId/reports"
+                element={<DeadlineReports />}
+              />
             </Route>
           </Route>
           <Route element={<RequireRole roles={["SINHVIEN"]} />}>

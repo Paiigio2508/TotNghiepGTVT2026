@@ -13,9 +13,6 @@ import java.util.List;
 public class ChatRoomService {
     private final ChatRoomRepository chatRoomRepository;
     public ChatRoom getRoomByStudent(String studentId) {
-
-        System.out.println("StudentId nhận được: " + studentId);
-
         return chatRoomRepository
                 .findByAdvisorAssignment_Student_Id(studentId)
                 .orElse(null);

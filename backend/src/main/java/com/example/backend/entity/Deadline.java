@@ -1,6 +1,7 @@
 package com.example.backend.entity;
 
 import com.example.backend.entity.base.BaseEntity;
+import com.example.backend.util.status.DeadlineType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +22,8 @@ public class Deadline extends BaseEntity {
     private String description;
 
     private LocalDateTime dueDate;
-
+    @Enumerated(EnumType.STRING)
+    private DeadlineType type;
     @ManyToOne
     @JoinColumn(name = "internship_term_id")
     private InternshipTerm internshipTerm;

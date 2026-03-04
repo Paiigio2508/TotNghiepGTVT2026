@@ -3,7 +3,6 @@ package com.example.backend.controller.teacher;
 import com.example.backend.dto.request.DeadlineRequest;
 import com.example.backend.service.DeadlineService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class TeacherDealineController {
 
     private final DeadlineService deadlineService;
+
     @GetMapping("/{internshipTermId}/{userId}")
     public ResponseEntity<?> getDeadlinesByTeacher(
             @PathVariable String internshipTermId,
@@ -22,6 +22,7 @@ public class TeacherDealineController {
                 deadlineService.getDeadlinesByTeacher(internshipTermId, userId)
         );
     }
+
     @PostMapping("/{userId}")
     public ResponseEntity<?> createDeadline(
             @PathVariable String userId,

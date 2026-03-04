@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssignment, String> {
-    boolean existsByStudentIdAndTermId(String studentId, String termId);
 
     @Query(value = """
             SELECT
@@ -97,4 +96,5 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
             String studentId,
             String termId
     );
+    List<AdvisorAssignment> findByTerm_IdAndTeacher_Id(String termId, String teacherId);
 }

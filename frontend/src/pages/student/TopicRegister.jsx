@@ -248,15 +248,20 @@ export default function TopicRegister() {
                 label="Tên đề tài"
                 rules={[{ required: true, message: "Không được để trống!" }]}
               >
-                <Input />
+                <Input placeholder={`VD: Xây dựng (Website, hệ thống)....  `} />
               </Form.Item>
 
               <Form.Item
                 name="description"
                 label="Mô tả"
+                initialValue={`Nội dung và phạm vi đề tài:
+- Nêu chức năng chính:
+- Công nghệ, công cụ, ngôn ngữ lập trình:
+- Đặc điểm nổi bật hệ thống của mình:
+`}
                 rules={[{ required: true, message: "Không được để trống!" }]}
               >
-                <TextArea rows={4} />
+                <TextArea rows={10} />
               </Form.Item>
             </Form>
           </Col>

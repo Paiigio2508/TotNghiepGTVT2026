@@ -16,6 +16,7 @@ import { useState, useEffect, useCallback } from "react";
 import dayjs from "dayjs";
 import { DeadlineAPI } from "../../api/DeadlineAPI";
 import { WeeklyReportAPI } from "../../api/WeeklyReportAPI";
+import { toast } from "react-toastify";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -30,7 +31,6 @@ export default function StudentDeadlineDetail() {
   const [fileList, setFileList] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // ✅ dùng useCallback để tránh recreate function
   const loadDetail = useCallback(async () => {
     try {
       setLoading(true);
@@ -40,10 +40,22 @@ export default function StudentDeadlineDetail() {
         userId
       );
 
-      console.log("Reloaded:", res.data);
+      const data = res.data;
+      setDeadline({ ...data });
 
-      // force re-render
-      setDeadline({ ...res.data });
+      // nếu đã có file → hiển thị file lên Upload
+      if (data.fileUrl) {
+        setFileList([
+          {
+            uid: "-1",
+            name: data.originalFileName || "weekly_report",
+            status: "done",
+            url: data.fileUrl,
+          },
+        ]);
+      } else {
+        setFileList([]);
+      }
     } catch (err) {
       console.log(err);
       message.error("Tải chi tiết thất bại!");
@@ -56,7 +68,7 @@ export default function StudentDeadlineDetail() {
     if (deadlineId && userId) {
       loadDetail();
     }
-  }, [loadDetail]);
+  }, [loadDetail, deadlineId, userId]);
 
   if (loading) return <Spin size="large" />;
 
@@ -64,8 +76,8 @@ export default function StudentDeadlineDetail() {
 
   const isExpired = dayjs().isAfter(dayjs(deadline.dueDate));
 
- const alreadySubmitted =
-   deadline.status === "SUBMITTED" || deadline.status === "LATE" || isExpired;
+  // chỉ khóa khi quá hạn
+  const disableSubmit = isExpired;
 
   const getStatusTag = () => {
     if (deadline.status === "SUBMITTED") return <Tag color="green">Đã nộp</Tag>;
@@ -87,21 +99,23 @@ export default function StudentDeadlineDetail() {
       setSubmitting(true);
 
       const formData = new FormData();
-      formData.append("file", fileList[0]);
+
+      // file có thể từ server hoặc upload mới
+      const file = fileList[0].originFileObj || fileList[0];
+      formData.append("file", file);
+
       formData.append("deadlineId", deadlineId);
       formData.append("userId", userId);
 
       await WeeklyReportAPI.submitWeeklyReport(formData);
 
-      message.success("Nộp bài thành công!");
+      toast.success("Nộp bài thành công!");
 
-      // reload data
       await loadDetail();
-
       setFileList([]);
     } catch (error) {
       console.log(error);
-      message.error("Nộp bài thất bại!");
+      toast.error("Nộp bài thất bại!");
     } finally {
       setSubmitting(false);
     }
@@ -110,6 +124,7 @@ export default function StudentDeadlineDetail() {
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
       <Row gutter={24}>
+        {/* LEFT SIDE */}
         <Col span={16}>
           <Card style={{ borderRadius: 16 }}>
             <Title level={3}>
@@ -128,6 +143,7 @@ export default function StudentDeadlineDetail() {
           </Card>
         </Col>
 
+        {/* RIGHT SIDE */}
         <Col span={8}>
           <Card style={{ borderRadius: 16 }}>
             <Title level={4}>
@@ -142,10 +158,16 @@ export default function StudentDeadlineDetail() {
                 setFileList([file]);
                 return false;
               }}
+              onPreview={(file) => {
+                if (file.url) {
+                  window.open(file.url);
+                }
+              }}
               onRemove={() => setFileList([])}
-              disabled={alreadySubmitted}
+              disabled={disableSubmit}
+              maxCount={1}
             >
-              <Button icon={<UploadOutlined />} disabled={alreadySubmitted}>
+              <Button icon={<UploadOutlined />} disabled={disableSubmit}>
                 Chọn file
               </Button>
             </Upload>
@@ -156,9 +178,9 @@ export default function StudentDeadlineDetail() {
               style={{ marginTop: 16 }}
               onClick={handleSubmit}
               loading={submitting}
-              disabled={alreadySubmitted}
+              disabled={disableSubmit}
             >
-              Nộp bài
+              {deadline.status === "SUBMITTED" ? "Nộp lại" : "Nộp bài"}
             </Button>
           </Card>
         </Col>

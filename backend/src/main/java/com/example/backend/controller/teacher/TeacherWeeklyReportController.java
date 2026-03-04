@@ -48,19 +48,12 @@ public class TeacherWeeklyReportController {
 
     ) throws IOException {
 
-
-        System.out.println(userId);
         List<WeeklyReport> reports =
                 weeklyReportService.findAllByDeadlineAndTeacher(deadlineId, userId);
 
         response.setContentType("application/zip");
         response.setHeader("Content-Disposition",
                 "attachment; filename=Week_Reports.zip");
-        System.out.println("Total reports: " + reports.size());
-
-        for (WeeklyReport report : reports) {
-            System.out.println("File URL: " + report.getFileUrl());
-        }
         try (ZipOutputStream zipOut =
                      new ZipOutputStream(response.getOutputStream())) {
 

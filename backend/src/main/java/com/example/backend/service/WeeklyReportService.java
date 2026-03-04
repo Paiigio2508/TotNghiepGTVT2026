@@ -35,12 +35,9 @@ public class WeeklyReportService {
 
         try {
 
-            // 1️⃣ Lấy user + student
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new AppException("User not found"));
-
+            // 1️⃣ Lấy student trực tiếp
             Student student = studentRepository
-                    .findByUser_Id(user.getId())
+                    .findByUser_Id(userId)
                     .orElseThrow(() -> new AppException("Student not found"));
 
             // 2️⃣ Lấy deadline
@@ -49,51 +46,33 @@ public class WeeklyReportService {
 
             String termId = deadline.getInternshipTerm().getId();
 
-            AdvisorAssignment assignment =
-                    advisorAssignmentRepository
-                            .findByStudentIdAndTermId(student.getId(), termId)
-                            .orElseThrow(() -> new AppException("Assignment not found"));
+            // 3️⃣ Lấy assignment
+            AdvisorAssignment assignment = advisorAssignmentRepository
+                    .findByStudentIdAndTermId(student.getId(), termId)
+                    .orElseThrow(() -> new AppException("Assignment not found"));
 
-            // 3️⃣ Kiểm tra đã tồn tại report chưa
+            // 4️⃣ Tìm report
             WeeklyReport report = weeklyReportRepository
                     .findByAdvisorAssignmentAndDeadline(assignment, deadline)
-                    .orElse(null);
+                    .orElseGet(() -> {
+                        WeeklyReport r = new WeeklyReport();
+                        r.setAdvisorAssignment(assignment);
+                        r.setDeadline(deadline);
+                        r.setWeekNo(deadline.getWeekNo());
+                        return r;
+                    });
 
-            boolean isUpdate = report != null;
-
-            if (!isUpdate) {
-                report = new WeeklyReport();
-                report.setAdvisorAssignment(assignment);
-                report.setDeadline(deadline);
-                report.setWeekNo(deadline.getWeekNo());
-            }
-
-            // 4️⃣ Nếu update → xóa file cũ trên Cloudinary
-            if (isUpdate && report.getFileUrl() != null) {
-
-                String oldUrl = report.getFileUrl();
-
-                String publicId = oldUrl
-                        .substring(oldUrl.indexOf("weekly_reports/"))
-                        .replaceAll("\\.[^.]+$", "");
-
-                cloudinary.uploader().destroy(
-                        publicId,
-                        ObjectUtils.asMap("resource_type", "raw")
-                );
-            }
-
-            // 5️⃣ Upload file mới
-
+            // 5️⃣ Upload file
             String originalName = file.getOriginalFilename();
-            report.setOriginalFileName(originalName);   // ✅ lưu tên gốc
+            report.setOriginalFileName(originalName);
 
-            // Lấy extension (.pdf, .docx...)
-            String extension = originalName.substring(originalName.lastIndexOf("."));
+            String extension = "";
+            if (originalName != null && originalName.contains(".")) {
+                extension = originalName.substring(originalName.lastIndexOf("."));
+            }
 
-            // public_id an toàn (KHÔNG dùng tên gốc)
             String publicId = "weekly_reports/"
-                    + student.getId()
+                    + assignment.getId()
                     + "_week"
                     + deadline.getWeekNo();
 
@@ -113,16 +92,18 @@ public class WeeklyReportService {
 
             String fileUrl = uploadResult.get("secure_url").toString();
 
-            // 6️⃣ Cập nhật thông tin
+            // 6️⃣ Update report
+            LocalDateTime now = LocalDateTime.now();
+
             report.setFileUrl(fileUrl);
-            report.setSubmitDate(LocalDateTime.now());
+            report.setSubmitDate(now);
             report.setComment(comment);
 
-            if (LocalDateTime.now().isAfter(deadline.getDueDate())) {
-                report.setStatus(WeeklyReportStatus.LATE);
-            } else {
-                report.setStatus(WeeklyReportStatus.SUBMITTED);
-            }
+            report.setStatus(
+                    now.isAfter(deadline.getDueDate())
+                            ? WeeklyReportStatus.LATE
+                            : WeeklyReportStatus.SUBMITTED
+            );
 
             return weeklyReportRepository.save(report);
 

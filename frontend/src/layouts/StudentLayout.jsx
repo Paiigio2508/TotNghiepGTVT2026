@@ -33,9 +33,6 @@ export default function StudentLayout() {
     const fetchRoom = async () => {
       try {
         const res = await ChatAPI.getRoomByStudent(userData.userId);
-
-        console.log("Room trả về:", res.data);
-        console.log("FULL RESPONSE:", JSON.stringify(res.data, null, 2));
         if (res.data.success && res.data.data) {
           setRoomId(res.data.data.id);
         } else {
