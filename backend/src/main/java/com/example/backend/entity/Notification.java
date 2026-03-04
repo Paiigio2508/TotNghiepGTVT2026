@@ -26,5 +26,6 @@ public class Notification extends BaseEntity {
     private Boolean isRead = false;
 
     @ManyToOne
+    @JoinColumn(name = "user_id")
     private User user;
 }
