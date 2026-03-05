@@ -14,6 +14,6 @@ public class Score extends BaseEntity {
     private String note;
 
     @OneToOne
-    @JoinColumn(name = "advisor_assignment_id", unique = true)
-    private AdvisorAssignment advisorAssignment;
+    @JoinColumn(name = "weekly_report_id")
+    private WeeklyReport weeklyReport;
 }

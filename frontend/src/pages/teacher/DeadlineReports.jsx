@@ -12,13 +12,18 @@ import {
   Progress,
   Statistic,
   Card,
+  Modal,
+  Form,
+  InputNumber,
 } from "antd";
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DeadlineAPI } from "../../api/DeadlineAPI";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
+const { TextArea } = Input;
 
 export default function DeadlineReports() {
   const { deadlineId } = useParams();
@@ -31,6 +36,13 @@ export default function DeadlineReports() {
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
 
+  /* ===== Modal chấm điểm ===== */
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null);
+
+  const [form] = Form.useForm();
+
   const userData = JSON.parse(localStorage.getItem("userData"));
   const userId = userData?.userId;
 
@@ -41,7 +53,7 @@ export default function DeadlineReports() {
       setLoading(true);
 
       const res = await DeadlineAPI.getTeacherReports(deadlineId, userId);
-      console.log(res.data);
+
       const safeData = Array.isArray(res.data)
         ? res.data
         : res.data?.data || [];
@@ -124,6 +136,7 @@ export default function DeadlineReports() {
       message.error("Download thất bại!");
     }
   };
+
   const downloadFile = async (url, filename) => {
     const response = await fetch(url);
 
@@ -141,6 +154,40 @@ export default function DeadlineReports() {
 
     document.body.removeChild(link);
   };
+
+  /* ================= MODAL CHẤM ĐIỂM ================= */
+
+  const openGradingModal = (record) => {
+    setSelectedReport(record);
+
+    setIsModalOpen(true);
+
+    form.setFieldsValue({
+      score: record.score || null,
+      comment: record.comment || "",
+    });
+  };
+
+  const handleSaveGrade = async () => {
+    try {
+      const values = await form.validateFields();
+
+      await DeadlineAPI.gradeReport({
+        weeklyReportId: selectedReport.weeklyReportId,
+        score: values.score,
+        comment: values.comment,
+      });
+
+      message.success("Chấm điểm thành công!");
+
+      setIsModalOpen(false);
+
+      loadReports();
+    } catch {
+      message.error("Lưu điểm thất bại!");
+    }
+  };
+
   /* ================= TABLE ================= */
 
   const columns = [
@@ -184,15 +231,33 @@ export default function DeadlineReports() {
     },
     {
       title: "Trạng thái",
-      width: 140,
+      width: 220,
       render: (_, record) => {
+        let statusTag = null;
+
         if (record.status === "SUBMITTED")
-          return <Tag color="green">Đã nộp</Tag>;
+          statusTag = <Tag color="green">Đã nộp</Tag>;
+        else if (record.status === "CHUA_NOP")
+          statusTag = <Tag color="red">Chưa nộp</Tag>;
+        else statusTag = <Tag color="orange">Nộp trễ</Tag>;
 
-        if (record.status === "CHUA_NOP")
-          return <Tag color="red">Chưa nộp</Tag>;
+        return (
+          <div>
+            {statusTag}
 
-        return <Tag color="orange">Nộp trễ</Tag>;
+            {record.weeklyReportId && (
+              <div style={{ marginTop: 6 }}>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => openGradingModal(record)}
+                >
+                  Chấm điểm
+                </Button>
+              </div>
+            )}
+          </div>
+        );
       },
     },
   ];
@@ -203,10 +268,12 @@ export default function DeadlineReports() {
         <Title level={3}>Danh sách sinh viên nộp báo cáo</Title>
         <Text type="secondary">Tổng sinh viên: {reportData.length}</Text>
       </Divider>
+
       <Col className="mb-2">
         <Button onClick={() => navigate(-1)}>Quay lại</Button>
       </Col>
-      {/* ===== DASHBOARD STATISTICS ===== */}
+
+      {/* ===== DASHBOARD ===== */}
 
       <Row gutter={16} style={{ marginBottom: 20 }}>
         <Col span={8}>
@@ -250,7 +317,7 @@ export default function DeadlineReports() {
         <Progress percent={percent} />
       </div>
 
-      {/* ===== ACTION BAR ===== */}
+      {/* ===== FILTER ===== */}
 
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col>
@@ -274,6 +341,7 @@ export default function DeadlineReports() {
             <Option value="LATE">Nộp trễ</Option>
           </Select>
         </Col>
+
         <Col>
           <Button type="primary" onClick={handleDownloadAll}>
             Download tất cả
@@ -291,6 +359,31 @@ export default function DeadlineReports() {
         bordered
         pagination={{ pageSize: 8 }}
       />
+
+      {/* ===== MODAL CHẤM ĐIỂM ===== */}
+
+      <Modal
+        title="Chấm điểm báo cáo"
+        open={isModalOpen}
+        onOk={handleSaveGrade}
+        onCancel={() => setIsModalOpen(false)}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            label="Điểm"
+            name="score"
+            rules={[{ required: true, message: "Nhập điểm!" }]}
+          >
+            <InputNumber min={0} max={10} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item label="Nhận xét" name="comment">
+            <TextArea rows={4} placeholder="Nhập nhận xét..." />
+          </Form.Item>
+        </Form>
+      </Modal>
     </>
   );
 }

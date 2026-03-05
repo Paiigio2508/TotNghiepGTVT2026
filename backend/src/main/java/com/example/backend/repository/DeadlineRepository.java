@@ -77,6 +77,7 @@ public interface DeadlineRepository extends JpaRepository<Deadline, String> {
     @Query(value = """
                         SELECT s.id AS studentId,s.student_code as studentCode, s.class_name as studentClass,
                                 s.full_name AS studentName,
+                                     wr.id as weeklyReportId,
                                 COALESCE(wr.status, 'CHUA_NOP') AS status,
                                 wr.file_url AS fileUrl,
                                 wr.original_file_name as originalFileName
