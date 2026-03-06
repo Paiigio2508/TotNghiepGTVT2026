@@ -15,7 +15,8 @@ public interface DeadlineProjection {
 
         LocalDateTime getDueDate();
         String getDescription();
-
+        String getScore();
+        String getNote();
         String getStatus();
 
 }

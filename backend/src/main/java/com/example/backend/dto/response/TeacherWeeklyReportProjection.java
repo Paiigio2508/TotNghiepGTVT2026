@@ -8,5 +8,7 @@ public interface TeacherWeeklyReportProjection {
     String getStudentClass();
     String getStatus();
     String getFileUrl();
+    String getScore();
+    String getNote();
     String getOriginalFileName();
 }

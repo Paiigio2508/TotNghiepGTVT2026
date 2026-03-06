@@ -1,7 +1,11 @@
 package com.example.backend.service;
+
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.example.backend.entity.*;
+import com.example.backend.entity.AdvisorAssignment;
+import com.example.backend.entity.Deadline;
+import com.example.backend.entity.Student;
+import com.example.backend.entity.WeeklyReport;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.*;
 import com.example.backend.util.status.WeeklyReportStatus;
@@ -11,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +26,8 @@ public class WeeklyReportService {
     private final AdvisorAssignmentRepository advisorAssignmentRepository;
     private final DeadlineRepository deadlineRepository;
     private final StudentRepository studentRepository;
-    private final UserRepository userRepository;
     private final Cloudinary cloudinary;
+
     @Transactional
     public WeeklyReport submitReport(
             MultipartFile file,
@@ -111,6 +114,7 @@ public class WeeklyReportService {
             throw new AppException("Submit report failed: " + e.getMessage());
         }
     }
+
     public List<WeeklyReport> findAllByDeadlineAndTeacher(
             String deadlineId,
             String userId

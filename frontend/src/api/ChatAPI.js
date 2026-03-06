@@ -11,4 +11,7 @@ export class ChatAPI {
   static getMessages = (roomId) => {
     return request.get(`/api/chat/${roomId}`);
   };
+  static sendMessage = (data) => {
+    return request.post("/api/chat/send", data);
+  };
 }

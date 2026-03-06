@@ -3,6 +3,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
+  MessageOutlined,
 } from "@ant-design/icons";
 import { FaBookDead, FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState, useEffect } from "react";
@@ -14,7 +15,8 @@ const { Header, Sider, Content } = Layout;
 
 export default function StudentLayout() {
   const [collapsed, setCollapsed] = useState(false);
-  const [roomId, setRoomId] = useState(null); // 👈 thêm dòng này
+  const [roomId, setRoomId] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
 
   const location = useLocation();
   const nav = useNavigate();
@@ -33,18 +35,20 @@ export default function StudentLayout() {
     const fetchRoom = async () => {
       try {
         const res = await ChatAPI.getRoomByStudent(userData.userId);
-        if (res.data.success && res.data.data) {
-          setRoomId(res.data.data.id);
-        } else {
-          setRoomId(null);
+
+        const room = res.data?.data || res.data;
+
+        if (room?.id) {
+          setRoomId(room.id);
         }
       } catch (err) {
-        console.error("Lỗi API:", err.response?.data || err.message);
+        console.error(err);
       }
     };
 
     fetchRoom();
-  }, [userData]);
+  }, []);
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
       <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
@@ -56,7 +60,6 @@ export default function StudentLayout() {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            transition: "0.3s",
           }}
         >
           <img
@@ -68,7 +71,6 @@ export default function StudentLayout() {
               borderRadius: "50%",
               objectFit: "cover",
               border: "3px solid #fff",
-              transition: "0.3s",
             }}
           />
 
@@ -78,7 +80,6 @@ export default function StudentLayout() {
                 marginTop: 10,
                 fontWeight: "bold",
                 fontSize: 14,
-                textAlign: "center",
               }}
             >
               {userData?.username}
@@ -90,12 +91,8 @@ export default function StudentLayout() {
           theme="dark"
           mode="inline"
           selectedKeys={[location.pathname]}
-          items={teacherMenu}
-          onClick={({ key }) => {
-            if (key.startsWith("/")) {
-              nav(key);
-            }
-          }}
+          items={studentMenu}
+          onClick={({ key }) => nav(key)}
         />
       </Sider>
 
@@ -103,8 +100,6 @@ export default function StudentLayout() {
         <Header
           style={{
             background: "#4E4336",
-            height: "48px",
-            padding: "0 16px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -128,31 +123,33 @@ export default function StudentLayout() {
 
         <Content style={{ padding: 16 }}>
           <Outlet />
-
-          {/* 👇 Chỉ render khi có roomId */}
-          {roomId && <ChatWidget roomId={roomId} />}
         </Content>
       </Layout>
+
+      {/* CHAT POPUP */}
+      {openChat && roomId && (
+        <ChatWidget
+          roomId={roomId}
+          studentName="Giảng viên"
+          mode="popup"
+          onClose={() => setOpenChat(false)}
+        />
+      )}
+
+      {/* FLOAT CHAT BUTTON */}
+      <FloatButton
+        icon={<MessageOutlined />}
+        onClick={() => setOpenChat(!openChat)}
+      />
 
       <FloatButton.BackTop />
     </Layout>
   );
 }
 
-const teacherMenu = [
-  {
-    key: "/student",
-    icon: <FaUserGraduate />,
-    label: "Thông tin",
-  },
-  {
-    key: "/student/topic",
-    icon: <FaHome />,
-    label: "Đăng ký đề tài",
-  },
-  {
-    key: "/student/deadlines",
-    icon: <FaBookDead />,
-    label: "Deadlines",
-  },
+const studentMenu = [
+  { key: "/student", icon: <FaUserGraduate />, label: "Thông tin" },
+  { key: "/student/topic", icon: <FaHome />, label: "Đăng ký đề tài" },
+  { key: "/student/deadlines", icon: <FaBookDead />, label: "Deadlines" },
+  { key: "/student/scores", icon: <FaBookDead />, label: "Bảng điểm" },
 ];

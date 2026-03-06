@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/chat")
 @RequiredArgsConstructor
@@ -68,6 +68,7 @@ public class ChatRestController {
 
         return ResponseEntity.ok(rooms);
     }
+
     @GetMapping("/{roomId}")
     public ResponseEntity<?> getMessagesByRoom(@PathVariable String roomId) {
 

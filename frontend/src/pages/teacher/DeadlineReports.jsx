@@ -20,6 +20,8 @@ import {
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { DeadlineAPI } from "../../api/DeadlineAPI";
+import { ScoreAPI } from "../../api/ScoreAPI";
+import { toast } from "react-toastify";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -164,21 +166,20 @@ export default function DeadlineReports() {
 
     form.setFieldsValue({
       score: record.score || null,
-      comment: record.comment || "",
+      note: record.note || "",
     });
   };
 
   const handleSaveGrade = async () => {
     try {
       const values = await form.validateFields();
-
-      await DeadlineAPI.gradeReport({
+      await ScoreAPI.create({
         weeklyReportId: selectedReport.weeklyReportId,
         score: values.score,
-        comment: values.comment,
+        note: values.note,
       });
 
-      message.success("Chấm điểm thành công!");
+      toast.success("Chấm điểm thành công!");
 
       setIsModalOpen(false);
 
@@ -190,77 +191,74 @@ export default function DeadlineReports() {
 
   /* ================= TABLE ================= */
 
-  const columns = [
-    {
-      title: "Mã",
-      dataIndex: "studentCode",
-      width: 120,
-    },
-    {
-      title: "Sinh viên",
-      dataIndex: "studentName",
-    },
-    {
-      title: "Lớp",
-      dataIndex: "studentClass",
-      width: 120,
-    },
-    {
-      title: "File báo cáo",
-      width: 260,
-      render: (_, record) => {
-        if (!record.fileUrl) {
-          return <Tag color="red">Chưa nộp</Tag>;
-        }
+const columns = [
+  {
+    title: "Mã",
+    dataIndex: "studentCode",
+    width: 120,
+  },
+  {
+    title: "Sinh viên",
+    dataIndex: "studentName",
+  },
+  {
+    title: "Lớp",
+    dataIndex: "studentClass",
+    width: 120,
+  },
+  {
+    title: "File báo cáo",
+    width: 260,
+    render: (_, record) => {
+      if (!record.fileUrl) {
+        return <Tag color="red">Chưa nộp</Tag>;
+      }
 
-        return (
-          <a
-            style={{
-              color: "#1677ff",
-              textDecoration: "underline",
-              cursor: "pointer",
-            }}
-            onClick={() =>
-              downloadFile(record.fileUrl, record.originalFileName)
-            }
-          >
-            {record.originalFileName}
-          </a>
-        );
-      },
+      return (
+        <a
+          style={{
+            color: "#1677ff",
+            textDecoration: "underline",
+            cursor: "pointer",
+          }}
+          onClick={() => downloadFile(record.fileUrl, record.originalFileName)}
+        >
+          {record.originalFileName}
+        </a>
+      );
     },
-    {
-      title: "Trạng thái",
-      width: 220,
-      render: (_, record) => {
-        let statusTag = null;
+  },
 
-        if (record.status === "SUBMITTED")
-          statusTag = <Tag color="green">Đã nộp</Tag>;
-        else if (record.status === "CHUA_NOP")
-          statusTag = <Tag color="red">Chưa nộp</Tag>;
-        else statusTag = <Tag color="orange">Nộp trễ</Tag>;
-
-        return (
-          <div>
-            {statusTag}
-
-            {record.weeklyReportId && (
-              <div style={{ marginTop: 6 }}>
-                <Button
-                  size="small"
-                  type="primary"
-                  onClick={() => openGradingModal(record)}
-                >
-                  Chấm điểm
-                </Button>
-              </div>
-            )}
-          </div>
-        );
-      },
+  // CỘT HIỂN THỊ ĐIỂM
+  {
+    title: "Điểm",
+    dataIndex: "score",
+    width: 100,
+    render: (score) => {
+      if (score === null || score === undefined) {
+        return <Tag>--</Tag>;
+      }
+      return <Tag color="blue">{score}</Tag>;
     },
-  ];
+  },
+
+  // CỘT CHẤM / SỬA ĐIỂM
+  {
+    title: "Chấm điểm",
+    width: 150,
+    render: (_, record) => {
+      return (
+        <Button
+          size="small"
+          type={record.score ? "default" : "primary"}
+          onClick={() => openGradingModal(record)}
+        >
+          {record.score ? "Sửa điểm" : "Chấm điểm"}
+        </Button>
+      );
+    },
+  },
+];
 
   return (
     <>
@@ -379,7 +377,7 @@ export default function DeadlineReports() {
             <InputNumber min={0} max={10} style={{ width: "100%" }} />
           </Form.Item>
 
-          <Form.Item label="Nhận xét" name="comment">
+          <Form.Item label="Nhận xét" name="note">
             <TextArea rows={4} placeholder="Nhập nhận xét..." />
           </Form.Item>
         </Form>

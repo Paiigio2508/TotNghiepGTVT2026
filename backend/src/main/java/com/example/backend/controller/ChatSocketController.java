@@ -8,12 +8,12 @@ import com.example.backend.repository.ChatMessageRepository;
 import com.example.backend.repository.ChatRoomRepository;
 import com.example.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/chat")
 public class ChatSocketController {
 
     private final ChatMessageRepository chatMessageRepository;
@@ -21,8 +21,8 @@ public class ChatSocketController {
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/chat.sendMessage")
-    public void sendMessage(ChatMessageDTO request) {
+    @PostMapping("/send")
+    public ChatMessage sendMessage(@RequestBody ChatMessageDTO request) {
 
         ChatRoom room = chatRoomRepository.findById(request.getRoomId())
                 .orElseThrow();
@@ -36,12 +36,14 @@ public class ChatSocketController {
         message.setMessage(request.getMessage());
         message.setIsRead(false);
 
-        chatMessageRepository.save(message);
+        ChatMessage saved = chatMessageRepository.save(message);
 
-        // Broadcast lại room
+        // broadcast realtime
         messagingTemplate.convertAndSend(
                 "/topic/room/" + request.getRoomId(),
-                message
+                saved
         );
+
+        return saved;
     }
 }

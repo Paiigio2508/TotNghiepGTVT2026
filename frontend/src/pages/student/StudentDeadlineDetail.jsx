@@ -32,6 +32,7 @@ export default function StudentDeadlineDetail() {
   const [submitting, setSubmitting] = useState(false);
 
   const loadDetail = useCallback(async () => {
+   
     try {
       setLoading(true);
 
@@ -39,7 +40,7 @@ export default function StudentDeadlineDetail() {
         deadlineId,
         userId
       );
-
+        console.log(res.data);
       const data = res.data;
       setDeadline({ ...data });
 
@@ -127,10 +128,23 @@ export default function StudentDeadlineDetail() {
         {/* LEFT SIDE */}
         <Col span={16}>
           <Card style={{ borderRadius: 16 }}>
-            <Title level={3}>
-              Tuần {deadline.weekNo} - {deadline.title}
-            </Title>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Title level={3} style={{ margin: 0 }}>
+                Tuần {deadline.weekNo} - {deadline.title}
+              </Title>
 
+     
+                <Tag color="red" className="text-danger fs-4" style={{ margin: 0 }}>
+                  {deadline.score ?? 0}/10
+                </Tag>
+     
+            </div>
             <Text type="secondary">
               Hạn nộp: {dayjs(deadline.dueDate).format("DD/MM/YYYY HH:mm")}
             </Text>
