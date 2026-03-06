@@ -2,6 +2,7 @@ import { Layout, Menu, Button, FloatButton } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import {
   FaBookDead,
+  FaClock,
   FaFacebookMessenger,
   FaHome,
   FaUserGraduate,
@@ -9,6 +10,7 @@ import {
 import { IoIosListBox } from "react-icons/io";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { LuNotepadText } from "react-icons/lu";
 
 const { Header, Sider, Content } = Layout;
 
@@ -114,6 +116,7 @@ const teacherMenu = [
   { key: "/teacher", icon: <FaHome />, label: "Dashboard" },
   { key: "/teacher/students", icon: <FaUserGraduate />, label: "Sinh viên" },
   { key: "/teacher/topics", icon: <IoIosListBox />, label: "Đề tài" },
-  { key: "/teacher/deadlines", icon: <FaBookDead />, label: "Deadlines" },
+  { key: "/teacher/deadlines", icon: <FaClock />, label: "Deadlines" },
+  { key: "/teacher/scores", icon: <LuNotepadText />, label: "Bảng điểm sinh viên" },
   { key: "/teacher/chats", icon: <FaFacebookMessenger />, label: "Tin nhắn" },
 ];

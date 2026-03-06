@@ -6,4 +6,7 @@ export class ScoreAPI {
   static getScoreByStudent = (userId) => {
     return request.get(`/api/student/scores/${userId}`);
   };
+  static getScoreStudentforTeacher = (userId, termId) => {
+    return request.get(`/api/teacher/scores/${userId}/${termId}`);
+  };
 }

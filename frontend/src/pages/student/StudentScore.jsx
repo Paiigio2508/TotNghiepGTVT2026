@@ -1,4 +1,4 @@
-import { Layout, Table, Tag, message } from "antd";
+import { Layout, Table, Tag, message, Card, Statistic } from "antd";
 import { useEffect, useState } from "react";
 import { ScoreAPI } from "../../api/ScoreAPI";
 
@@ -21,14 +21,23 @@ export default function StudentScore() {
     }
   }, [userId]);
 
-  const loadScore = async () => {
-    try {
-      const res = await ScoreAPI.getScoreByStudent(userId);
-      setScore(res.data);
-    } catch (error) {
-      message.error("Tải score thất bại!");
-    }
-  };
+const loadScore = async () => {
+  try {
+    const res = await ScoreAPI.getScoreByStudent(userId);
+    const data = Array.isArray(res.data) ? res.data : [];
+    setScore(data);
+  } catch (error) {
+    message.error("Tải score thất bại!");
+  }
+};
+  // ⭐ tính điểm trung bình
+  const averageScore =
+    score.length > 0
+      ? (
+          score.reduce((sum, item) => sum + Number(item.score), 0) /
+          score.length
+        ).toFixed(2)
+      : 0;
 
   const columns = [
     {
@@ -66,6 +75,8 @@ export default function StudentScore() {
     <Layout style={{ padding: "24px", background: "#fff" }}>
       <h2 style={{ marginBottom: 20 }}>📊 Bảng điểm sinh viên</h2>
 
+      {/* Điểm trung bình */}
+
       <Table
         columns={columns}
         dataSource={score}
@@ -73,6 +84,21 @@ export default function StudentScore() {
         pagination={false}
         bordered
       />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginBottom: 20,
+        }}
+      >
+        <Card style={{ width: 250 }}>
+          <Statistic
+            title="Điểm trung bình"
+            value={averageScore}
+            suffix="/ 10"
+          />
+        </Card>
+      </div>
     </Layout>
   );
 }

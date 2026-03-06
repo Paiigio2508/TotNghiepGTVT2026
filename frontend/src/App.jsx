@@ -29,6 +29,7 @@ import StudentDeadlineDetail from "./pages/student/StudentDeadlineDetail";
 import DeadlineReports from "./pages/teacher/DeadlineReports";
 import TeacherChatPage from "./pages/teacher/TeacherChatPage";
 import StudentScore from "./pages/student/StudentScore";
+import TeacherScore from "./pages/teacher/TeacherScore";
 
 export default function App() {
   return (
@@ -65,6 +66,7 @@ export default function App() {
                 path="/teacher/deadline/:deadlineId/reports"
                 element={<DeadlineReports />}
               />
+              <Route path="scores" element={<TeacherScore />} />
               <Route path="chats" element={<TeacherChatPage />} />
             </Route>
           </Route>

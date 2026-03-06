@@ -2,11 +2,15 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.ScoreRequest;
 import com.example.backend.dto.response.ScoreForStudentView;
+import com.example.backend.dto.response.ScoreStudentTeacherView;
 import com.example.backend.entity.Score;
 import com.example.backend.entity.Student;
+import com.example.backend.entity.Teacher;
 import com.example.backend.entity.WeeklyReport;
+import com.example.backend.exception.AppException;
 import com.example.backend.repository.ScoreRepository;
 import com.example.backend.repository.StudentRepository;
+import com.example.backend.repository.TeacherRepository;
 import com.example.backend.repository.WeeklyReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,7 @@ public class ScoreService {
     private final ScoreRepository scoreRepository;
     private final WeeklyReportRepository weeklyReportRepository;
     private  final StudentRepository studentRepository;
+    private final TeacherRepository teacherRepository;
     public Score createScore(ScoreRequest scoreRequest) {
 
         WeeklyReport weeklyReport = weeklyReportRepository
@@ -50,7 +55,16 @@ public class ScoreService {
    public List<ScoreForStudentView> getALLScoreByStudent(String userID){
         Student student = studentRepository
                 .findByUser_Id(userID)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new AppException("Student not found"));
         return scoreRepository.getALLScoreByStudent(student.getId());
+    }
+    public List<ScoreStudentTeacherView> getALLScoreStudentByTeacher(String userID,String termID){
+        System.out.println(userID);
+        System.out.println(termID);
+        Teacher teacher = teacherRepository
+                .findByUserId(userID)
+                .orElseThrow(() -> new AppException("Teacher not found"));
+        System.out.println(teacher.getId());
+        return scoreRepository.getALLScoreStudentByTeacher(teacher.getId(),termID);
     }
 }

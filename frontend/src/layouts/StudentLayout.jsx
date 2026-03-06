@@ -5,7 +5,7 @@ import {
   LogoutOutlined,
   MessageOutlined,
 } from "@ant-design/icons";
-import { FaBookDead, FaHome, FaUserGraduate } from "react-icons/fa";
+import { FaBookDead, FaClock, FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
@@ -151,10 +151,10 @@ export default function StudentLayout() {
 const studentMenu = [
   { key: "/student", icon: <FaUserGraduate />, label: "Thông tin" },
   { key: "/student/topic", icon: <FaHome />, label: "Đăng ký đề tài" },
-  { key: "/student/deadlines", icon: <FaBookDead />, label: "Deadlines" },
+  { key: "/student/deadlines", icon: <FaClock />, label: "Deadlines" },
   {
     key: "/student/scores",
-    icon: <LuNotepadText/>,
+    icon: <LuNotepadText />,
     label: "Bảng điểm theo tuần ",
   },
 ];

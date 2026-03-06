@@ -4,11 +4,12 @@ import {
   MenuUnfoldOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
-import { FaHome, FaUserGraduate, FaChalkboardTeacher } from "react-icons/fa";
+import { FaHome, FaUserGraduate, FaChalkboardTeacher, FaBook, FaGraduationCap } from "react-icons/fa";
 import { BsBoxSeamFill } from "react-icons/bs";
 import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
+import { LuNotepadText } from "react-icons/lu";
 
 const { Header, Sider, Content } = Layout;
 
@@ -118,12 +119,17 @@ const menuItems = [
   },
   {
     key: "/admin/hoc-ky",
-    icon: <FaHome />,
+    icon: <FaGraduationCap />,
     label: "Học kỳ thực tập",
   },
   {
     key: "/admin/topic",
-    icon: <FaHome />,
+    icon: <FaBook />,
     label: "Danh sách đề tài",
+  },
+  {
+    key: "/admin/socres",
+    icon: <LuNotepadText />,
+    label: "Danh sách điểm",
   },
 ];
