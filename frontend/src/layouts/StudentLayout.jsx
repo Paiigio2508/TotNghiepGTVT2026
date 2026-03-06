@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
 import { ChatAPI } from "../api/ChatAPI";
+import { LuNotepadText } from "react-icons/lu";
 
 const { Header, Sider, Content } = Layout;
 
@@ -151,5 +152,9 @@ const studentMenu = [
   { key: "/student", icon: <FaUserGraduate />, label: "Thông tin" },
   { key: "/student/topic", icon: <FaHome />, label: "Đăng ký đề tài" },
   { key: "/student/deadlines", icon: <FaBookDead />, label: "Deadlines" },
-  { key: "/student/scores", icon: <FaBookDead />, label: "Bảng điểm" },
+  {
+    key: "/student/scores",
+    icon: <LuNotepadText/>,
+    label: "Bảng điểm theo tuần ",
+  },
 ];

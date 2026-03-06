@@ -28,6 +28,7 @@ import StudentDeadlineList from "./pages/student/StudentDeadlineList";
 import StudentDeadlineDetail from "./pages/student/StudentDeadlineDetail";
 import DeadlineReports from "./pages/teacher/DeadlineReports";
 import TeacherChatPage from "./pages/teacher/TeacherChatPage";
+import StudentScore from "./pages/student/StudentScore";
 
 export default function App() {
   return (
@@ -76,6 +77,7 @@ export default function App() {
                 path="deadlines/:deadlineId"
                 element={<StudentDeadlineDetail />}
               />
+              <Route path="scores" element={<StudentScore />} />
             </Route>
           </Route>
           {/* 404 */}
