@@ -106,6 +106,7 @@ export default function DeadlineManage() {
       } else {
         await DeadlineAPI.createDeadline(payload, userId);
         toast.success("Tạo thành công!");
+            toast.success("Tạo thành công!");
       }
 
       setOpen(false);
