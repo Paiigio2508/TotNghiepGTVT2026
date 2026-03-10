@@ -11,6 +11,5 @@ public class ChatMessageDTO {
     private String message;
     private String fileUrl;
     private String fileName;
-
     private String messageType;
 }
