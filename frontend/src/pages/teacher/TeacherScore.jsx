@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Table, Select, Card } from "antd";
 import { ScoreAPI } from "../../api/ScoreAPI";
@@ -6,116 +7,170 @@ import { TermAPI } from "../../api/TermAPI";
 const { Option } = Select;
 
 export default function TeacherScore() {
-  const [terms, setTerms] = useState([]);
-  const [termId, setTermId] = useState(null);
-  const [data, setData] = useState([]);
-  const [columns, setColumns] = useState([]);
+
+  const [terms,setTerms] = useState([]);
+  const [termId,setTermId] = useState(null);
+  const [data,setData] = useState([]);
+  const [columns,setColumns] = useState([]);
 
   const user = JSON.parse(localStorage.getItem("userData"));
 
-  useEffect(() => {
+  useEffect(()=>{
     loadTerms();
-  }, []);
+  },[]);
 
-  useEffect(() => {
-    if (termId) {
+  useEffect(()=>{
+    if(termId){
       loadScore();
     }
-  }, [termId]);
+  },[termId]);
 
-  const loadTerms = async () => {
+  /* ================= LOAD TERMS ================= */
+
+  const loadTerms = async ()=>{
     const res = await TermAPI.getAllTermForTeacherLayout();
     setTerms(res.data);
   };
 
-  const loadScore = async () => {
-    const res = await ScoreAPI.getScoreStudentforTeacher(user.userId, termId);
+  /* ================= LOAD SCORE ================= */
+
+  const loadScore = async ()=>{
+
+    const res = await ScoreAPI.getScoreStudentforTeacher(user.userId,termId);
 
     const rows = res.data;
 
-    const weeks = [...new Set(rows.map((r) => r.week))].sort((a, b) => a - b);
+    if(!rows || rows.length===0){
+      setData([]);
+      setColumns([]);
+      return;
+    }
+
+    /* ===== LẤY DANH SÁCH TUẦN ===== */
+
+    const weeks = [...new Set(rows.map(r=>r.week))].sort((a,b)=>a-b);
 
     const map = {};
 
-    rows.forEach((r) => {
-      if (!map[r.studentId]) {
+    rows.forEach(r=>{
+
+      if(!map[r.studentId]){
         map[r.studentId] = {
           key: r.studentId,
+          studentCode: r.studentCode,
           studentName: r.studentName,
-          topicTitle: r.topicTitle,
+          topicTitle: r.topicTitle
         };
       }
 
       map[r.studentId][`week${r.week}`] = r.score;
+
     });
 
     const tableData = Object.values(map);
 
-    tableData.forEach((row) => {
+    /* ===== TÍNH AVG ===== */
+
+    tableData.forEach(row=>{
+
       let sum = 0;
 
-      weeks.forEach((w) => {
+      weeks.forEach(w=>{
         sum += row[`week${w}`] || 0;
       });
 
       row.avg = (sum / weeks.length).toFixed(2);
+
     });
 
+    /* ===== BASE COLUMNS ===== */
+
     const baseColumns = [
+
       {
-        title: "Tên",
-        dataIndex: "studentName",
-        width: 250,
+        title:"Mã SV",
+        dataIndex:"studentCode",
+        width:150
       },
+
       {
-        title: "Đề tài",
-        dataIndex: "topicTitle",
-        width: 350,
-        render: (text) => (
+        title:"Sinh viên",
+        dataIndex:"studentName",
+        width:250
+      },
+
+      {
+        title:"Đề tài",
+        dataIndex:"topicTitle",
+        width:350,
+        render:(text)=>(
           <div
             style={{
-              whiteSpace: "normal",
-              wordBreak: "break-word",
-              lineHeight: "1.4",
+              whiteSpace:"normal",
+              wordBreak:"break-word",
+              lineHeight:"1.4"
             }}
           >
             {text}
           </div>
-        ),
-      },
+        )
+      }
+
     ];
 
-    const weekColumns = weeks.map((w) => ({
-      title: `W${w}`,
-      dataIndex: `week${w}`,
-      align: "center",
+    /* ===== WEEK COLUMNS ===== */
+
+    const weekColumns = weeks.map(w=>({
+
+      title:`W${w}`,
+      dataIndex:`week${w}`,
+      align:"center",
+      width:80
+
     }));
 
+    /* ===== AVG COLUMN ===== */
+
     const avgColumn = {
-      title: "Avg",
-      dataIndex: "avg",
-      align: "center",
+      title:"Avg",
+      dataIndex:"avg",
+      align:"center",
+      width:100
     };
 
-    setColumns([...baseColumns, ...weekColumns, avgColumn]);
+    setColumns([...baseColumns,...weekColumns,avgColumn]);
     setData(tableData);
+
   };
 
-  return (
+  return(
+
     <Card title="📊 Bảng điểm sinh viên">
+
       <Select
-        style={{ width: 250, marginBottom: 20 }}
+        style={{width:250,marginBottom:20}}
         placeholder="Chọn kỳ thực tập"
-        onChange={(v) => setTermId(v)}
+        allowClear
+        onChange={(v)=>setTermId(v)}
       >
-        {terms.map((t) => (
+        {terms.map(t=>(
           <Option key={t.id} value={t.id}>
             {t.name}
           </Option>
         ))}
       </Select>
 
-      <Table columns={columns} dataSource={data} pagination={false} bordered />
+      <Table
+        columns={columns}
+        dataSource={data}
+        pagination={false}
+        bordered
+        scroll={{x:1200}}
+      />
+
     </Card>
+
   );
+
 }
+

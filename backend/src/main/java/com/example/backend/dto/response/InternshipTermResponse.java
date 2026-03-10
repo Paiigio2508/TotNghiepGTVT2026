@@ -13,7 +13,7 @@ public interface InternshipTermResponse {
     String getDescription();
 
     LocalDate getStartDate();  // start_date as startDate
-
+    String getNgaySinh();
     LocalDate getEndDate();    // end_date as endDate
 
     String getStatus();

@@ -15,15 +15,18 @@ import java.util.Optional;
 public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssignment, String> {
 
     @Query(value = """
-            SELECT
-                s.student_code AS studentCode,
-                s.full_name AS fullName,
-                s.class_name as className,
-                t.full_name AS teacherName
-            FROM advisor_assignments a
-            JOIN students s ON a.student_id = s.id
-            JOIN teachers t ON a.teacher_id = t.id
-            where a.term_id =:term_id order by s.student_code
+  SELECT
+      s.student_code AS studentCode,
+      s.full_name AS fullName,
+      s.class_name AS className,
+      u.ngay_sinh AS ngaySinh,
+      t.full_name AS teacherName
+  FROM advisor_assignments a
+  JOIN students s ON a.student_id = s.id
+  JOIN users u ON s.user_id = u.id
+  JOIN teachers t ON a.teacher_id = t.id
+  WHERE a.term_id = :term_id
+  ORDER BY s.student_code;
                     
                 """, nativeQuery = true)
     List<InternshipTermResponse> getALLSVPhanCong(@PathVariable String term_id);

@@ -13,8 +13,8 @@ import java.util.Optional;
 public interface StudentRepository extends JpaRepository<Student, String> {
 
     @Query(value = """
-            select s.id as id,student_code as userCode, full_name as name, class_name as className, email, phone,gender,
-             url_image as urlImage ,created_at as createdAt ,s.status  from users u join students s on u.id =s.user_id order by  createdAt
+               select s.id as id,student_code as userCode, full_name as name, class_name as className, email, phone,gender,u.ngay_sinh as ngaySinh,
+                         url_image as urlImage ,created_at as createdAt ,s.status  from users u join students s on u.id =s.user_id order by  createdAt
             """, nativeQuery = true)
     List<UserResponse> getALLSTUDENT();
     Optional<Student> findByUser_Id(String userId);

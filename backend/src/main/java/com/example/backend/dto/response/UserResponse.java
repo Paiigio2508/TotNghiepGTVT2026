@@ -17,6 +17,7 @@ public interface UserResponse {
     String getEmail();
 
     String getPhone();
+    String getNgaySinh();
 
     String getUrlImage();
     String getCreatedAt();

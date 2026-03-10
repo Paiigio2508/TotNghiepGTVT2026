@@ -3,17 +3,16 @@ package com.example.backend.service;
 import com.example.backend.dto.request.ScoreRequest;
 import com.example.backend.dto.response.ScoreForStudentView;
 import com.example.backend.dto.response.ScoreStudentTeacherView;
-import com.example.backend.entity.Score;
-import com.example.backend.entity.Student;
-import com.example.backend.entity.Teacher;
-import com.example.backend.entity.WeeklyReport;
+import com.example.backend.entity.*;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.ScoreRepository;
 import com.example.backend.repository.StudentRepository;
 import com.example.backend.repository.TeacherRepository;
 import com.example.backend.repository.WeeklyReportRepository;
+import com.example.backend.util.status.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +25,7 @@ public class ScoreService {
     private final WeeklyReportRepository weeklyReportRepository;
     private  final StudentRepository studentRepository;
     private final TeacherRepository teacherRepository;
+    private  final NotificationService notificationService;
     public Score createScore(ScoreRequest scoreRequest) {
 
         WeeklyReport weeklyReport = weeklyReportRepository
@@ -50,7 +50,23 @@ public class ScoreService {
             score.setCreatedAt(LocalDateTime.now());
         }
 
-        return scoreRepository.save(score);
+        /* SAVE SCORE TRƯỚC */
+        Score savedScore = scoreRepository.save(score);
+
+        Student student = weeklyReport.getAdvisorAssignment().getStudent();
+
+        Notification notification = new Notification();
+        notification.setTitle("Đã có điểm báo cáo tuần");
+        notification.setContent(
+                "Tuần " + weeklyReport.getWeekNo() +
+                        " đã được chấm điểm: " + savedScore.getScore()
+        );
+        notification.setUser(student.getUser());
+        notification.setType(NotificationType.WEEKLY_REPORT_GRADED);
+        notification.setEntityId(savedScore.getId());
+        notificationService.sendNotification(notification);
+
+        return savedScore;
     }
    public List<ScoreForStudentView> getALLScoreByStudent(String userID){
         Student student = studentRepository

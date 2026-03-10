@@ -36,6 +36,7 @@ export default function PhanCongManage() {
   const loadAssigned = async () => {
     try {
       const res = await AssignmentsAPI.getAllsvAssigned(termId);
+      console.log(res.data);
       setAssignedData(res.data);
     } catch (err) {
       message.error("Tải danh sách đã phân công thất bại!");
@@ -63,6 +64,7 @@ export default function PhanCongManage() {
     },
     { title: "Mã SV", dataIndex: "studentCode" },
     { title: "Họ tên", dataIndex: "fullName" },
+    { title: "Ngày sinh", dataIndex: "ngaySinh" },
     {
       title: "Lớp",
       dataIndex: "className",

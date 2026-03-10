@@ -6,5 +6,6 @@ public enum RegistrationStatus {
     REJECTED_BY_TEACHER,
     FINAL_APPROVED,        // Admin duyệt cuối
     REJECTED_BY_ADMIN,
-    CANCELLED
+    CANCELLED,
+
 }

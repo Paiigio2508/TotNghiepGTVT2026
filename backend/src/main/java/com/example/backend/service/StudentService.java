@@ -18,6 +18,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -66,7 +68,7 @@ public class StudentService {
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
         user.setGender(request.getGender());
-
+        user.setNgaySinh(request.getNgaySinh());
         userRepository.save(user);
 
         Student student = new Student();
@@ -122,11 +124,11 @@ public class StudentService {
         }
 
         user.setEmail(request.getEmail());
-        user.setUsername(request.getEmail());
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
         user.setUpdatedAt(LocalDateTime.now());
         user.setGender(request.getGender());
+        user.setNgaySinh(request.getNgaySinh());
         userRepository.save(user);
 
         student.setFullName(request.getFullName());
@@ -169,7 +171,7 @@ public class StudentService {
                     request.setClassName(support.getCellValue(row, 3));
                     request.setEmail(support.getCellValue(row, 4));
                     request.setPhone(support.getCellValue(row, 5));
-
+                    request.setNgaySinh(LocalDate.parse(support.getCellValue(row, 7)));
                     String image = support.getCellValue(row, 6);
                     request.setUrlImage(image.isEmpty() ? defaultImage : image);
 

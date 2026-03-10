@@ -58,6 +58,7 @@ public class TeacherService {
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
         user.setGender(request.getGender());
+        user.setNgaySinh(request.getNgaySinh());
         userRepository.save(user);
 
         Teacher teacher = new Teacher();
@@ -110,11 +111,11 @@ public class TeacherService {
         }
 
         user.setEmail(request.getEmail());
-        user.setUsername(request.getEmail());
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
         user.setUpdatedAt(LocalDateTime.now());
         user.setGender(request.getGender());
+        user.setNgaySinh(request.getNgaySinh());
         teacher.setFullName(request.getFullName());
         teacher.setTeacherCode(request.getUserCode());
 

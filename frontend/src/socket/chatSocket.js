@@ -3,7 +3,16 @@ import { Client } from "@stomp/stompjs";
 
 let stompClient = null;
 
-export const connectSocket = (roomId, onMessageReceived) => {
+export const connectSocket = (
+  roomId,
+  userId,
+  onChatMessage,
+  onNotification
+) => {
+  if (stompClient && stompClient.connected) {
+    return;
+  }
+
   const socket = new SockJS("http://localhost:8080/ws");
 
   stompClient = new Client({
@@ -12,28 +21,38 @@ export const connectSocket = (roomId, onMessageReceived) => {
   });
 
   stompClient.onConnect = () => {
-    console.log("Socket connected");
 
-    stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
-      const body = JSON.parse(message.body);
-      onMessageReceived(body);
-    });
+    /* ================= CHAT ================= */
+
+    if (roomId) {
+      stompClient.subscribe(`/topic/room/${roomId}`, (message) => {
+        const body = JSON.parse(message.body);
+
+        if (onChatMessage) {
+          onChatMessage(body);
+        }
+      });
+    }
+
+    /* ================= NOTIFICATION ================= */
+
+    if (userId) {
+      stompClient.subscribe(`/topic/notification/${userId}`, (message) => {
+        const body = JSON.parse(message.body);
+
+        if (onNotification) {
+          onNotification(body);
+        }
+      });
+    }
   };
 
   stompClient.activate();
 };
 
-export const sendMessage = (roomId, message) => {
-  if (!stompClient || !stompClient.connected) return;
-
-  stompClient.publish({
-    destination: "/app/chat.sendMessage",
-    body: JSON.stringify(message),
-  });
-};
-
 export const disconnectSocket = () => {
   if (stompClient) {
     stompClient.deactivate();
+    stompClient = null;
   }
 };

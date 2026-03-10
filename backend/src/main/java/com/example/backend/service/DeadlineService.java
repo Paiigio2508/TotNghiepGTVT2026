@@ -11,6 +11,7 @@ import com.example.backend.repository.InternshipTermRepository;
 import com.example.backend.repository.TeacherRepository;
 import com.example.backend.util.EmailService;
 import com.example.backend.util.status.DeadlineType;
+import com.example.backend.util.status.NotificationType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +24,10 @@ public class DeadlineService {
     private final DeadlineRepository deadlineRepository;
     private final InternshipTermRepository internshipTermRepository;
     private final TeacherRepository teacherRepository;
-    private  final EmailService emailService;
-    private  final AdvisorAssignmentRepository advisorAssignmentRepository;
+    private final EmailService emailService;
+    private final AdvisorAssignmentRepository advisorAssignmentRepository;
+    private final NotificationService notificationService;
+
     public List<Deadline> getDeadlinesByTeacher(String termId, String userId) {
 
         Teacher teacher = teacherRepository.findByUserId(userId)
@@ -32,6 +35,7 @@ public class DeadlineService {
 
         return deadlineRepository.findByTermAndTeacher(termId, teacher.getId());
     }
+
     public Deadline createDeadline(DeadlineRequest request, String teacherId) {
 
         InternshipTerm term = internshipTermRepository.findById(request.getInternshipTermId())
@@ -63,7 +67,7 @@ public class DeadlineService {
 
         //  Lấy toàn bộ sinh viên trong kỳ thực tập
         List<AdvisorAssignment> assignments =
-                advisorAssignmentRepository.findByTerm_IdAndTeacher_Id(term.getId(),deadline.getTeacher().getId());
+                advisorAssignmentRepository.findByTerm_IdAndTeacher_Id(term.getId(), deadline.getTeacher().getId());
         for (AdvisorAssignment assignment : assignments) {
 
             Student student = assignment.getStudent();
@@ -76,10 +80,18 @@ public class DeadlineService {
             } catch (Exception e) {
                 System.out.println("Gửi mail thất bại cho: " + student.getUser().getEmail());
             }
+            Notification notification = new Notification();
+            notification.setTitle("Deadline mới");
+            notification.setContent("Tuần " + savedDeadline.getWeekNo() + " có deadline mới: " + savedDeadline.getTitle());
+            notification.setUser(student.getUser());
+            notification.setType(NotificationType.DEADLINE_CREATED);
+            notification.setEntityId(savedDeadline.getId());
+            notificationService.sendNotification(notification);
         }
 
         return savedDeadline;
     }
+
     public Deadline updateDeadline(String id, DeadlineRequest request, String userId) {
 
         Deadline deadline = deadlineRepository.findById(id)
@@ -136,9 +148,11 @@ public class DeadlineService {
 
         return deadlineRepository.save(deadline);
     }
+
     public List<DeadlineProjection> getDeadlinesForStudent(String userId) {
         return deadlineRepository.findDeadlinesByStudentUserId(userId);
     }
+
     public DeadlineProjection getDeadlineDetailForStudent(String deadlineId, String userId) {
         return deadlineRepository
                 .findDeadlineDetailForStudent(deadlineId, userId)
@@ -155,7 +169,7 @@ public class DeadlineService {
         }
 
         return deadlineRepository.findReportsByWeekAndDeadline(
-                 deadlineId, userId
+                deadlineId, userId
         );
     }
 }

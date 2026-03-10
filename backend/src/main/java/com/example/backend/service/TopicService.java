@@ -6,6 +6,7 @@ import com.example.backend.dto.response.TopicTeacherView;
 import com.example.backend.entity.*;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.*;
+import com.example.backend.util.status.NotificationType;
 import com.example.backend.util.status.TopicStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class TopicService {
     private final StudentRepository studentRepository;
     private final AdvisorAssignmentRepository advisorAssignmentRepository;
     private final AdvisorAssignmentService advisorAssignmentService;
+    private final NotificationService notificationService;
     public List<Topic> getTopicsByUser(String userId) {
 
         Student student = studentRepository
@@ -94,12 +96,11 @@ public class TopicService {
                 .findByUser_Id(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy sinh viên"));
 
-        // ❌ Không phải đề tài của mình
+
         if (!topic.getStudent().getId().equals(student.getId())) {
             throw new AppException("Bạn không có quyền hủy đề tài này");
         }
 
-        // ❌ Chỉ được hủy khi đang PENDING
         if (topic.getStatus() != TopicStatus.PENDING) {
             throw new AppException("Chỉ được hủy khi đề tài đang chờ duyệt");
         }
@@ -128,6 +129,19 @@ public class TopicService {
                 topic.getId(),
                 TopicStatus.REJECTED_BY_TEACHER
         );
+
+        Student student = topic.getStudent();
+
+        Notification notification = new Notification();
+        notification.setTitle("Đề tài đã được duyệt");
+        notification.setContent(
+                "Đề tài \"" + topic.getTitle() + "\" đã được giảng viên duyệt"
+        );
+        notification.setUser(student.getUser());
+        notification.setType(NotificationType.TOPIC_APPROVED_BY_TEACHER);
+        notification.setEntityId(topic.getId());
+
+        notificationService.sendNotification(notification);
     }
     /* ================= GIẢNG VIÊN TỪ CHỐI ================= */
     @Transactional
@@ -163,5 +177,17 @@ public class TopicService {
                 topic.getTerm().getId(),
                 topic
         );
+        Student student = topic.getStudent();
+
+        Notification notification = new Notification();
+        notification.setTitle("Đề tài duyệt chính thức");
+        notification.setContent(
+                "Đề tài \"" + topic.getTitle() + "\" đã được admin duyệt cuối cùng "
+        );
+        notification.setUser(student.getUser());
+        notification.setType(NotificationType.TOPIC_APPROVED_BY_ADMIN);
+        notification.setEntityId(topic.getId());
+
+        notificationService.sendNotification(notification);
     }
 }

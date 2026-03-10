@@ -7,6 +7,8 @@ import jakarta.persistence.Table;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
+
 @Entity
 @Table(name = "users")
 @SuperBuilder
@@ -20,6 +22,7 @@ public class User extends BaseEntity {
     private String username;
     private String password;
     private String role;   // ADMIN, STUDENT, TEACHER
+    private LocalDate ngaySinh;
     @Column(unique = true)
     private String email;
     @Column(unique = true)

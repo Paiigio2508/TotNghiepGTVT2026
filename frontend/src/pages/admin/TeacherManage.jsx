@@ -1,3 +1,4 @@
+
 import {
   Table,
   Button,
@@ -13,6 +14,7 @@ import {
   Col,
   Tag,
   Radio,
+  DatePicker,
 } from "antd";
 import { RetweetOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -21,6 +23,7 @@ import { TeacherAPI } from "../../api/TeacherAPI";
 import "./css/UserManage.css";
 import UpLoadImage from "../UpLoadImage";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 
 export default function TeacherManage() {
   const [data, setData] = useState([]);
@@ -56,7 +59,7 @@ export default function TeacherManage() {
       (item) =>
         item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
         item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase()),
+        item.phone?.toLowerCase().includes(keyword.toLowerCase())
     );
 
     setData(result);
@@ -77,7 +80,12 @@ export default function TeacherManage() {
   const onEdit = (record) => {
     setEditing(record);
     setImageUrl(record.urlImage);
-    form.setFieldsValue(record);
+
+    form.setFieldsValue({
+      ...record,
+      ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
+    });
+
     setOpen(true);
   };
 
@@ -93,6 +101,9 @@ export default function TeacherManage() {
         email: values.email,
         urlImage: values.urlImage,
         gender: values.gender,
+        ngaySinh: values.ngaySinh
+          ? values.ngaySinh.format("YYYY-MM-DD")
+          : null,
       };
 
       let res;
@@ -103,13 +114,11 @@ export default function TeacherManage() {
         res = await TeacherAPI.createTeacher(payload);
       }
 
-      // 🔥 CHECK SUCCESS FLAG TỪ BE
       if (res.data && res.data.success === false) {
         toast.error(res.data.message);
         return;
       }
 
-      // ✅ Chỉ chạy khi thực sự thành công
       toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
       setOpen(false);
@@ -149,20 +158,22 @@ export default function TeacherManage() {
           <Tag color="pink">Nữ</Tag>
         ),
     },
+    {
+      title: "Ngày sinh",
+      dataIndex: "ngaySinh",
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
+    },
     { title: "Email", dataIndex: "email" },
     { title: "SĐT", dataIndex: "phone" },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      render: (status) => (
-        <>
-          {status == 0 ? (
-            <Tag color="#00cc00">Hoạt động</Tag>
-          ) : (
-            <Tag color="red">Ngừng hoạt động</Tag>
-          )}
-        </>
-      ),
+      render: (status) =>
+        status == 0 ? (
+          <Tag color="#00cc00">Hoạt động</Tag>
+        ) : (
+          <Tag color="red">Ngừng hoạt động</Tag>
+        ),
     },
     {
       title: "Hành động",
@@ -197,7 +208,7 @@ export default function TeacherManage() {
           }
         >
           <div className="d-flex justify-content-center gap-4">
-            <Form.Item label="Tìm kiếm" name="timKiem" className="ant-input">
+            <Form.Item label="Tìm kiếm" name="timKiem">
               <Input
                 maxLength={30}
                 placeholder="Mã / tên / SĐT..."
@@ -258,7 +269,6 @@ export default function TeacherManage() {
         centered
       >
         <Row gutter={24}>
-          {/* Upload ảnh */}
           <Col span={10} className="d-flex justify-content-center pt-5">
             <UpLoadImage
               defaultImage={imageUrl}
@@ -269,7 +279,6 @@ export default function TeacherManage() {
             />
           </Col>
 
-          {/* Form */}
           <Col span={14}>
             <Form form={form} layout="vertical">
               <Form.Item
@@ -287,18 +296,26 @@ export default function TeacherManage() {
               >
                 <Input />
               </Form.Item>
+
               <Form.Item
                 name="gender"
                 label="Giới tính"
-                rules={[
-                  { required: true, message: "Vui lòng chọn giới tính!" },
-                ]}
+                rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
               >
                 <Radio.Group>
                   <Radio value="Nam">Nam</Radio>
                   <Radio value="Nữ">Nữ</Radio>
                 </Radio.Group>
               </Form.Item>
+
+              <Form.Item
+                name="ngaySinh"
+                label="Ngày sinh"
+                rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
+              >
+                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+              </Form.Item>
+
               <Form.Item
                 name="email"
                 label="Email"
@@ -333,3 +350,4 @@ export default function TeacherManage() {
     </>
   );
 }
+

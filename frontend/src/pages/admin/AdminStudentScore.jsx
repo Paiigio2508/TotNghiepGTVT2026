@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Table, Select, Card, message, Space } from "antd";
 import { ScoreAPI } from "../../api/ScoreAPI";
@@ -27,6 +28,8 @@ export default function AdminStudentScore() {
     }
   }, [termId, teacherId]);
 
+  /* ================= LOAD TERM ================= */
+
   const loadTerms = async () => {
     try {
       const res = await TermAPI.getAll();
@@ -35,6 +38,8 @@ export default function AdminStudentScore() {
       message.error("Không tải được danh sách kỳ");
     }
   };
+
+  /* ================= LOAD TEACHER ================= */
 
   const loadTeachers = async () => {
     try {
@@ -45,10 +50,11 @@ export default function AdminStudentScore() {
     }
   };
 
+  /* ================= LOAD SCORE ================= */
+
   const loadScore = async () => {
     try {
       const res = await ScoreAPI.getScoreStudentforAdmin(teacherId, termId);
-
       const rows = res.data;
 
       if (!rows || rows.length === 0) {
@@ -57,7 +63,11 @@ export default function AdminStudentScore() {
         return;
       }
 
+      /* ===== LẤY DANH SÁCH WEEK ===== */
+
       const weeks = [...new Set(rows.map((r) => r.week))].sort((a, b) => a - b);
+
+      /* ===== GROUP DATA THEO STUDENT ===== */
 
       const map = {};
 
@@ -65,6 +75,7 @@ export default function AdminStudentScore() {
         if (!map[r.studentId]) {
           map[r.studentId] = {
             key: r.studentId,
+            studentCode: r.studentCode,
             studentName: r.studentName,
             topicTitle: r.topicTitle,
           };
@@ -74,6 +85,8 @@ export default function AdminStudentScore() {
       });
 
       const tableData = Object.values(map);
+
+      /* ===== TÍNH AVG ===== */
 
       tableData.forEach((row) => {
         let sum = 0;
@@ -85,7 +98,14 @@ export default function AdminStudentScore() {
         row.avg = (sum / weeks.length).toFixed(2);
       });
 
+      /* ===== BASE COLUMNS ===== */
+
       const baseColumns = [
+        {
+          title: "Mã SV",
+          dataIndex: "studentCode",
+          width: 150,
+        },
         {
           title: "Sinh viên",
           dataIndex: "studentName",
@@ -108,12 +128,16 @@ export default function AdminStudentScore() {
         },
       ];
 
+      /* ===== WEEK COLUMNS ===== */
+
       const weekColumns = weeks.map((w) => ({
         title: `W${w}`,
         dataIndex: `week${w}`,
         align: "center",
         width: 80,
       }));
+
+      /* ===== AVG COLUMN ===== */
 
       const avgColumn = {
         title: "Avg",
@@ -133,6 +157,8 @@ export default function AdminStudentScore() {
   return (
     <Card title="📊 Bảng điểm sinh viên (Admin)">
       <Space style={{ marginBottom: 20 }}>
+        {/* TERM SELECT */}
+
         <Select
           style={{ width: 250 }}
           placeholder="Chọn kỳ thực tập"
@@ -145,6 +171,9 @@ export default function AdminStudentScore() {
             </Option>
           ))}
         </Select>
+
+        {/* TEACHER SELECT */}
+
         <Select
           style={{ width: 250 }}
           placeholder="Chọn giảng viên"
@@ -159,8 +188,6 @@ export default function AdminStudentScore() {
             </Option>
           ))}
         </Select>
-
-        {/* Term select */}
       </Space>
 
       <Table
@@ -173,3 +200,4 @@ export default function AdminStudentScore() {
     </Card>
   );
 }
+
