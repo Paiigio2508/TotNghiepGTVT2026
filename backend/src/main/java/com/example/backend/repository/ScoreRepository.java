@@ -37,33 +37,36 @@ public interface ScoreRepository extends JpaRepository<Score, String> {
     List<ScoreForStudentView> getALLScoreByStudent(@Param("studentId") String studentId);
 
     @Query(value = """
-            SELECT
-                                           s.id AS studentId,
-                                           s.full_name AS studentName,
-                                           tp.title AS topicTitle,
-                                           d.week_no AS week,
-                                           COALESCE(sc.score,0) AS score
-                                       FROM advisor_assignments aa
-                                       JOIN students s ON aa.student_id = s.id
-                                       LEFT JOIN topics tp ON aa.topic_id = tp.id
-                                       
-                                       JOIN deadlines d
-                                         ON d.internship_term_id = aa.term_id
-                                        AND d.teacher_id = aa.teacher_id
-                                       
-                                       LEFT JOIN weekly_reports wr
-                                         ON wr.advisor_assignment_id = aa.id
-                                        AND wr.deadline_id = d.id
-                                       
-                                       LEFT JOIN scores sc
-                                         ON sc.weekly_report_id = wr.id
-                                       WHERE aa.teacher_id = :teacherID
-                                       AND aa.term_id = :termID
-                                       and d.type="REPORT"
-                                       ORDER BY s.full_name, d.week_no;
+SELECT
+    s.id AS studentId,
+    s.full_name AS studentName,
+    tp.title AS topicTitle,
+    d.week_no AS week,
+    COALESCE(sc.score,0) AS score
+FROM advisor_assignments aa
+JOIN students s ON aa.student_id = s.id
+LEFT JOIN topics tp ON aa.topic_id = tp.id
+
+JOIN deadlines d
+  ON d.internship_term_id = aa.term_id
+ AND d.teacher_id = aa.teacher_id
+
+LEFT JOIN weekly_reports wr
+  ON wr.advisor_assignment_id = aa.id
+ AND wr.deadline_id = d.id
+
+LEFT JOIN scores sc
+  ON sc.weekly_report_id = wr.id
+
+WHERE aa.term_id = :termID
+AND d.type = "REPORT"
+AND (:teacherID IS NULL OR aa.teacher_id = :teacherID)
+
+ORDER BY s.full_name, d.week_no;
                    """, nativeQuery = true)
     List<ScoreStudentTeacherView> getALLScoreStudentByTeacher(
             @Param("teacherID") String teacherID,
             @Param("termID") String termID
     );
+
 }

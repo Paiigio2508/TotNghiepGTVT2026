@@ -9,4 +9,7 @@ export class ScoreAPI {
   static getScoreStudentforTeacher = (userId, termId) => {
     return request.get(`/api/teacher/scores/${userId}/${termId}`);
   };
+  static getScoreStudentforAdmin = (userId, termId) => {
+    return request.get(`/api/admin/scores/${userId}/${termId}`);
+  };
 }

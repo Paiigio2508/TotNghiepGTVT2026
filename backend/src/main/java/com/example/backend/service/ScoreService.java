@@ -58,13 +58,18 @@ public class ScoreService {
                 .orElseThrow(() -> new AppException("Student not found"));
         return scoreRepository.getALLScoreByStudent(student.getId());
     }
-    public List<ScoreStudentTeacherView> getALLScoreStudentByTeacher(String userID,String termID){
-        System.out.println(userID);
-        System.out.println(termID);
+    public List<ScoreStudentTeacherView> getALLScoreStudentByTeacher(String userID, String termID){
+
+        // Admin không chọn teacher → chỉ lọc theo term
+        if(userID == null || userID.equals("null") || userID.isBlank()){
+            return scoreRepository.getALLScoreStudentByTeacher(null, termID);
+        }
+
+        // Có chọn teacher → tìm teacher theo userId
         Teacher teacher = teacherRepository
                 .findByUserId(userID)
                 .orElseThrow(() -> new AppException("Teacher not found"));
-        System.out.println(teacher.getId());
-        return scoreRepository.getALLScoreStudentByTeacher(teacher.getId(),termID);
+
+        return scoreRepository.getALLScoreStudentByTeacher(teacher.getId(), termID);
     }
 }

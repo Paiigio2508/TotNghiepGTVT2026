@@ -25,7 +25,6 @@ export default function TeacherScore() {
 
   const loadTerms = async () => {
     const res = await TermAPI.getAllTermForTeacherLayout();
-    console.log(res.data);
     setTerms(res.data);
   };
 

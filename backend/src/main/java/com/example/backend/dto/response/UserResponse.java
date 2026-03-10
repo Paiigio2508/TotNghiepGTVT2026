@@ -5,6 +5,7 @@ import java.util.UUID;
 public interface UserResponse {
 
     UUID getId();
+    String getUserID();
 
     String getUserCode();
 

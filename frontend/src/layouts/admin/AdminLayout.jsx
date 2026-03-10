@@ -128,7 +128,7 @@ const menuItems = [
     label: "Danh sách đề tài",
   },
   {
-    key: "/admin/socres",
+    key: "/admin/scores",
     icon: <LuNotepadText />,
     label: "Danh sách điểm",
   },

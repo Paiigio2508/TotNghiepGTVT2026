@@ -30,6 +30,7 @@ import DeadlineReports from "./pages/teacher/DeadlineReports";
 import TeacherChatPage from "./pages/teacher/TeacherChatPage";
 import StudentScore from "./pages/student/StudentScore";
 import TeacherScore from "./pages/teacher/TeacherScore";
+import AdminStudentScore from "./pages/admin/AdminStudentScore";
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
               <Route path="hoc-ky" element={<HocKyManage />} />
               <Route path="assignments/:termId" element={<PhanCongManage />} />
               <Route path="topic" element={<TopicManageAdmin />} />
+              <Route path="scores" element={<AdminStudentScore />} />
             </Route>
           </Route>
 
