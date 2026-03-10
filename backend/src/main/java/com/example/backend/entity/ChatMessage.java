@@ -1,6 +1,7 @@
 package com.example.backend.entity;
 
 import com.example.backend.entity.base.BaseEntity;
+import com.example.backend.util.status.MessageType;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -16,7 +17,14 @@ public class ChatMessage extends BaseEntity {
     private String message;
 
     private Boolean isRead;
+    // link file hoặc ảnh
+    private String fileUrl;
 
+    // tên file
+    private String fileName;
+
+    @Enumerated(EnumType.STRING)
+    private MessageType messageType;
     @ManyToOne
     @JoinColumn(name = "chat_room_id", nullable = false)
     @JsonIgnore

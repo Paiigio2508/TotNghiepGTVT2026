@@ -1,5 +1,6 @@
 import { Avatar, Input, Button } from "antd";
-import { SendOutlined } from "@ant-design/icons";
+import { SendOutlined, UploadOutlined } from "@ant-design/icons";
+
 import { useEffect, useRef, useState } from "react";
 import { ChatAPI } from "../api/ChatAPI";
 
@@ -9,6 +10,7 @@ import { Client } from "@stomp/stompjs";
 export default function ChatWidget({ roomId, studentName, mode = "page" }) {
   const [messages, setMessages] = useState([]);
   const [content, setContent] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const bottomRef = useRef(null);
 
@@ -69,7 +71,7 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
     return () => stompClient.deactivate();
   }, [roomId]);
 
-  /* SEND MESSAGE */
+  /* SEND TEXT MESSAGE */
 
   const sendMessage = async () => {
     if (!content.trim()) return;
@@ -79,6 +81,7 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
         roomId,
         senderId: userData.userId,
         message: content,
+        messageType: "TEXT",
       });
 
       setContent("");
@@ -87,6 +90,27 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
     }
   };
 
+  /* UPLOAD FILE */
+
+const handleUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    const formData = new FormData();
+
+    formData.append("file", file);
+    formData.append("roomId", roomId);
+    formData.append("senderId", userData.userId);
+
+    await ChatAPI.sendFile(formData);
+  } catch (err) {
+    console.error(err);
+  }
+};
+const getDownloadUrl = (url) => {
+  return url.replace("/upload/", "/upload/fl_attachment/");
+};
   return (
     <div
       style={{
@@ -149,11 +173,43 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
                   maxWidth: "65%",
                   padding: "8px 12px",
                   borderRadius: 12,
-                  background: isMe ? "#1677ff" : "#e4e6eb",
+                  background:
+                    msg.messageType === "FILE"
+                      ? "transparent"
+                      : isMe
+                      ? "#1677ff"
+                      : "#e4e6eb",
                   color: isMe ? "#fff" : "#000",
                 }}
               >
-                {msg.message}
+                {/* TEXT MESSAGE */}
+
+                {msg.messageType === "TEXT" && msg.message}
+
+                {/* IMAGE MESSAGE */}
+
+                {msg.messageType === "IMAGE" && (
+                  <img
+                    src={msg.fileUrl}
+                    alt="img"
+                    style={{
+                      maxWidth: "200px",
+                      borderRadius: 8,
+                    }}
+                  />
+                )}
+
+                {/* FILE MESSAGE */}
+
+                {msg.messageType === "FILE" && (
+                  <a
+                    href={getDownloadUrl(msg.fileUrl, msg.fileName)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    📎 {msg.fileName}
+                  </a>
+                )}
               </div>
             </div>
           );
@@ -172,6 +228,17 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
           gap: 8,
         }}
       >
+        {/* FILE UPLOAD */}
+
+        <label style={{ cursor: "pointer" }}>
+          <UploadOutlined style={{ fontSize: 20 }} />
+          <input
+            type="file"
+            style={{ display: "none" }}
+            onChange={handleUpload}
+          />
+        </label>
+
         <Input
           value={content}
           placeholder="Nhập tin nhắn..."
@@ -179,7 +246,12 @@ export default function ChatWidget({ roomId, studentName, mode = "page" }) {
           onPressEnter={sendMessage}
         />
 
-        <Button type="primary" icon={<SendOutlined />} onClick={sendMessage}>
+        <Button
+          type="primary"
+          icon={<SendOutlined />}
+          onClick={sendMessage}
+          loading={uploading}
+        >
           Gửi
         </Button>
       </div>

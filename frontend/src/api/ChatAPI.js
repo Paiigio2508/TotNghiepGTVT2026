@@ -14,4 +14,9 @@ export class ChatAPI {
   static sendMessage = (data) => {
     return request.post("/api/chat/send", data);
   };
+  static sendFile = (formData) => {
+    return request.post("/api/chat/send-file", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  };
 }
