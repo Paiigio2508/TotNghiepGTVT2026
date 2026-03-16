@@ -82,6 +82,6 @@ public interface TopicRepository extends JpaRepository<Topic, String> {
                 WHERE t.status = 'APPROVED_BY_TEACHER'
                   AND t.term_id = :termId
             """, nativeQuery = true)
-    
+
     List<TopicAdminView> findForAdmin(@Param("termId") String termId);
 }
