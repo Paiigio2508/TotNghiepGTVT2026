@@ -22,6 +22,9 @@ public class Student {
     @OneToOne
     @JoinColumn(name = "user_id")
     private User user;
+    @ManyToOne
+    @JoinColumn(name = "specialization_id")
+    private Specialization specialization;
     @Enumerated(EnumType.STRING)
     private StudentStatus status;
 }

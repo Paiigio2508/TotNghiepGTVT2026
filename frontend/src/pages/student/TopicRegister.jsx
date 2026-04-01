@@ -57,7 +57,7 @@ export default function TopicRegister() {
     data.some(
       (item) =>
         item.status === "APPROVED_BY_TEACHER" ||
-        item.status === "APPROVED_BY_ADMIN"
+        item.status === "APPROVED_BY_ADMIN",
     );
 
   /* ================= SEARCH ================= */
@@ -70,28 +70,41 @@ export default function TopicRegister() {
     const result = dataGoc.filter(
       (item) =>
         item.title?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.description?.toLowerCase().includes(keyword.toLowerCase())
+        item.description?.toLowerCase().includes(keyword.toLowerCase()),
     );
 
     setData(result);
   };
 
-  /* ================= SUBMIT ================= */
   const onSubmit = async () => {
     try {
       const values = await form.validateFields();
 
       if (editing) {
-        await TopicAPI.update(editing.id, studentId, values);
-        toast.success("Cập nhật đề tài thành công!");
+        const res = await TopicAPI.update(editing.id, studentId, values);
+        const data = res?.data || res;
+
+        if (data?.success === false) {
+          toast.error(data?.message || "Cập nhật thất bại!");
+          return;
+        }
+
+        toast.success(data?.message || "Cập nhật đề tài thành công!");
       } else {
         if (hasApproved) {
           toast.error("Bạn đã có đề tài được duyệt. Không thể đăng ký thêm!");
           return;
         }
 
-        await TopicAPI.create(studentId, values);
-        toast.success("Đăng ký đề tài thành công!");
+        const res = await TopicAPI.create(studentId, values);
+        const data = res?.data || res;
+
+        if (data?.success === false) {
+          toast.error(data?.message || "Đăng ký thất bại!");
+          return;
+        }
+
+        toast.success(data?.message || "Đăng ký đề tài thành công!");
       }
 
       setOpen(false);
@@ -99,7 +112,9 @@ export default function TopicRegister() {
       setEditing(null);
       loadTopics();
     } catch (err) {
-      message.error(err.response?.data?.message || "Có lỗi xảy ra!");
+      toast.error(
+        err?.response?.data?.message || err?.message || "Có lỗi xảy ra!",
+      );
     }
   };
 

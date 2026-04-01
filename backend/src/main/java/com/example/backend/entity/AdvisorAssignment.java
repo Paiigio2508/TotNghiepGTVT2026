@@ -35,7 +35,12 @@ public class AdvisorAssignment extends BaseEntity {
     private Topic topic;
     @Column(nullable = false)
     private LocalDate assignedDate;
-
+    @ManyToOne
+    @JoinColumn(name = "specialization_id")
+    private Specialization specialization;
+    private String studentSpecializationSnapshot;
+    private String teacherSpecializationSnapshot;
+    private String matchedSpecializationSnapshot;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InternshipResult result = InternshipResult.DANG_THUC_TAP;

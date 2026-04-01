@@ -12,6 +12,6 @@ import lombok.Setter;
 @Table(name = "specialization")
 public class Specialization extends BaseEntity {
     private String name;
-    private String Description;
+    private String description;
     private Integer status;
 }

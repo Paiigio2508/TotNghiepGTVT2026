@@ -3,7 +3,6 @@ package com.example.backend.controller.admin;
 import com.example.backend.dto.request.UserRequest;
 import com.example.backend.service.StudentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/api/admin/student")
 @CrossOrigin("http://localhost:5173")
-public class StudentController {
+public class AdminStudentController {
 
     private final StudentService studentService;
 

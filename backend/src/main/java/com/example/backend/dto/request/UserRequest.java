@@ -13,5 +13,6 @@ public class UserRequest {
     private String className;
     private String phone;
     private String email;
+    private String specializationId;
     private String urlImage;
 }

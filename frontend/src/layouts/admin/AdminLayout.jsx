@@ -101,6 +101,16 @@ const menuItems = [
     label: "Dashboard",
   },
   {
+    key: "/admin/hoc-ky",
+    icon: <FaGraduationCap />,
+    label: "Học kỳ thực tập",
+  },
+  {
+    key: "/admin/specialization",
+    icon: <FaBook />,
+    label: "Chuyên ngành",
+  },
+  {
     key: "product",
     icon: <BsBoxSeamFill size={20} />,
     label: "Người dùng",
@@ -117,11 +127,7 @@ const menuItems = [
       },
     ],
   },
-  {
-    key: "/admin/hoc-ky",
-    icon: <FaGraduationCap />,
-    label: "Học kỳ thực tập",
-  },
+
   {
     key: "/admin/topic",
     icon: <FaBook />,

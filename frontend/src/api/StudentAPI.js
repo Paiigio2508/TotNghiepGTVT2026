@@ -10,18 +10,17 @@ export class StudentAPI {
   static updateStudent = (id, data) => {
     return request.put(`/api/admin/student/${id}`, data);
   };
+  static updateStudentSpecialization = (id, data) => {
+    return request.put(`/api/student/student/specialization/${id}`, data);
+  };
   static deleteStudent = (id) => {
     return request.put(`/api/admin/student/updateTT/${id}`);
   };
   static importStudent = (formData) => {
-  return request.post(
-    "/api/admin/student/import",
-    formData,
-    {
+    return request.post("/api/admin/student/import", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
-    }
-  );
-};
+    });
+  };
 }

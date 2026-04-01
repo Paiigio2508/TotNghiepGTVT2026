@@ -31,6 +31,8 @@ import TeacherChatPage from "./pages/teacher/TeacherChatPage";
 import StudentScore from "./pages/student/StudentScore";
 import TeacherScore from "./pages/teacher/TeacherScore";
 import AdminStudentScore from "./pages/admin/AdminStudentScore";
+import AdminSpecialization from "./pages/admin/AdminSpecialization";
+import TeacherSpecialization from "./pages/teacher/TeacherSpecialization";
 
 export default function App() {
   return (
@@ -49,6 +51,7 @@ export default function App() {
           <Route element={<RequireRole roles={["ADMIN"]} />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
+              <Route path="specialization" element={<AdminSpecialization />} />
               <Route path="students" element={<StudentManage />} />
               <Route path="teachers" element={<TeacherManage />} />
               <Route path="hoc-ky" element={<HocKyManage />} />
@@ -61,6 +64,7 @@ export default function App() {
           {/* ================= TEACHER ================= */}
           <Route element={<RequireRole roles={["GIANGVIEN"]} />}>
             <Route path="/teacher" element={<TeacherLayout />}>
+              <Route path="specialization" element={<TeacherSpecialization />} />
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />

@@ -2,9 +2,11 @@ package com.example.backend.service;
 
 import com.example.backend.dto.request.UserRequest;
 import com.example.backend.dto.response.UserResponse;
+import com.example.backend.entity.Specialization;
 import com.example.backend.entity.Student;
 import com.example.backend.entity.User;
 import com.example.backend.exception.AppException;
+import com.example.backend.repository.SpecializationRepository;
 import com.example.backend.repository.StudentRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
@@ -31,6 +33,7 @@ public class StudentService {
     private final PasswordEncoder passwordEncoder;
     private final StudentRepository studentRepository;
     private final UserRepository userRepository;
+    private final SpecializationRepository specializationRepository;
     private final EmailService emailService;
     private final Support support;
 
@@ -131,13 +134,28 @@ public class StudentService {
         user.setNgaySinh(request.getNgaySinh());
         userRepository.save(user);
 
+        Specialization specialization = specializationRepository.findById(id)
+                .orElseThrow(() -> new AppException("Không tìm thấy ngành"));
+        student.setSpecialization(specialization);
         student.setFullName(request.getFullName());
         student.setClassName(request.getClassName());
         student.setStudentCode(request.getUserCode());
 
         studentRepository.save(student);
     }
+    public void updateStudentSpecialization(String id, UserRequest request) {
 
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException("Không tìm thấy người dùng"));
+        Student student = studentRepository.findByUser_Id(user.getId())
+                .orElseThrow(() -> new AppException("Không tìm thấy sinh viên"));
+
+        Specialization specialization = specializationRepository.findById(request.getSpecializationId())
+                .orElseThrow(() -> new AppException("Không tìm thấy ngành"));
+        student.setSpecialization(specialization);
+
+        studentRepository.save(student);
+    }
     // ================= DELETE =================
     public void deleteStudent(String id) {
 

@@ -1,7 +1,6 @@
 import { Layout, Menu, Button, FloatButton } from "antd";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import {
-  FaBookDead,
   FaClock,
   FaFacebookMessenger,
   FaHome,
@@ -114,9 +113,18 @@ export default function TeacherLayout() {
 
 const teacherMenu = [
   { key: "/teacher", icon: <FaHome />, label: "Dashboard" },
+  {
+    key: "/teacher/specialization",
+    icon: <FaUserGraduate />,
+    label: "Chuyên ngành",
+  },
   { key: "/teacher/students", icon: <FaUserGraduate />, label: "Sinh viên" },
   { key: "/teacher/topics", icon: <IoIosListBox />, label: "Đề tài" },
   { key: "/teacher/deadlines", icon: <FaClock />, label: "Deadlines" },
-  { key: "/teacher/scores", icon: <LuNotepadText />, label: "Bảng điểm sinh viên" },
+  {
+    key: "/teacher/scores",
+    icon: <LuNotepadText />,
+    label: "Bảng điểm sinh viên",
+  },
   { key: "/teacher/chats", icon: <FaFacebookMessenger />, label: "Tin nhắn" },
 ];
