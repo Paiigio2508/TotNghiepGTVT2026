@@ -18,4 +18,12 @@ export class SpecializationAPI {
   static getAllTeacher = () => {
     return request.get("/api/teacher/specialization");
   };
+  static updateSpecializations = (data) => {
+    return request.put("/api/teacher/specialization", data);
+  };
+  static getSpecializationHistory = (userId) => {
+    return request.get(
+      `api/teacher/specialization/history/${userId}`,
+    );
+  };
 }
