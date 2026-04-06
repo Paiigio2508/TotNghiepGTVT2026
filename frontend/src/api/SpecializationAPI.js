@@ -22,8 +22,9 @@ export class SpecializationAPI {
     return request.put("/api/teacher/specialization", data);
   };
   static getSpecializationHistory = (userId) => {
-    return request.get(
-      `api/teacher/specialization/history/${userId}`,
-    );
+    return request.get(`api/teacher/specialization/history/${userId}`);
+  };
+  static getSpecializationByTeacher = (userId) => {
+    return request.get(`api/teacher/specialization/by-teacher/${userId}`);
   };
 }

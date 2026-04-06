@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import {
   Card,
   Form,
@@ -17,84 +17,122 @@ import { SpecializationAPI } from "../../api/SpecializationAPI";
 
 const { Text } = Typography;
 
-const TeacherSpecialization = ({
-  form,
-  loading,
-  setLoading,
-  onSuccess,
-  teacherDetail,
-}) => {
+const TeacherSpecialization = ({ form, loading, setLoading }) => {
   const [specializations, setSpecializations] = useState([]);
   const [userId, setUserId] = useState(null);
-
+  const [currentSpecializations, setCurrentSpecializations] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [note, setNote] = useState("");
   const [pendingValues, setPendingValues] = useState(null);
-
   const [historyOpen, setHistoryOpen] = useState(false);
   const [histories, setHistories] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
-  const [selectedSpecializationNames, setSelectedSpecializationNames] =
-    useState([]);
-
   useEffect(() => {
-    const userData = localStorage.getItem("userData");
-    if (userData) {
-      try {
-        const parsed = JSON.parse(userData);
-        setUserId(parsed.userId);
-      } catch (error) {
-        console.log("Parse userData lỗi:", error);
-      }
+    try {
+      const userData = localStorage.getItem("userData");
+      const parsed = userData ? JSON.parse(userData) : null;
+      setUserId(parsed?.userId ?? null);
+    } catch {
+      setUserId(null);
     }
   }, []);
 
-  useEffect(() => {
-    const loadSpecializations = async () => {
-      try {
-        const res = await SpecializationAPI.getAllTeacher();
-        const raw = Array.isArray(res?.data) ? res.data : [];
-        setSpecializations(raw.filter((item) => item.status === 0));
-      } catch (error) {
-        console.log(error);
-        message.error("Không tải được danh sách chuyên ngành");
-      }
-    };
+  const getArrayData = (res) => {
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res)) return res;
+    return [];
+  };
 
+  const loadSpecializations = useCallback(async () => {
+    try {
+      const res = await SpecializationAPI.getAllTeacher();
+      const raw = getArrayData(res);
+      setSpecializations(raw.filter((item) => item.status === 0));
+    } catch {
+      message.error("Không tải được danh sách chuyên ngành");
+    }
+  }, []);
+
+  const loadCurrentSpecializations = useCallback(async () => {
+    if (!userId) return;
+
+    try {
+      const res = await SpecializationAPI.getSpecializationByTeacher(userId);
+      const raw = getArrayData(res);
+      setCurrentSpecializations(raw);
+    } catch {
+      setCurrentSpecializations([]);
+      message.error("Không tải được thế mạnh hiện tại");
+    }
+  }, [userId]);
+
+  useEffect(() => {
     loadSpecializations();
-  }, []);
+  }, [loadSpecializations]);
 
   useEffect(() => {
-    if (!form) return;
-
-    if (teacherDetail) {
-      form.setFieldsValue({
-        specializationIds:
-          teacherDetail.specializations?.map((item) => item.id) || [],
-      });
+    if (userId != null) {
+      loadCurrentSpecializations();
     }
-  }, [teacherDetail, form]);
+  }, [userId, loadCurrentSpecializations]);
 
   useEffect(() => {
-    setSelectedSpecializationNames(
-      teacherDetail?.specializations?.map((item) => item.name) || []
-    );
-  }, [teacherDetail]);
+    form?.setFieldsValue({
+      specializationIds: currentSpecializations.map((item) => item.id),
+    });
+  }, [currentSpecializations, form]);
 
-  const currentSpecializationIds = useMemo(() => {
-    return teacherDetail?.specializations?.map((item) => item.id) || [];
-  }, [teacherDetail]);
+  const currentSpecializationIds = useMemo(
+    () => currentSpecializations.map((item) => item.id).sort(),
+    [currentSpecializations],
+  );
 
-  const handleSubmit = async (values) => {
+  const historyColumns = useMemo(
+    () => [
+      {
+        title: "Trước đó",
+        dataIndex: "oldValue",
+        key: "oldValue",
+        render: (text) => text || "Không có",
+      },
+      {
+        title: "Sau thay đổi",
+        dataIndex: "newValue",
+        key: "newValue",
+        render: (text) => text || "Không có",
+      },
+      {
+        title: "Lý do",
+        dataIndex: "note",
+        key: "note",
+        render: (text) => text || "Không có",
+      },
+      {
+        title: "Thời gian",
+        dataIndex: "createdDate",
+        key: "createdDate",
+        render: (text) => (text ? new Date(text).toLocaleString("vi-VN") : ""),
+      },
+    ],
+    [],
+  );
+
+  const resetConfirmState = () => {
+    setConfirmOpen(false);
+    setNote("");
+    setPendingValues(null);
+  };
+
+  const handleSubmit = (values) => {
     if (!userId) {
       message.error("Không tìm thấy giảng viên");
       return;
     }
 
-    const newIds = [...(values.specializationIds || [])].sort();
-    const oldIds = [...currentSpecializationIds].sort();
-    const isSame = JSON.stringify(newIds) === JSON.stringify(oldIds);
+    const newIds = [...(values?.specializationIds || [])].sort();
+    const isSame =
+      JSON.stringify(newIds) === JSON.stringify(currentSpecializationIds);
 
     if (isSame) {
       message.warning("Không có thay đổi nào để cập nhật");
@@ -111,12 +149,12 @@ const TeacherSpecialization = ({
       return;
     }
 
-    try {
-      if (!userId) {
-        message.error("Không tìm thấy giảng viên");
-        return;
-      }
+    if (!userId) {
+      message.error("Không tìm thấy giảng viên");
+      return;
+    }
 
+    try {
       setLoading?.(true);
 
       const payload = {
@@ -125,92 +163,37 @@ const TeacherSpecialization = ({
         note: note.trim(),
       };
 
-      const res = await SpecializationAPI.updateSpecializations(payload);
-
-      const selectedNames = specializations
-        .filter((item) =>
-          (pendingValues?.specializationIds || []).includes(item.id)
-        )
-        .map((item) => item.name);
-
-      setSelectedSpecializationNames(selectedNames);
-
-      form.setFieldsValue({
-        specializationIds: pendingValues?.specializationIds || [],
-      });
+      await SpecializationAPI.updateSpecializations(payload);
+      await loadCurrentSpecializations();
 
       message.success("Cập nhật thế mạnh thành công");
-
-      setConfirmOpen(false);
-      setNote("");
-      setPendingValues(null);
-
-      if (onSuccess) {
-        onSuccess(res);
-      }
-    } catch (error) {
-      console.log(error);
+      resetConfirmState();
+    } catch {
       message.error("Cập nhật thế mạnh thất bại");
     } finally {
       setLoading?.(false);
     }
   };
 
-  const handleCloseModal = () => {
-    setConfirmOpen(false);
-    setNote("");
-    setPendingValues(null);
-  };
-
   const loadHistory = async () => {
-    try {
-      if (!userId) {
-        message.error("Không tìm thấy giảng viên");
-        return;
-      }
+    if (!userId) {
+      message.error("Không tìm thấy giảng viên");
+      return;
+    }
 
-      setHistoryLoading(true);
+    try {
       setHistoryOpen(true);
+      setHistoryLoading(true);
 
       const res = await SpecializationAPI.getSpecializationHistory(userId);
-      const raw = Array.isArray(res?.data) ? res.data : [];
-      setHistories(raw);
-    } catch (error) {
-      console.log(error);
-      message.error("Không tải được lịch sử thay đổi");
+      setHistories(getArrayData(res));
+    } catch {
       setHistories([]);
+      message.error("Không tải được lịch sử thay đổi");
     } finally {
       setHistoryLoading(false);
     }
   };
-
-  const historyColumns = [
-    {
-      title: "Trước đó",
-      dataIndex: "oldValue",
-      key: "oldValue",
-      render: (text) => text || "Không có",
-    },
-    {
-      title: "Sau thay đổi",
-      dataIndex: "newValue",
-      key: "newValue",
-      render: (text) => text || "Không có",
-    },
-    {
-      title: "Lý do",
-      dataIndex: "note",
-      key: "note",
-      render: (text) => text || "Không có",
-    },
-    {
-      title: "Thời gian",
-      dataIndex: "createdDate",
-      key: "createdDate",
-      render: (text) =>
-        text ? new Date(text).toLocaleString("vi-VN") : "",
-    },
-  ];
 
   return (
     <div>
@@ -220,11 +203,11 @@ const TeacherSpecialization = ({
       >
         <div style={{ marginBottom: 16 }}>
           <Text strong>Thế mạnh hiện tại: </Text>
-          {selectedSpecializationNames.length > 0 ? (
+          {currentSpecializations.length > 0 ? (
             <Space wrap>
-              {selectedSpecializationNames.map((name, index) => (
-                <Tag color="blue" key={`${name}-${index}`}>
-                  {name}
+              {currentSpecializations.map((item) => (
+                <Tag color="blue" key={item.id}>
+                  {item.name}
                 </Tag>
               ))}
             </Space>
@@ -262,7 +245,6 @@ const TeacherSpecialization = ({
               <Button type="primary" htmlType="submit" loading={loading}>
                 Lưu thay đổi
               </Button>
-              <Button onClick={loadHistory}>Xem history</Button>
             </Space>
           </Form.Item>
         </Form>
@@ -271,7 +253,7 @@ const TeacherSpecialization = ({
       <Modal
         title="Xác nhận cập nhật thế mạnh"
         open={confirmOpen}
-        onCancel={handleCloseModal}
+        onCancel={resetConfirmState}
         onOk={handleConfirmSave}
         confirmLoading={loading}
         okText="Xác nhận"
@@ -284,9 +266,7 @@ const TeacherSpecialization = ({
             required
             validateStatus={!note.trim() && confirmOpen ? "error" : ""}
             help={
-              !note.trim() && confirmOpen
-                ? "Vui lòng nhập lý do thay đổi"
-                : ""
+              !note.trim() && confirmOpen ? "Vui lòng nhập lý do thay đổi" : ""
             }
           >
             <Input.TextArea
@@ -311,7 +291,7 @@ const TeacherSpecialization = ({
         <Table
           loading={historyLoading}
           dataSource={histories}
-          rowKey={(record, index) => index}
+          rowKey={(record) => record.id}
           pagination={{ pageSize: 5 }}
           locale={{
             emptyText: <Empty description="Chưa có lịch sử thay đổi" />,
