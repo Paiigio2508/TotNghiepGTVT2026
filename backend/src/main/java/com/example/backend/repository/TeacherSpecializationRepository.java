@@ -25,4 +25,5 @@ public interface TeacherSpecializationRepository extends JpaRepository<TeacherSp
     List<TeacherSpecialization> findByTeacher(Teacher teacher);
 
     void deleteByTeacher(Teacher teacher);
+    List<TeacherSpecialization> findByTeacher_IdIn(List<String> teacherIds);
 }
