@@ -50,6 +50,7 @@ export default function StudentDashboard() {
       try {
         const res = await TermAPI.getinternshipsStudent(studentId);
         const result = Array.isArray(res.data) ? res.data[0] : res.data;
+        console.log("🚀 ~ loadTermStudent ~ result:", result)
         setData(result || null);
       } catch (err) {
         message.error("Tải dữ liệu thất bại!");

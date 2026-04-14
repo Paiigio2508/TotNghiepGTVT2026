@@ -309,7 +309,10 @@ export default function DeadlineManage() {
             </Radio.Group>
           </Form.Item>
 
-          <Form.Item shouldUpdate={(prev, cur) => prev.type !== cur.type}>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, cur) => prev.type !== cur.type}
+          >
             {({ getFieldValue }) =>
               getFieldValue("type") === "REPORT" ? (
                 <Form.Item
@@ -331,7 +334,10 @@ export default function DeadlineManage() {
             <Input.TextArea rows={3} />
           </Form.Item>
 
-          <Form.Item shouldUpdate={(prev, cur) => prev.type !== cur.type}>
+          <Form.Item
+            noStyle
+            shouldUpdate={(prev, cur) => prev.type !== cur.type}
+          >
             {({ getFieldValue }) =>
               getFieldValue("type") === "REPORT" ? (
                 <Form.Item

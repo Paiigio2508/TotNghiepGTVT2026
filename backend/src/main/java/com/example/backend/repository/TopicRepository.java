@@ -58,28 +58,28 @@ public interface TopicRepository extends JpaRepository<Topic, String> {
     );
 
     @Query(value = """
-                SELECT 
-                    t.id,
-                    t.title,
-                    t.description,
-                    t.status,
-                    s.full_name AS fullName,
-                    s.student_code AS studentCode,
-                    s.class_name AS className,
-                    te.full_name AS teacherName,
-                    te.teacher_code AS teacherCode,
-                    it.academic_year AS academicYear
-                FROM topics t
-                JOIN students s 
-                    ON s.id = t.student_id
-                JOIN internship_terms it 
-                    ON it.id = t.term_id
-                JOIN advisor_assignments a
-                    ON a.student_id = t.student_id
-                    AND a.term_id = t.term_id
-                JOIN teachers te 
-                    ON te.id = a.teacher_id
-                WHERE t.status = 'APPROVED_BY_TEACHER'
+SELECT\s
+    t.id,
+    t.title,
+    t.description,
+    t.status,
+    s.full_name AS fullName,
+    s.student_code AS studentCode,
+    s.class_name AS className,
+    te.full_name AS teacherName,
+    te.teacher_code AS teacherCode,
+    it.academic_year AS academicYear
+FROM topics t
+JOIN students s\s
+    ON s.id = t.student_id
+JOIN internship_terms it\s
+    ON it.id = t.term_id
+LEFT JOIN advisor_assignments a
+    ON a.student_id = t.student_id
+    AND a.term_id = t.term_id
+LEFT JOIN teachers te\s
+    ON te.id = a.teacher_id
+WHERE t.status IN ('APPROVED_BY_TEACHER', 'APPROVED_BY_ADMIN')
                   AND t.term_id = :termId
             """, nativeQuery = true)
 

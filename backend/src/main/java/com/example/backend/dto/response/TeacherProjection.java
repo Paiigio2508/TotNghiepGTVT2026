@@ -5,4 +5,5 @@ public interface TeacherProjection {
     String getName();
     String getEmail();
     Long getAssignedCount();
+    String getSpecializations();
 }

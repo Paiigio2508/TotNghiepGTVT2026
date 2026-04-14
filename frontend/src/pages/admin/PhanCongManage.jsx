@@ -54,6 +54,7 @@ export default function PhanCongManage() {
     { title: "Giảng viên", dataIndex: "name" },
     { title: "Email", dataIndex: "email" },
     { title: "Đã nhận", dataIndex: "assignedCount" },
+    { title: "Thế mạnh", dataIndex: "specializations" },
   ];
   const assignedColumns = [
     {
@@ -69,7 +70,7 @@ export default function PhanCongManage() {
       title: "Lớp",
       dataIndex: "className",
       filters: [...new Set(assignedData.map((item) => item.className))].map(
-        (cls) => ({ text: cls, value: cls })
+        (cls) => ({ text: cls, value: cls }),
       ),
       onFilter: (value, record) => record.className === value,
     },
@@ -77,10 +78,11 @@ export default function PhanCongManage() {
       title: "Giảng viên HD",
       dataIndex: "teacherName",
       filters: [...new Set(assignedData.map((item) => item.teacherName))].map(
-        (name) => ({ text: name, value: name })
+        (name) => ({ text: name, value: name }),
       ),
       onFilter: (value, record) => record.teacherName === value,
     },
+    { title: "Đăng kí thế mạnh", dataIndex: "matchedSpecialization" },
   ];
   return (
     <>

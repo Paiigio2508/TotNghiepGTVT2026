@@ -50,6 +50,7 @@ export default function TopicManage() {
   const loadTopics = async (termId) => {
     try {
       const res = await TopicAPI.findTopicsByAdmin(termId);
+      console.log("🚀 ~ loadTopics ~ res:", res)
       setData(res.data);
       setDataGoc(res.data);
     } catch {

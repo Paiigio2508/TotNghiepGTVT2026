@@ -21,5 +21,6 @@ public interface InternshipTermResponse {
     String getStudentCode();
     String getFullName();
     String getClassName();
+    String getMatchedSpecialization();
     String getTeacherName();
 }

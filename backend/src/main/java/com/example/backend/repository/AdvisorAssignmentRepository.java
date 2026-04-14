@@ -20,7 +20,8 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
       s.full_name AS fullName,
       s.class_name AS className,
       u.ngay_sinh AS ngaySinh,
-      t.full_name AS teacherName
+      t.full_name AS teacherName,
+      a.matched_specialization_snapshot as matchedSpecialization
   FROM advisor_assignments a
   JOIN students s ON a.student_id = s.id
   JOIN users u ON s.user_id = u.id
@@ -52,7 +53,7 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
 
 
     @Query(value = """
-       select
+   select
            i.name as nameIntern,
            s.full_name as studentName,
            us.email as studentEmail,
@@ -61,29 +62,26 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
            s.student_code as studentCode,
            s.major as studentMajor,
            s.status as studentStatus,
-       
+		   sp.name as specializationName,
            i.registration_deadline as registrationDeadline,
            i.start_date as startDate,
            i.end_date as endDate,
            aa.result as result,
            i.status as termStatus,
-       
            t.teacher_code as teacherCode,
            t.full_name as teacherName,
            ut.email as teacherEmail,
            ut.phone as teacherPhone,
-       
            -- topic (có thể null)
            tp.title as topicName,
            tp.description as topicDescription
-       
        from students s
        join users us on us.id = s.user_id
        left join advisor_assignments aa on s.id = aa.student_id
        left join internship_terms i on i.id = aa.term_id
        left join teachers t on t.id = aa.teacher_id
        left join users ut on ut.id = t.user_id
-       
+       left join specialization sp on s.specialization_id= sp.id
        -- join topic
        left join topics tp
            on tp.id = aa.topic_id
