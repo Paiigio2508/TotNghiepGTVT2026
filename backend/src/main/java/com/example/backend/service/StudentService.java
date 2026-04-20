@@ -10,6 +10,7 @@ import com.example.backend.repository.SpecializationRepository;
 import com.example.backend.repository.StudentRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
+import com.example.backend.util.status.RoleStatus;
 import com.example.backend.util.status.StudentStatus;
 import com.example.backend.util.Support;
 import lombok.RequiredArgsConstructor;
@@ -66,7 +67,7 @@ public class StudentService {
         user.setUsername(request.getEmail());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
-        user.setRole("SINHVIEN");
+        user.setRole(RoleStatus.STUDENT);
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());

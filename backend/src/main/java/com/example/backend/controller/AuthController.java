@@ -25,7 +25,6 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-
         Optional<User> optionalUser = userRepository.findByUsername(request.getUsername());
 
         if (optionalUser.isEmpty()) {
@@ -36,7 +35,6 @@ public class AuthController {
 
         User user = optionalUser.get();
 
-        // ✅ Kiểm tra mật khẩu
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
@@ -52,9 +50,9 @@ public class AuthController {
                 Map.of(
                         "accessToken", token,
                         "username", user.getUsername(),
-                        "role", user.getRole(),
+                        "role", user.getRole().name(),
                         "avatar", user.getUrlImage() == null ? "" : user.getUrlImage(),
-                            "userId",user.getId()
+                        "userId", user.getId()
                 )
         );
     }

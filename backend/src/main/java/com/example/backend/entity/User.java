@@ -1,9 +1,9 @@
 package com.example.backend.entity;
 
 import com.example.backend.entity.base.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.example.backend.util.status.RoleStatus;
+import com.example.backend.util.status.TopicStatus;
+import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -21,7 +21,7 @@ public class User extends BaseEntity {
 
     private String username;
     private String password;
-    private String role;   // ADMIN, STUDENT, TEACHER
+//    private String role;   // ADMIN, STUDENT, TEACHER
     private LocalDate ngaySinh;
     @Column(unique = true)
     private String email;
@@ -30,5 +30,6 @@ public class User extends BaseEntity {
     private String gender;
     @Column(name = "url_image", length = 1000)
     private String urlImage;
-
+    @Enumerated(EnumType.STRING)
+    private RoleStatus role;
 }

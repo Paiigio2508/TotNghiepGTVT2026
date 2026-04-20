@@ -1,11 +1,13 @@
 package com.example.backend.util.security;
 
+import com.example.backend.util.status.RoleStatus;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -28,13 +30,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
-        // 🔥 BỎ QUA WebSocket hoàn toàn
+        // Bỏ qua WebSocket
         if (path.startsWith("/ws")) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // Bỏ qua login
+        // Bỏ qua auth
         if (path.startsWith("/api/auth")) {
             filterChain.doFilter(request, response);
             return;
@@ -43,20 +45,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
-
             String token = header.substring(7);
 
             try {
                 if (jwtTokenProvider.validateToken(token)) {
-
                     String username = jwtTokenProvider.getUsername(token);
-                    String role = jwtTokenProvider.getRole(token);
+                    RoleStatus role = jwtTokenProvider.getRole(token);
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
                                     username,
                                     null,
-                                    List.of(() -> role)
+                                    List.of(new SimpleGrantedAuthority(role.name()))
                             );
 
                     authentication.setDetails(
@@ -66,7 +66,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             } catch (Exception e) {
-                // không làm gì
+                SecurityContextHolder.clearContext();
             }
         }
 

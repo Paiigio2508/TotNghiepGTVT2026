@@ -15,4 +15,5 @@ public class UserRequest {
     private String email;
     private String specializationId;
     private String urlImage;
+    private String role;
 }

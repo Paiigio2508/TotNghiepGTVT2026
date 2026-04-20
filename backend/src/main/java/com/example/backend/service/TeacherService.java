@@ -9,6 +9,7 @@ import com.example.backend.repository.TeacherRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
 import com.example.backend.util.Support;
+import com.example.backend.util.status.RoleStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -53,7 +54,7 @@ public class TeacherService {
         user.setUsername(request.getEmail());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
-        user.setRole("GIANGVIEN");
+        user.setRole(RoleStatus.valueOf(request.getRole()));
         user.setPassword(passwordEncoder.encode(rawPassword));
         user.setUrlImage(request.getUrlImage());
         user.setCreatedAt(LocalDateTime.now());
@@ -109,7 +110,7 @@ public class TeacherService {
                 !codeTeacher.get().getId().equals(teacher.getId())) {
             throw new AppException("Mã giảng viên đã tồn tại");
         }
-
+        user.setRole(RoleStatus.valueOf(request.getRole()));
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setUrlImage(request.getUrlImage());
