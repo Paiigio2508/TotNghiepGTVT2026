@@ -1,4 +1,3 @@
-
 import {
   Table,
   Button,
@@ -15,6 +14,7 @@ import {
   Tag,
   Radio,
   DatePicker,
+  Select,
 } from "antd";
 import { RetweetOutlined } from "@ant-design/icons";
 import { useState, useEffect } from "react";
@@ -24,6 +24,8 @@ import "./css/UserManage.css";
 import UpLoadImage from "../UpLoadImage";
 import { toast } from "react-toastify";
 import dayjs from "dayjs";
+
+const { Option } = Select;
 
 export default function TeacherManage() {
   const [data, setData] = useState([]);
@@ -83,6 +85,7 @@ export default function TeacherManage() {
 
     form.setFieldsValue({
       ...record,
+      role: record.role || "TEACHER",
       ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
     });
 
@@ -101,6 +104,7 @@ export default function TeacherManage() {
         email: values.email,
         urlImage: values.urlImage,
         gender: values.gender,
+        role: values.role,
         ngaySinh: values.ngaySinh
           ? values.ngaySinh.format("YYYY-MM-DD")
           : null,
@@ -166,6 +170,16 @@ export default function TeacherManage() {
     { title: "Email", dataIndex: "email" },
     { title: "SĐT", dataIndex: "phone" },
     {
+      title: "Vai trò",
+      dataIndex: "role",
+      render: (role) => {
+        if (role === "HEAD_OF_DEPARTMENT") {
+          return <Tag color="gold">Trưởng bộ môn</Tag>;
+        }
+        return <Tag color="blue">Giảng viên</Tag>;
+      },
+    },
+    {
       title: "Trạng thái",
       dataIndex: "status",
       render: (status) =>
@@ -199,7 +213,6 @@ export default function TeacherManage() {
         </h2>
       </Divider>
 
-      {/* SEARCH */}
       <div className="form-header">
         <Form
           form={form}
@@ -232,13 +245,13 @@ export default function TeacherManage() {
         </Form>
       </div>
 
-      {/* ADD BUTTON */}
       <Space className="float-end mt-4 mb-4">
         <Button
           type="primary"
           onClick={() => {
             setEditing(null);
             form.resetFields();
+            form.setFieldsValue({ role: "TEACHER" });
             setOpen(true);
             setImageUrl(null);
           }}
@@ -247,7 +260,6 @@ export default function TeacherManage() {
         </Button>
       </Space>
 
-      {/* TABLE */}
       <Table
         className="custom-table"
         dataSource={data}
@@ -259,7 +271,6 @@ export default function TeacherManage() {
         }}
       />
 
-      {/* MODAL */}
       <Modal
         open={open}
         title={editing ? "Sửa giảng viên" : "Thêm giảng viên"}
@@ -295,6 +306,17 @@ export default function TeacherManage() {
                 rules={[{ required: true, message: "Không được để trống!" }]}
               >
                 <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="role"
+                label="Vai trò"
+                rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
+              >
+                <Select placeholder="Chọn vai trò">
+                  <Option value="TEACHER">Giảng viên</Option>
+                  <Option value="HEAD_OF_DEPARTMENT">Trưởng bộ môn</Option>
+                </Select>
               </Form.Item>
 
               <Form.Item
@@ -350,4 +372,3 @@ export default function TeacherManage() {
     </>
   );
 }
-
