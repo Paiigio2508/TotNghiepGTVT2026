@@ -1,11 +1,15 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.TeacherSpecializationTermResponse;
 import com.example.backend.dto.request.UserRequest;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Teacher;
+import com.example.backend.entity.TeacherSpecializationTerm;
 import com.example.backend.entity.User;
 import com.example.backend.exception.AppException;
+import com.example.backend.repository.InternshipTermRepository;
 import com.example.backend.repository.TeacherRepository;
+import com.example.backend.repository.TeacherSpecializationTermRepository;
 import com.example.backend.repository.UserRepository;
 import com.example.backend.util.EmailService;
 import com.example.backend.util.Support;
@@ -15,8 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +31,7 @@ public class TeacherService {
     private final UserRepository userRepository;
     private final EmailService emailService;
     private final Support support;
-
+    private  final TeacherSpecializationTermRepository teacherSpecializationTermRepository;
     // ================= GET ALL =================
     public List<UserResponse> getALL() {
         return teacherRepository.getALL();
@@ -134,5 +138,38 @@ public class TeacherService {
         user.setUpdatedAt(LocalDateTime.now());
         teacherRepository.save(teacher);
         userRepository.save(user);
+    }
+    public List<TeacherSpecializationTermResponse> getByTerm(String termId) {
+        List<Teacher> teachers = teacherRepository.findAll();
+        List<TeacherSpecializationTerm> assignments = teacherSpecializationTermRepository.findByTermId(termId);
+
+        Map<String, List<TeacherSpecializationTerm>> grouped = assignments.stream()
+                .collect(Collectors.groupingBy(item -> item.getTeacher().getId()));
+
+        List<TeacherSpecializationTermResponse> result = new ArrayList<>();
+
+        for (Teacher teacher : teachers) {
+            List<TeacherSpecializationTerm> teacherAssignments =
+                    grouped.getOrDefault(teacher.getId(), Collections.emptyList());
+
+            List<TeacherSpecializationTermResponse.SpecializationItem> specializations =
+                    teacherAssignments.stream()
+                            .map(item -> new TeacherSpecializationTermResponse.SpecializationItem(
+                                    item.getSpecialization().getId(),
+                                    item.getSpecialization().getName()
+                            ))
+                            .toList();
+
+            result.add(new TeacherSpecializationTermResponse(
+                    teacher.getId(),
+                    teacher.getTeacherCode(),
+                    teacher.getFullName(),
+                    teacher.getUser() != null ? teacher.getUser().getEmail() : null,
+                    teacher.getUser() != null ? String.valueOf(teacher.getUser().getRole()) : null,
+                    specializations
+            ));
+        }
+
+        return result;
     }
 }

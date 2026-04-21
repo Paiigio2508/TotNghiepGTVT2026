@@ -32,7 +32,7 @@ import StudentScore from "./pages/student/StudentScore";
 import TeacherScore from "./pages/teacher/TeacherScore";
 import AdminStudentScore from "./pages/admin/AdminStudentScore";
 import AdminSpecialization from "./pages/admin/AdminSpecialization";
-import TeacherSpecialization from "./pages/teacher/TeacherSpecialization";
+import AssignTeacherPage from "./pages/teacher/AssignTeacherPage";
 
 export default function App() {
   return (
@@ -62,18 +62,20 @@ export default function App() {
           </Route>
 
           {/* ================= TEACHER ================= */}
-          <Route element={<RequireRole roles={["GIANGVIEN"]} />}>
+          <Route element={<RequireRole roles={["TEACHER", "HEAD_OF_DEPARTMENT"]} />}>
             <Route path="/teacher" element={<TeacherLayout />}>
-              <Route path="specialization" element={<TeacherSpecialization />} />
+              {/* <Route index element={<TeacherSpecialization />} />
+              <Route path="specialization" element={<TeacherSpecialization />} /> */}
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />
-              <Route
-                path="/teacher/deadline/:deadlineId/reports"
-                element={<DeadlineReports />}
-              />
+              <Route path="deadline/:deadlineId/reports" element={<DeadlineReports />} />
               <Route path="scores" element={<TeacherScore />} />
               <Route path="chats" element={<TeacherChatPage />} />
+
+              <Route element={<RequireRole roles={["HEAD_OF_DEPARTMENT"]} />}>
+                <Route path="assign-teachers" element={<AssignTeacherPage />} />
+              </Route>
             </Route>
           </Route>
           <Route element={<RequireRole roles={["SINHVIEN"]} />}>

@@ -11,7 +11,7 @@ public interface UserResponse {
 
     String getName();
     String getGender();
-
+    String getRole();
     String getClassName();
 
     String getEmail();

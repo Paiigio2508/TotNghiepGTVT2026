@@ -35,6 +35,12 @@ public class AuthController {
 
         User user = optionalUser.get();
 
+        if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
+            return ResponseEntity
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Sai tài khoản hoặc mật khẩu");
+        }
+
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)

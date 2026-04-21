@@ -39,6 +39,7 @@ export default function TeacherManage() {
   const loadTeacher = async () => {
     try {
       const res = await TeacherAPI.getAll();
+      console.log("🚀 ~ loadTeacher ~ res:", res)
       setData(res.data);
       setDataGoc(res.data);
     } catch (err) {

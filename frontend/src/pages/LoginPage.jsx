@@ -12,56 +12,57 @@ function LoginPage() {
 
   const navigate = useNavigate();
 
-  // 🔥 Nếu đã login rồi thì tự redirect
+  const roleRoute = {
+    ADMIN: "/admin",
+    HEAD_OF_DEPARTMENT: "/teacher",
+    TEACHER: "/teacher",
+    STUDENT: "/student",
+  };
+
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem("userData"));
 
-    if (userData) {
-      const roleRoute = {
-        ADMIN: "/admin",
-        GIANGVIEN: "/teacher",
-        SINHVIEN: "/student",
-      };
-
+    if (userData?.role) {
       navigate(roleRoute[userData.role] || "/login", { replace: true });
     }
   }, [navigate]);
 
-const handleLogin = async (e) => {
-  e.preventDefault();
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-  try {
-    const res = await AuthAPI.login({
-      username,
-      password,
-    });
+    try {
+      const res = await AuthAPI.login({
+        username,
+        password,
+      });
 
-    const { accessToken, username: userName, role, avatar,userId } = res.data;
-
-    localStorage.setItem(
-      "userData",
-      JSON.stringify({
+      const {
         accessToken,
-        role,
         username: userName,
+        role,
         avatar,
-        userId
-      })
-    );
+        userId,
+      } = res.data;
 
-    toast.success("Đăng nhập thành công!");
+      localStorage.setItem(
+        "userData",
+        JSON.stringify({
+          accessToken,
+          role,
+          username: userName,
+          avatar,
+          userId,
+        })
+      );
 
-    const roleRoute = {
-      ADMIN: "/admin",
-      GIANGVIEN: "/teacher",
-      SINHVIEN: "/student",
-    };
-    navigate(roleRoute[role] || "/login", { replace: true });
-  } catch (error) {
-    console.error(error);
-    alert("Sai tài khoản hoặc mật khẩu");
-  }
-};
+      toast.success("Đăng nhập thành công!");
+
+      navigate(roleRoute[role] || "/login", { replace: true });
+    } catch (error) {
+      console.error(error);
+      alert("Sai tài khoản hoặc mật khẩu");
+    }
+  };
 
   return (
     <div className="login-wrapper">

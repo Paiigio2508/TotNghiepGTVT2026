@@ -10,6 +10,7 @@ import { IoIosListBox } from "react-icons/io";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { LuNotepadText } from "react-icons/lu";
+import { MdAssignmentInd } from "react-icons/md";
 
 const { Header, Sider, Content } = Layout;
 
@@ -20,6 +21,30 @@ export default function TeacherLayout() {
   const nav = useNavigate();
 
   const userData = JSON.parse(localStorage.getItem("userData"));
+  const role = userData?.role;
+
+  const teacherMenu = [
+    { key: "/teacher", icon: <FaHome />, label: "Dashboard" },
+        ...(role === "HEAD_OF_DEPARTMENT"
+      ? [
+          {
+            key: "/teacher/assign-teachers",
+            icon: <MdAssignmentInd />,
+            label: "Phân giảng viên",
+          },
+        ]
+      : []),
+    { key: "/teacher/students", icon: <FaUserGraduate />, label: "Sinh viên" },
+    { key: "/teacher/topics", icon: <IoIosListBox />, label: "Đề tài" },
+    { key: "/teacher/deadlines", icon: <FaClock />, label: "Deadlines" },
+    {
+      key: "/teacher/scores",
+      icon: <LuNotepadText />,
+      label: "Bảng điểm sinh viên",
+    },
+    { key: "/teacher/chats", icon: <FaFacebookMessenger />, label: "Tin nhắn" },
+
+  ];
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
@@ -30,7 +55,6 @@ export default function TeacherLayout() {
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* SIDEBAR */}
       <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
         <div
           style={{
@@ -80,7 +104,6 @@ export default function TeacherLayout() {
       </Sider>
 
       <Layout>
-        {/* HEADER */}
         <Header
           style={{
             background: "#4E4336",
@@ -100,7 +123,6 @@ export default function TeacherLayout() {
           </Button>
         </Header>
 
-        {/* CONTENT */}
         <Content style={{ padding: 16 }}>
           <Outlet />
         </Content>
@@ -110,21 +132,3 @@ export default function TeacherLayout() {
     </Layout>
   );
 }
-
-const teacherMenu = [
-  { key: "/teacher", icon: <FaHome />, label: "Dashboard" },
-  {
-    key: "/teacher/specialization",
-    icon: <FaUserGraduate />,
-    label: "Chuyên ngành",
-  },
-  { key: "/teacher/students", icon: <FaUserGraduate />, label: "Sinh viên" },
-  { key: "/teacher/topics", icon: <IoIosListBox />, label: "Đề tài" },
-  { key: "/teacher/deadlines", icon: <FaClock />, label: "Deadlines" },
-  {
-    key: "/teacher/scores",
-    icon: <LuNotepadText />,
-    label: "Bảng điểm sinh viên",
-  },
-  { key: "/teacher/chats", icon: <FaFacebookMessenger />, label: "Tin nhắn" },
-];
