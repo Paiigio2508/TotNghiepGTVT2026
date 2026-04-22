@@ -50,32 +50,4 @@ public class StudentTopicController {
     ) {
         topicService.cancelTopicByUser(topicId, userId);
     }
-//
-//    /* ================= GIẢNG VIÊN ================= */
-//
-//    // Giảng viên duyệt
-//    @PutMapping("/teacher/approve/{topicId}")
-//    public Topic approveByTeacher(@PathVariable String topicId) {
-//        return topicService.approveByTeacher(topicId);
-//    }
-//
-//    // Giảng viên từ chối
-//    @PutMapping("/teacher/reject/{topicId}")
-//    public Topic rejectByTeacher(@PathVariable String topicId) {
-//        return topicService.rejectByTeacher(topicId);
-//    }
-//
-//    /* ================= ADMIN ================= */
-//
-//    // Admin duyệt cuối
-//    @PutMapping("/admin/approve/{topicId}")
-//    public Topic approveByAdmin(@PathVariable String topicId) {
-//        return topicService.approveByAdmin(topicId);
-//    }
-//
-//    // Admin từ chối
-//    @PutMapping("/admin/reject/{topicId}")
-//    public Topic rejectByAdmin(@PathVariable String topicId) {
-//        return topicService.rejectByAdmin(topicId);
-//    }
 }
