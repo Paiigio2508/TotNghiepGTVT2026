@@ -25,7 +25,7 @@ public class AdvisorAssignmentController {
 
     @PostMapping("/auto/{termId}")
     public ResponseEntity<String> autoAssign(@PathVariable String termId) {
-//        service.autoAssign(termId);
+        service.autoAssign(termId);
         return ResponseEntity.ok("Phân công tự động thành công");
     }
 

@@ -162,6 +162,9 @@ export default function HocKyManage() {
           <Button
             danger
             size="small"
+            disabled={
+              record.status === "SAP_DIEN_RA" || record.status === "KET_THUC"
+            }
             onClick={() =>
               navigate(`/admin/assignments/${record.id}`, {
                 state: { term: record },

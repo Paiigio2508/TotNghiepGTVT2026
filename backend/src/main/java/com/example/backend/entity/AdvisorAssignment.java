@@ -41,6 +41,11 @@ public class AdvisorAssignment extends BaseEntity {
     private String studentSpecializationSnapshot;
     private String teacherSpecializationSnapshot;
     private String matchedSpecializationSnapshot;
+    @Column(length = 20)
+    private String assignmentType; // AUTO | MANUAL
+
+    @Column(length = 50)
+    private String assignmentReason;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InternshipResult result = InternshipResult.DANG_THUC_TAP;

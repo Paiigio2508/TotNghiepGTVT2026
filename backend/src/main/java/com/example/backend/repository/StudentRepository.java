@@ -46,13 +46,14 @@ public interface StudentRepository extends JpaRepository<Student, String> {
     List<Student> getALLSVDuDieuKien(String termId);
 
     @Query(value = """
-         SELECT
-                    COALESCE(sp.name, 'Chưa chọn chuyên môn') AS name,
-                    COUNT(s.id) AS total
-                FROM students s
-                LEFT JOIN specialization sp ON s.specialization_id = sp.id
-                GROUP BY sp.name
-                ORDER BY total DESC
+        SELECT COALESCE(sp.name, 'Chưa chọn chuyên môn') AS name,
+                      COUNT(s.id) AS total
+                  FROM students s
+                  LEFT JOIN specialization sp ON s.specialization_id = sp.id
+                  WHERE s.status = 'DU_DIEU_KIEN'
+                  GROUP BY sp.name
+                  ORDER BY total DESC
+
             """, nativeQuery = true)
     List<StudentStatResponse> getStudentStats();
 }

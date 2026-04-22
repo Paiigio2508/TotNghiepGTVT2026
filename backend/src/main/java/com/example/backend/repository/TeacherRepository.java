@@ -25,7 +25,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, String> {
     Optional<Teacher> findByTeacherCode(String teacherCode);
 
     @Query(value = """
-            SELECT
+           SELECT
                 t.id AS id,
                 t.full_name AS name,
                 s.email AS email,
@@ -36,8 +36,8 @@ public interface TeacherRepository extends JpaRepository<Teacher, String> {
                 ON t.user_id = s.id
             LEFT JOIN advisor_assignments a
                 ON a.teacher_id = t.id
-               AND a.term_id = :term_id
-            LEFT JOIN teacher_specializations ts
+               AND a.term_id =:term_id
+            LEFT JOIN teacher_specialization_term ts
                 ON ts.teacher_id = t.id
             LEFT JOIN specialization sp
                 ON sp.id = ts.specialization_id

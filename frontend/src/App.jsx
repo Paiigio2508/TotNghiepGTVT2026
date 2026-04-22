@@ -62,14 +62,19 @@ export default function App() {
           </Route>
 
           {/* ================= TEACHER ================= */}
-          <Route element={<RequireRole roles={["TEACHER", "HEAD_OF_DEPARTMENT"]} />}>
+          <Route
+            element={<RequireRole roles={["TEACHER", "HEAD_OF_DEPARTMENT"]} />}
+          >
             <Route path="/teacher" element={<TeacherLayout />}>
               {/* <Route index element={<TeacherSpecialization />} />
               <Route path="specialization" element={<TeacherSpecialization />} /> */}
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />
-              <Route path="deadline/:deadlineId/reports" element={<DeadlineReports />} />
+              <Route
+                path="deadline/:deadlineId/reports"
+                element={<DeadlineReports />}
+              />
               <Route path="scores" element={<TeacherScore />} />
               <Route path="chats" element={<TeacherChatPage />} />
 
@@ -78,7 +83,7 @@ export default function App() {
               </Route>
             </Route>
           </Route>
-          <Route element={<RequireRole roles={["SINHVIEN"]} />}>
+          <Route element={<RequireRole roles={["STUDENT"]} />}>
             <Route path="/student" element={<StudentLayout />}>
               <Route index element={<StudentDashboard />} />
               <Route path="topic" element={<TopicRegister />} />

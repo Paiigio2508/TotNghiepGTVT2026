@@ -11,7 +11,7 @@ public interface TeacherSpecializationTermRepository extends JpaRepository<Teach
     List<TeacherSpecializationTerm> findByTerm_Id(String termId);
 
     List<TeacherSpecializationTerm> findByTeacher_IdAndTerm_Id(String teacherId, String termId);
-
+    List<TeacherSpecializationTerm> findByTerm_IdAndTeacher_IdIn(String termId, List<String> teacherIds);
     void deleteByTeacher_IdAndTerm_Id(String teacherId, String termId);
 
 
