@@ -1,5 +1,6 @@
 package com.example.backend.controller.admin;
 
+import com.example.backend.dto.request.ChangeTeacherRequest;
 import com.example.backend.service.AdvisorAssignmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -34,5 +35,13 @@ public class AdvisorAssignmentController {
         return ResponseEntity.ok(
                 service.getALLSVPhanCong(termId)
         );
+    }
+    @PutMapping("/change-teacher/{assignmentId}")
+    public ResponseEntity<String> changeTeacher(
+            @PathVariable String assignmentId,
+            @RequestBody ChangeTeacherRequest request
+    ) {
+        service.changeTeacher(assignmentId, request);
+        return ResponseEntity.ok("Cập nhật giảng viên thành công");
     }
 }

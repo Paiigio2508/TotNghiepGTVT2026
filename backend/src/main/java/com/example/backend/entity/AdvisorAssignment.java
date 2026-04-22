@@ -46,6 +46,7 @@ public class AdvisorAssignment extends BaseEntity {
 
     @Column(length = 50)
     private String assignmentReason;
+    private Boolean isMatchedSpecialization;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InternshipResult result = InternshipResult.DANG_THUC_TAP;

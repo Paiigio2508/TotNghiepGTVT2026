@@ -9,12 +9,18 @@ export class AssignmentsAPI {
   static autoAssign = (termId) => {
     return request.post(`/api/admin/assignments/auto/${termId}`);
   };
+  static changeTeacher = (assignmentId, payload) => {
+    return request.put(
+      `/api/admin/assignments/change-teacher/${assignmentId}`,
+      payload,
+    );
+  };
   static getAllsvAssigned = (id) => {
     return request.get(`/api/admin/assignments/assigned/${id}`);
   };
   static getStudentsByTerm = (teacherId, termId) => {
     return request.get(
-      `/api/teacher/assignments/students/${teacherId}/${termId}`
+      `/api/teacher/assignments/students/${teacherId}/${termId}`,
     );
   };
 }

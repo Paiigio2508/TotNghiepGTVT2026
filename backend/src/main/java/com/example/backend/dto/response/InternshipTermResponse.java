@@ -23,6 +23,10 @@ public interface InternshipTermResponse {
     String getClassName();
     String getMatchedSpecialization();
     String getTeacherSnapshot();
-    String getStudenSnapshot();
+    String getStudentSnapshot();
+    String getIsMatchedSpecialization();
+    String getAssignmentType();
+    String getAssignmentReason();
     String getTeacherName();
+    String getAssignmentId();
 }

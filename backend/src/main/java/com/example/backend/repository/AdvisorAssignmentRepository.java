@@ -15,23 +15,31 @@ import java.util.Optional;
 public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssignment, String> {
 
     @Query(value = """
-            SELECT * FROM doantotnghiepgtvt2026.advisor_assignments;
-            
-                     SELECT
-                            s.student_code AS studentCode,
-                            s.full_name AS fullName,
-                            s.class_name AS className,
-                            u.ngay_sinh AS ngaySinh,
-                            t.full_name AS teacherName,
-                            a.matched_specialization_snapshot as matchedSpecialization,
-                            a.teacher_specialization_snapshot as teacherSnapshot,
-                            a.student_specialization_snapshot as studenSnapshot
-                        FROM advisor_assignments a
-                        JOIN students s ON a.student_id = s.id
-                        JOIN users u ON s.user_id = u.id
-                        JOIN teachers t ON a.teacher_id = t.id
-                        WHERE a.term_id = :term_id
-                        ORDER BY s.student_code;
+  SELECT
+      a.id AS assignmentId,
+      s.id AS studentId,
+      t.id AS teacherId,
+  
+      s.student_code AS studentCode,
+      s.full_name AS fullName,
+      s.class_name AS className,
+      u.ngay_sinh AS ngaySinh,
+      t.full_name AS teacherName,
+  
+      a.matched_specialization_snapshot AS matchedSpecialization,
+      a.teacher_specialization_snapshot AS teacherSnapshot,
+      a.student_specialization_snapshot AS studentSnapshot,
+  
+      a.is_matched_specialization AS isMatchedSpecialization,
+      a.assignment_type AS assignmentType,
+      a.assignment_reason AS assignmentReason
+  
+  FROM advisor_assignments a
+  JOIN students s ON a.student_id = s.id
+  JOIN users u ON s.user_id = u.id
+  JOIN teachers t ON a.teacher_id = t.id
+  WHERE a.term_id = :term_id
+  ORDER BY teacherName;
                               
                           """, nativeQuery = true)
     List<InternshipTermResponse> getALLSVPhanCong(@PathVariable String term_id);

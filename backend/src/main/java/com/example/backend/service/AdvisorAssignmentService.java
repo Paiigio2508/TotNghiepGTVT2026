@@ -1,5 +1,6 @@
 package com.example.backend.service;
 
+import com.example.backend.dto.request.ChangeTeacherRequest;
 import com.example.backend.dto.response.InternshipStudentView;
 import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.StudentProjection;
@@ -164,14 +165,14 @@ public class AdvisorAssignmentService {
             assignment.setTerm(term);
             assignment.setAssignedDate(LocalDate.now());
 
-            // snapshot thế mạnh sinh viên tại thời điểm phân công
+            // Snapshot thế mạnh sinh viên tại thời điểm phân công
             if (student.getSpecialization() != null) {
                 assignment.setStudentSpecializationSnapshot(student.getSpecialization().getName());
             } else {
                 assignment.setStudentSpecializationSnapshot(null);
             }
 
-            // snapshot thế mạnh giảng viên theo kỳ tại thời điểm phân công
+            // Snapshot thế mạnh giảng viên tại thời điểm phân công
             List<String> teacherSpecNames = teacherSpecializationNameMap.get(selectedTeacher.getId());
             if (teacherSpecNames != null && !teacherSpecNames.isEmpty()) {
                 assignment.setTeacherSpecializationSnapshot(String.join(", ", teacherSpecNames));
@@ -179,35 +180,30 @@ public class AdvisorAssignmentService {
                 assignment.setTeacherSpecializationSnapshot(null);
             }
 
-            // đánh dấu kết quả phân công đúng flow
+            // Nguồn phân công
+            assignment.setAssignmentType("AUTO");
+
+            // Đánh dấu đúng flow
             if (matchedBySpecialization && student.getSpecialization() != null) {
                 // Đúng thế mạnh
                 assignment.setSpecialization(student.getSpecialization());
                 assignment.setMatchedSpecializationSnapshot(student.getSpecialization().getName());
-
-                // nếu entity của bạn có các field này thì mở ra dùng
-                // assignment.setAssignmentType("AUTO");
-                // assignment.setAssignmentReason("MATCHED_SPECIALIZATION");
-                // assignment.setIsMatchedSpecialization(true);
+                assignment.setAssignmentReason("MATCHED_SPECIALIZATION");
+                assignment.setIsMatchedSpecialization(true);
 
             } else {
                 assignment.setSpecialization(null);
+                assignment.setIsMatchedSpecialization(false);
 
                 if (student.getSpecialization() == null) {
                     // Sinh viên không đăng ký thế mạnh
                     assignment.setMatchedSpecializationSnapshot("Chưa đăng ký");
-
-                    // assignment.setAssignmentType("AUTO");
-                    // assignment.setAssignmentReason("NO_SPECIALIZATION_RANDOM");
-                    // assignment.setIsMatchedSpecialization(false);
+                    assignment.setAssignmentReason("NO_SPECIALIZATION_RANDOM");
 
                 } else {
                     // Có đăng ký nhưng không còn giảng viên đúng thế mạnh
                     assignment.setMatchedSpecializationSnapshot("Không đúng thế mạnh");
-
-                    // assignment.setAssignmentType("AUTO");
-                    // assignment.setAssignmentReason("NO_MATCHING_TEACHER");
-                    // assignment.setIsMatchedSpecialization(false);
+                    assignment.setAssignmentReason("NO_MATCHING_TEACHER");
                 }
             }
 
@@ -264,5 +260,92 @@ public class AdvisorAssignmentService {
                         );
 
         assignment.setTopic(topic);
+    }
+
+
+    @Transactional
+    public void changeTeacher(String assignmentId, ChangeTeacherRequest request) {
+
+        AdvisorAssignment assignment = advisorAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new AppException("Không tìm thấy bản phân công"));
+
+        if (request == null || request.getTeacherId() == null || request.getTeacherId().trim().isEmpty()) {
+            throw new AppException("Thiếu teacherId");
+        }
+
+        Teacher newTeacher = teacherRepository.findById(request.getTeacherId())
+                .orElseThrow(() -> new AppException("Không tìm thấy giảng viên"));
+
+        InternshipTerm term = assignment.getTerm();
+        Student student = assignment.getStudent();
+
+        // Lấy toàn bộ thế mạnh của giảng viên mới theo kỳ thực tập
+        List<TeacherSpecializationTerm> teacherSpecializationTerms =
+                teacherSpecializationTermRepository.findByTerm_IdAndTeacher_IdIn(
+                        term.getId(),
+                        List.of(newTeacher.getId())
+                );
+
+        List<String> teacherSpecNames = new ArrayList<>();
+        boolean matchedBySpecialization = false;
+
+        for (TeacherSpecializationTerm tst : teacherSpecializationTerms) {
+            if (tst.getSpecialization() == null) {
+                continue;
+            }
+
+            String specializationName = tst.getSpecialization().getName();
+            teacherSpecNames.add(specializationName);
+
+            if (student.getSpecialization() != null
+                    && tst.getSpecialization().getId().equals(student.getSpecialization().getId())) {
+                matchedBySpecialization = true;
+            }
+        }
+
+        // Cập nhật giảng viên mới
+        assignment.setTeacher(newTeacher);
+
+        // Snapshot thế mạnh giảng viên
+        if (!teacherSpecNames.isEmpty()) {
+            assignment.setTeacherSpecializationSnapshot(String.join(", ", teacherSpecNames));
+        } else {
+            assignment.setTeacherSpecializationSnapshot(null);
+        }
+
+        // Snapshot thế mạnh sinh viên giữ nguyên theo thời điểm hiện tại hoặc set lại cho chắc
+        if (student.getSpecialization() != null) {
+            assignment.setStudentSpecializationSnapshot(student.getSpecialization().getName());
+        } else {
+            assignment.setStudentSpecializationSnapshot(null);
+        }
+
+        // Đây là chỉnh tay
+        assignment.setAssignmentType("MANUAL");
+        assignment.setAssignmentReason(
+                request.getReason() != null && !request.getReason().trim().isEmpty()
+                        ? request.getReason()
+                        : "REASSIGNED_BY_HEAD"
+        );
+
+        // Cập nhật trạng thái phù hợp
+        if (student.getSpecialization() == null) {
+            // SV không đăng ký thế mạnh
+            assignment.setSpecialization(null);
+            assignment.setIsMatchedSpecialization(false);
+            assignment.setMatchedSpecializationSnapshot("Chưa đăng ký");
+        } else if (matchedBySpecialization) {
+            // Đúng thế mạnh
+            assignment.setSpecialization(student.getSpecialization());
+            assignment.setIsMatchedSpecialization(true);
+            assignment.setMatchedSpecializationSnapshot(student.getSpecialization().getName());
+        } else {
+            // Không đúng thế mạnh
+            assignment.setSpecialization(null);
+            assignment.setIsMatchedSpecialization(false);
+            assignment.setMatchedSpecializationSnapshot("Không đúng thế mạnh");
+        }
+
+        advisorAssignmentRepository.save(assignment);
     }
 }

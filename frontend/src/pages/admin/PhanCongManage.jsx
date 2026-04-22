@@ -121,11 +121,11 @@ export default function PhanCongManage() {
       return <Tag>Chưa đăng ký</Tag>;
     }
 
-    if (record?.isMatchedSpecialization === true) {
+    if (record?.isMatchedSpecialization === "true") {
       return <Tag color="green">Đúng thế mạnh</Tag>;
     }
 
-    if (record?.isMatchedSpecialization === false) {
+    if (record?.isMatchedSpecialization === "false") {
       return <Tag color="red">Không đúng thế mạnh</Tag>;
     }
 
@@ -219,56 +219,39 @@ export default function PhanCongManage() {
     setSelectedTeacherId(null);
   };
 
-  const handleUpdateTeacher = async () => {
-    if (!selectedAssignment) {
-      message.error("Không tìm thấy bản ghi cần cập nhật");
-      return;
-    }
+const handleUpdateTeacher = async () => {
+  if (!selectedAssignment) {
+    message.error("Không tìm thấy bản ghi cần cập nhật");
+    return;
+  }
 
-    if (!selectedTeacherId) {
-      message.warning("Vui lòng chọn giảng viên");
-      return;
-    }
+  if (!selectedTeacherId) {
+    message.warning("Vui lòng chọn giảng viên");
+    return;
+  }
 
-    try {
-      setSubmittingUpdate(true);
+  try {
+    setSubmittingUpdate(true);
 
-      if (AssignmentsAPI.changeTeacher) {
-        await AssignmentsAPI.changeTeacher(
-          selectedAssignment.assignmentId || selectedAssignment.id,
-          {
-            teacherId: selectedTeacherId,
-            reason: "REASSIGNED_BY_HEAD",
-          },
-        );
-      } else if (AssignmentsAPI.updateAssignmentTeacher) {
-        await AssignmentsAPI.updateAssignmentTeacher({
-          assignmentId:
-            selectedAssignment.assignmentId || selectedAssignment.id,
-          studentId: selectedAssignment.studentId,
-          teacherId: selectedTeacherId,
-          termId,
-          reason: "REASSIGNED_BY_HEAD",
-        });
-      } else {
-        throw new Error(
-          "Chưa có API cập nhật giảng viên. Hãy nối backend cho changeTeacher hoặc updateAssignmentTeacher.",
-        );
-      }
+    await AssignmentsAPI.changeTeacher(
+      selectedAssignment.assignmentId || selectedAssignment.id,
+      {
+        teacherId: selectedTeacherId,
+        reason: "REASSIGNED_BY_HEAD",
+      },
+    );
 
-      message.success("Cập nhật giảng viên thành công");
-      handleCloseModal();
-      await loadAll();
-    } catch (error) {
-      message.error(
-        error?.response?.data ||
-          error?.message ||
-          "Cập nhật giảng viên thất bại",
-      );
-    } finally {
-      setSubmittingUpdate(false);
-    }
-  };
+    message.success("Cập nhật giảng viên thành công");
+    handleCloseModal();
+    await loadAll();
+  } catch (error) {
+    message.error(
+      error?.response?.data || error?.message || "Cập nhật giảng viên thất bại",
+    );
+  } finally {
+    setSubmittingUpdate(false);
+  }
+};
 
   const studentColumns = [
     { title: "Mã SV", dataIndex: "studentCode" },
@@ -489,7 +472,7 @@ export default function PhanCongManage() {
                 showQuickJumper: true,
                 defaultPageSize: 5,
               }}
-              scroll={{ x: 1400 }}
+              scroll={{ x: 1600 }}
             />
           </Card>
         </Col>
