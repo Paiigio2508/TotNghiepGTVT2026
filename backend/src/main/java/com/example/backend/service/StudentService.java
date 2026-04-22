@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.UserRequest;
+import com.example.backend.dto.response.StudentStatResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Specialization;
 import com.example.backend.entity.Student;
@@ -206,5 +207,7 @@ public class StudentService {
             throw new AppException("Import thất bại");
         }
     }
-
+    public List<StudentStatResponse> getStudentStats() {
+        return studentRepository.getStudentStats();
+    }
 }

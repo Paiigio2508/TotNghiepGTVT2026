@@ -5,11 +5,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-public interface TeacherSpecializationTermRepository  extends JpaRepository<TeacherSpecializationTerm, String> {
+public interface TeacherSpecializationTermRepository extends JpaRepository<TeacherSpecializationTerm, String> {
 
-    List<TeacherSpecializationTerm> findByTermId(String termId);
 
-    List<TeacherSpecializationTerm> findByTeacherIdAndTermId(String teacherId, String termId);
+    List<TeacherSpecializationTerm> findByTerm_Id(String termId);
 
-    void deleteByTeacherIdAndTermId(String teacherId, String termId);
+    List<TeacherSpecializationTerm> findByTeacher_IdAndTerm_Id(String teacherId, String termId);
+
+    void deleteByTeacher_IdAndTerm_Id(String teacherId, String termId);
+
+
 }

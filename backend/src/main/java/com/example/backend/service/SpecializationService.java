@@ -1,21 +1,14 @@
 package com.example.backend.service;
 
-import com.example.backend.dto.request.UpdateTeacherSpecializationRequest;
 import com.example.backend.entity.Specialization;
-import com.example.backend.entity.Teacher;
-import com.example.backend.entity.TeacherSpecialization;
-import com.example.backend.entity.TeacherSpecializationHistory;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.SpecializationRepository;
 import com.example.backend.repository.TeacherRepository;
 import com.example.backend.repository.TeacherSpecializationHistoryRepository;
-import com.example.backend.repository.TeacherSpecializationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -23,8 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SpecializationService {
     private final SpecializationRepository specializationRepository;
-    private final TeacherRepository teacherRepository;
-    private final TeacherSpecializationRepository teacherSpecializationRepository;
+
     private final TeacherSpecializationHistoryRepository teacherSpecializationHistoryRepository;
 
     public List<Specialization> getAll() {
@@ -83,9 +75,6 @@ public class SpecializationService {
         specialization.setUpdatedAt(LocalDateTime.now());
 
         return specializationRepository.save(specialization);
-    }
-    public List<Map<String, Object>> getHistory(String userId) {
-        return teacherSpecializationHistoryRepository.getHistory(userId);
     }
 
 }

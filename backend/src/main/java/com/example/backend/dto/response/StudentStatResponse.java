@@ -1,6 +1,6 @@
 package com.example.backend.dto.response;
 
-public interface SpecializationResponse {
-    String getId();
+public interface StudentStatResponse {
     String getName();
+    Long getTotal();
 }

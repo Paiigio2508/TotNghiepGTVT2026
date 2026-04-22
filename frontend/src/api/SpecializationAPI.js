@@ -15,18 +15,27 @@ export class SpecializationAPI {
   static getAllStudent = () => {
     return request.get("/api/student/specialization");
   };
+
+  // tbm phân
   static getAllSpecializtion = () => {
     return request.get("/api/head/specialization");
   };
+
   static getTeacherSpecializationTerm = (termId) => {
-    return request.get(`/api/head/specialization/term/${termId}`);
+    return request.get(`/api/head/specialization/teacher-assignment/${termId}`);
   };
 
   static saveTeacherSpecializationTerm = (data) => {
-    return request.post("/api/head/specialization/term/save", data);
+    return request.post("/api/head/specialization/teacher-assignment", data);
   };
 
   static saveTeacherSpecializationTermBulk = (data) => {
-    return request.post("/api/head/specialization/term/save-bulk", data);
+    return request.post("/api/head/specialization/teacher-assignment/bulk", data);
   };
+  static getTeacherSpecializationHistory = (termId) => {
+    return request.get(`/api/head/specialization/teacher-assignment/history/${termId}`);
+  };
+static getStudentStats = () => {
+  return request.get("/api/head/specialization/student-stat");
+};
 }

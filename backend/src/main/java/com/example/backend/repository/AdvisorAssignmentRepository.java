@@ -15,21 +15,21 @@ import java.util.Optional;
 public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssignment, String> {
 
     @Query(value = """
-  SELECT
-      s.student_code AS studentCode,
-      s.full_name AS fullName,
-      s.class_name AS className,
-      u.ngay_sinh AS ngaySinh,
-      t.full_name AS teacherName,
-      a.matched_specialization_snapshot as matchedSpecialization
-  FROM advisor_assignments a
-  JOIN students s ON a.student_id = s.id
-  JOIN users u ON s.user_id = u.id
-  JOIN teachers t ON a.teacher_id = t.id
-  WHERE a.term_id = :term_id
-  ORDER BY s.student_code;
-                    
-                """, nativeQuery = true)
+            SELECT
+                s.student_code AS studentCode,
+                s.full_name AS fullName,
+                s.class_name AS className,
+                u.ngay_sinh AS ngaySinh,
+                t.full_name AS teacherName,
+                a.matched_specialization_snapshot as matchedSpecialization
+            FROM advisor_assignments a
+            JOIN students s ON a.student_id = s.id
+            JOIN users u ON s.user_id = u.id
+            JOIN teachers t ON a.teacher_id = t.id
+            WHERE a.term_id = :term_id
+            ORDER BY s.student_code;
+                              
+                          """, nativeQuery = true)
     List<InternshipTermResponse> getALLSVPhanCong(@PathVariable String term_id);
 
     @Query(value = """
@@ -53,42 +53,42 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
 
 
     @Query(value = """
-   select
-           i.name as nameIntern,
-           s.full_name as studentName,
-           us.email as studentEmail,
-           us.phone as studentPhone,
-           s.class_name as studentClassName,
-           s.student_code as studentCode,
-           s.major as studentMajor,
-           s.status as studentStatus,
-		   sp.name as specializationName,
-           i.registration_deadline as registrationDeadline,
-           i.start_date as startDate,
-           i.end_date as endDate,
-           aa.result as result,
-           i.status as termStatus,
-           t.teacher_code as teacherCode,
-           t.full_name as teacherName,
-           ut.email as teacherEmail,
-           ut.phone as teacherPhone,
-           -- topic (có thể null)
-           tp.title as topicName,
-           tp.description as topicDescription
-       from students s
-       join users us on us.id = s.user_id
-       left join advisor_assignments aa on s.id = aa.student_id
-       left join internship_terms i on i.id = aa.term_id
-       left join teachers t on t.id = aa.teacher_id
-       left join users ut on ut.id = t.user_id
-       left join specialization sp on s.specialization_id= sp.id
-       -- join topic
-       left join topics tp
-           on tp.id = aa.topic_id
-           and tp.status = 'APPROVED_BY_ADMIN'
-       
-       where s.user_id = :studentId
-                                       """, nativeQuery = true)
+            select
+                    i.name as nameIntern,
+                    s.full_name as studentName,
+                    us.email as studentEmail,
+                    us.phone as studentPhone,
+                    s.class_name as studentClassName,
+                    s.student_code as studentCode,
+                    s.major as studentMajor,
+                    s.status as studentStatus,
+              sp.name as specializationName,
+                    i.registration_deadline as registrationDeadline,
+                    i.start_date as startDate,
+                    i.end_date as endDate,
+                    aa.result as result,
+                    i.status as termStatus,
+                    t.teacher_code as teacherCode,
+                    t.full_name as teacherName,
+                    ut.email as teacherEmail,
+                    ut.phone as teacherPhone,
+                    -- topic (có thể null)
+                    tp.title as topicName,
+                    tp.description as topicDescription
+                from students s
+                join users us on us.id = s.user_id
+                left join advisor_assignments aa on s.id = aa.student_id
+                left join internship_terms i on i.id = aa.term_id
+                left join teachers t on t.id = aa.teacher_id
+                left join users ut on ut.id = t.user_id
+                left join specialization sp on s.specialization_id= sp.id
+                -- join topic
+                left join topics tp
+                    on tp.id = aa.topic_id
+                    and tp.status = 'APPROVED_BY_ADMIN'
+                
+                where s.user_id = :studentId
+                                                """, nativeQuery = true)
     List<InternshipStudentView> findInternshipInfoByStudentId(@PathVariable("studentId") String studentId);
 
     Optional<AdvisorAssignment> findByStudent(Student student);
@@ -97,5 +97,6 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
             String studentId,
             String termId
     );
+
     List<AdvisorAssignment> findByTerm_IdAndTeacher_Id(String termId, String teacherId);
 }

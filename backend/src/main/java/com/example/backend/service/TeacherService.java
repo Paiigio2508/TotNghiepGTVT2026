@@ -139,37 +139,4 @@ public class TeacherService {
         teacherRepository.save(teacher);
         userRepository.save(user);
     }
-    public List<TeacherSpecializationTermResponse> getByTerm(String termId) {
-        List<Teacher> teachers = teacherRepository.findAll();
-        List<TeacherSpecializationTerm> assignments = teacherSpecializationTermRepository.findByTermId(termId);
-
-        Map<String, List<TeacherSpecializationTerm>> grouped = assignments.stream()
-                .collect(Collectors.groupingBy(item -> item.getTeacher().getId()));
-
-        List<TeacherSpecializationTermResponse> result = new ArrayList<>();
-
-        for (Teacher teacher : teachers) {
-            List<TeacherSpecializationTerm> teacherAssignments =
-                    grouped.getOrDefault(teacher.getId(), Collections.emptyList());
-
-            List<TeacherSpecializationTermResponse.SpecializationItem> specializations =
-                    teacherAssignments.stream()
-                            .map(item -> new TeacherSpecializationTermResponse.SpecializationItem(
-                                    item.getSpecialization().getId(),
-                                    item.getSpecialization().getName()
-                            ))
-                            .toList();
-
-            result.add(new TeacherSpecializationTermResponse(
-                    teacher.getId(),
-                    teacher.getTeacherCode(),
-                    teacher.getFullName(),
-                    teacher.getUser() != null ? teacher.getUser().getEmail() : null,
-                    teacher.getUser() != null ? String.valueOf(teacher.getUser().getRole()) : null,
-                    specializations
-            ));
-        }
-
-        return result;
-    }
 }

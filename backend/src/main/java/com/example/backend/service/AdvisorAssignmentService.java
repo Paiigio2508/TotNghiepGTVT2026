@@ -27,7 +27,7 @@ public class AdvisorAssignmentService {
 
     private final AdvisorAssignmentRepository advisorAssignmentRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private  final TeacherSpecializationRepository teacherSpecializationRepository;
+
     public List<Student> getStudentsForAssignment(String termId) {
 
         InternshipTerm term = termRepository.findById(termId)
@@ -43,12 +43,15 @@ public class AdvisorAssignmentService {
     public List<TeacherProjection> findTeachersForAssignment(String termId) {
         return teacherRepository.findTeachersForAssignment(termId);
     }
+
     public List<InternshipTermResponse> getALLSVPhanCong(String termId) {
         return advisorAssignmentRepository.getALLSVPhanCong(termId);
     }
+
     public List<StudentProjection> getStudentsByTerm(String teacherId, String termId) {
         return advisorAssignmentRepository.findStudentsByTeacherAndTerm(teacherId, termId);
     }
+
 //    @Transactional
 //    public void autoAssign(String termId) {
 //
@@ -56,204 +59,145 @@ public class AdvisorAssignmentService {
 //                .orElseThrow(() -> new AppException("Không tìm thấy kỳ thực tập"));
 //
 //        List<Student> students = studentRepository.getALLSVDuDieuKien(termId);
-//        List<TeacherProjection> teachers =
-//                teacherRepository.findTeachersForAssignment(termId);
+//        List<TeacherProjection> teachers = teacherRepository.findTeachersForAssignment(termId);
 //
-//        if (students.isEmpty()) {
+//        if (students == null || students.isEmpty()) {
 //            throw new AppException("Không có sinh viên cần phân công");
 //        }
 //
-//        if (teachers.isEmpty()) {
+//        if (teachers == null || teachers.isEmpty()) {
 //            throw new AppException("Không có giảng viên");
 //        }
 //
-//        // 1️⃣ Lấy toàn bộ Teacher entity 1 lần
+//        // 1. Lấy danh sách teacherId
 //        List<String> teacherIds = new ArrayList<>();
 //        for (TeacherProjection t : teachers) {
 //            teacherIds.add(t.getId());
 //        }
 //
+//        // 2. Lấy entity Teacher
 //        List<Teacher> teacherEntities = teacherRepository.findAllById(teacherIds);
-//
-//        // 2️⃣ Tạo list count có thể thay đổi
-//        List<Long> counts = new ArrayList<>();
-//        for (TeacherProjection t : teachers) {
-//            counts.add(t.getAssignedCount());
+//        if (teacherEntities == null || teacherEntities.isEmpty()) {
+//            throw new AppException("Không tìm thấy thông tin giảng viên");
 //        }
 //
-//        // 3️⃣ Bắt đầu phân công
+//        // 3. Map teacherId -> Teacher
+//        Map<String, Teacher> teacherMap = new HashMap<>();
+//        for (Teacher teacher : teacherEntities) {
+//            teacherMap.put(teacher.getId(), teacher);
+//        }
+//
+//        // 4. Map teacherId -> số lượng sinh viên hiện tại
+//        Map<String, Long> countMap = new HashMap<>();
+//        for (TeacherProjection t : teachers) {
+//            countMap.put(t.getId(), t.getAssignedCount() == null ? 0L : t.getAssignedCount());
+//        }
+//
+//        // 5. Lấy toàn bộ chuyên ngành của giảng viên
+//        List<TeacherSpecialization> teacherSpecializations =
+//                teacherSpecializationRepository.findByTeacher_IdIn(teacherIds);
+//
+//        // 6. Map specializationId -> list teacherId
+//        Map<String, List<String>> specializationTeacherMap = new HashMap<>();
+//
+//        // 7. Map teacherId -> list specializationName
+//        Map<String, List<String>> teacherSpecializationNameMap = new HashMap<>();
+//
+//        for (TeacherSpecialization ts : teacherSpecializations) {
+//            if (ts.getTeacher() == null || ts.getSpecialization() == null) {
+//                continue;
+//            }
+//
+//            String teacherId = ts.getTeacher().getId();
+//            String specializationId = ts.getSpecialization().getId();
+//            String specializationName = ts.getSpecialization().getName();
+//
+//            specializationTeacherMap
+//                    .computeIfAbsent(specializationId, k -> new ArrayList<>())
+//                    .add(teacherId);
+//
+//            teacherSpecializationNameMap
+//                    .computeIfAbsent(teacherId, k -> new ArrayList<>())
+//                    .add(specializationName);
+//        }
+//
+//        // 8. Bắt đầu phân công
 //        for (Student student : students) {
 //
-//            // tìm giảng viên có số sinh viên ít nhất
-//            int minIndex = 0;
-//            for (int i = 1; i < counts.size(); i++) {
-//                if (counts.get(i) < counts.get(minIndex)) {
-//                    minIndex = i;
+//            Teacher selectedTeacher = null;
+//            boolean matchedBySpecialization = false;
+//
+//            if (student == null) {
+//                continue;
+//            }
+//
+//            // Ưu tiên match theo chuyên ngành của sinh viên
+//            if (student.getSpecialization() != null) {
+//                String studentSpecializationId = student.getSpecialization().getId();
+//
+//                List<String> matchedTeacherIds = specializationTeacherMap.get(studentSpecializationId);
+//
+//                if (matchedTeacherIds != null && !matchedTeacherIds.isEmpty()) {
+//                    selectedTeacher = findTeacherMinLoad(matchedTeacherIds, countMap, teacherMap);
+//                    if (selectedTeacher != null) {
+//                        matchedBySpecialization = true;
+//                    }
 //                }
 //            }
 //
-//            Teacher teacher = teacherEntities.get(minIndex);
+//            // Fallback: không có chuyên ngành hoặc không có giảng viên phù hợp
+//            if (selectedTeacher == null) {
+//                selectedTeacher = findTeacherMinLoad(teacherIds, countMap, teacherMap);
+//            }
+//
+//            if (selectedTeacher == null) {
+//                throw new AppException("Không tìm được giảng viên để phân công cho sinh viên: " + student.getFullName());
+//            }
 //
 //            AdvisorAssignment assignment = new AdvisorAssignment();
 //            assignment.setStudent(student);
-//            assignment.setTeacher(teacher);
+//            assignment.setTeacher(selectedTeacher);
 //            assignment.setTerm(term);
 //            assignment.setAssignedDate(LocalDate.now());
+//
+//            // snapshot chuyên ngành sinh viên tại thời điểm phân công
+//            if (student.getSpecialization() != null) {
+//                assignment.setStudentSpecializationSnapshot(student.getSpecialization().getName());
+//            } else {
+//                assignment.setStudentSpecializationSnapshot(null);
+//            }
+//
+//            // snapshot các chuyên ngành của giảng viên tại thời điểm phân công
+//            List<String> teacherSpecNames = teacherSpecializationNameMap.get(selectedTeacher.getId());
+//            if (teacherSpecNames != null && !teacherSpecNames.isEmpty()) {
+//                assignment.setTeacherSpecializationSnapshot(String.join(", ", teacherSpecNames));
+//            } else {
+//                assignment.setTeacherSpecializationSnapshot(null);
+//            }
+//
+//            // lưu chuyên ngành match thực tế
+//            if (matchedBySpecialization && student.getSpecialization() != null) {
+//                assignment.setSpecialization(student.getSpecialization());
+//                assignment.setMatchedSpecializationSnapshot(student.getSpecialization().getName());
+//            } else {
+//                assignment.setSpecialization(null);
+//                assignment.setMatchedSpecializationSnapshot("AUTO");
+//            }
+//
 //            advisorAssignmentRepository.save(assignment);
-//            ChatRoom chatRoom= new ChatRoom();
+//
+//            ChatRoom chatRoom = new ChatRoom();
 //            chatRoom.setAdvisorAssignment(assignment);
 //            chatRoomRepository.save(chatRoom);
 //
-//
-//            // tăng số lượng của giảng viên đó lên
-//            counts.set(minIndex, counts.get(minIndex) + 1);
+//            // tăng số lượng sinh viên của giảng viên vừa được gán
+//            countMap.put(
+//                    selectedTeacher.getId(),
+//                    countMap.getOrDefault(selectedTeacher.getId(), 0L) + 1
+//            );
 //        }
 //    }
-@Transactional
-public void autoAssign(String termId) {
 
-    InternshipTerm term = termRepository.findById(termId)
-            .orElseThrow(() -> new AppException("Không tìm thấy kỳ thực tập"));
-
-    List<Student> students = studentRepository.getALLSVDuDieuKien(termId);
-    List<TeacherProjection> teachers = teacherRepository.findTeachersForAssignment(termId);
-
-    if (students == null || students.isEmpty()) {
-        throw new AppException("Không có sinh viên cần phân công");
-    }
-
-    if (teachers == null || teachers.isEmpty()) {
-        throw new AppException("Không có giảng viên");
-    }
-
-    // 1. Lấy danh sách teacherId
-    List<String> teacherIds = new ArrayList<>();
-    for (TeacherProjection t : teachers) {
-        teacherIds.add(t.getId());
-    }
-
-    // 2. Lấy entity Teacher
-    List<Teacher> teacherEntities = teacherRepository.findAllById(teacherIds);
-    if (teacherEntities == null || teacherEntities.isEmpty()) {
-        throw new AppException("Không tìm thấy thông tin giảng viên");
-    }
-
-    // 3. Map teacherId -> Teacher
-    Map<String, Teacher> teacherMap = new HashMap<>();
-    for (Teacher teacher : teacherEntities) {
-        teacherMap.put(teacher.getId(), teacher);
-    }
-
-    // 4. Map teacherId -> số lượng sinh viên hiện tại
-    Map<String, Long> countMap = new HashMap<>();
-    for (TeacherProjection t : teachers) {
-        countMap.put(t.getId(), t.getAssignedCount() == null ? 0L : t.getAssignedCount());
-    }
-
-    // 5. Lấy toàn bộ chuyên ngành của giảng viên
-    List<TeacherSpecialization> teacherSpecializations =
-            teacherSpecializationRepository.findByTeacher_IdIn(teacherIds);
-
-    // 6. Map specializationId -> list teacherId
-    Map<String, List<String>> specializationTeacherMap = new HashMap<>();
-
-    // 7. Map teacherId -> list specializationName
-    Map<String, List<String>> teacherSpecializationNameMap = new HashMap<>();
-
-    for (TeacherSpecialization ts : teacherSpecializations) {
-        if (ts.getTeacher() == null || ts.getSpecialization() == null) {
-            continue;
-        }
-
-        String teacherId = ts.getTeacher().getId();
-        String specializationId = ts.getSpecialization().getId();
-        String specializationName = ts.getSpecialization().getName();
-
-        specializationTeacherMap
-                .computeIfAbsent(specializationId, k -> new ArrayList<>())
-                .add(teacherId);
-
-        teacherSpecializationNameMap
-                .computeIfAbsent(teacherId, k -> new ArrayList<>())
-                .add(specializationName);
-    }
-
-    // 8. Bắt đầu phân công
-    for (Student student : students) {
-
-        Teacher selectedTeacher = null;
-        boolean matchedBySpecialization = false;
-
-        if (student == null) {
-            continue;
-        }
-
-        // Ưu tiên match theo chuyên ngành của sinh viên
-        if (student.getSpecialization() != null) {
-            String studentSpecializationId = student.getSpecialization().getId();
-
-            List<String> matchedTeacherIds = specializationTeacherMap.get(studentSpecializationId);
-
-            if (matchedTeacherIds != null && !matchedTeacherIds.isEmpty()) {
-                selectedTeacher = findTeacherMinLoad(matchedTeacherIds, countMap, teacherMap);
-                if (selectedTeacher != null) {
-                    matchedBySpecialization = true;
-                }
-            }
-        }
-
-        // Fallback: không có chuyên ngành hoặc không có giảng viên phù hợp
-        if (selectedTeacher == null) {
-            selectedTeacher = findTeacherMinLoad(teacherIds, countMap, teacherMap);
-        }
-
-        if (selectedTeacher == null) {
-            throw new AppException("Không tìm được giảng viên để phân công cho sinh viên: " + student.getFullName());
-        }
-
-        AdvisorAssignment assignment = new AdvisorAssignment();
-        assignment.setStudent(student);
-        assignment.setTeacher(selectedTeacher);
-        assignment.setTerm(term);
-        assignment.setAssignedDate(LocalDate.now());
-
-        // snapshot chuyên ngành sinh viên tại thời điểm phân công
-        if (student.getSpecialization() != null) {
-            assignment.setStudentSpecializationSnapshot(student.getSpecialization().getName());
-        } else {
-            assignment.setStudentSpecializationSnapshot(null);
-        }
-
-        // snapshot các chuyên ngành của giảng viên tại thời điểm phân công
-        List<String> teacherSpecNames = teacherSpecializationNameMap.get(selectedTeacher.getId());
-        if (teacherSpecNames != null && !teacherSpecNames.isEmpty()) {
-            assignment.setTeacherSpecializationSnapshot(String.join(", ", teacherSpecNames));
-        } else {
-            assignment.setTeacherSpecializationSnapshot(null);
-        }
-
-        // lưu chuyên ngành match thực tế
-        if (matchedBySpecialization && student.getSpecialization() != null) {
-            assignment.setSpecialization(student.getSpecialization());
-            assignment.setMatchedSpecializationSnapshot(student.getSpecialization().getName());
-        } else {
-            assignment.setSpecialization(null);
-            assignment.setMatchedSpecializationSnapshot("AUTO");
-        }
-
-        advisorAssignmentRepository.save(assignment);
-
-        ChatRoom chatRoom = new ChatRoom();
-        chatRoom.setAdvisorAssignment(assignment);
-        chatRoomRepository.save(chatRoom);
-
-        // tăng số lượng sinh viên của giảng viên vừa được gán
-        countMap.put(
-                selectedTeacher.getId(),
-                countMap.getOrDefault(selectedTeacher.getId(), 0L) + 1
-        );
-    }
-}
     private Teacher findTeacherMinLoad(List<String> candidateTeacherIds,
                                        Map<String, Long> countMap,
                                        Map<String, Teacher> teacherMap) {
@@ -277,10 +221,12 @@ public void autoAssign(String termId) {
 
         return selectedTeacher;
     }
+
     //student layout
     public List<InternshipStudentView> findInternshipInfoByStudentId(String studentId) {
         return advisorAssignmentRepository.findInternshipInfoByStudentId(studentId);
     }
+
     @Transactional
     public void assignTopic(String studentId, String termId, Topic topic) {
 

@@ -1,5 +1,6 @@
 package com.example.backend.repository;
 
+import com.example.backend.dto.response.StudentStatResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Student;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,7 +18,9 @@ public interface StudentRepository extends JpaRepository<Student, String> {
                          url_image as urlImage ,created_at as createdAt ,s.status  from users u join students s on u.id =s.user_id order by  createdAt
             """, nativeQuery = true)
     List<UserResponse> getALLSTUDENT();
+
     Optional<Student> findByUser_Id(String userId);
+
     boolean existsByStudentCode(String studentCode);
 
     Optional<Student> findByStudentCode(String studentCode);
@@ -42,4 +45,14 @@ public interface StudentRepository extends JpaRepository<Student, String> {
             """, nativeQuery = true)
     List<Student> getALLSVDuDieuKien(String termId);
 
+    @Query(value = """
+         SELECT
+                    COALESCE(sp.name, 'Chưa chọn chuyên môn') AS name,
+                    COUNT(s.id) AS total
+                FROM students s
+                LEFT JOIN specialization sp ON s.specialization_id = sp.id
+                GROUP BY sp.name
+                ORDER BY total DESC
+            """, nativeQuery = true)
+    List<StudentStatResponse> getStudentStats();
 }
