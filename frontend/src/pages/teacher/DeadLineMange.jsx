@@ -39,12 +39,24 @@ export default function DeadlineManage() {
   const userData = JSON.parse(localStorage.getItem("userData"));
   const userId = userData?.userId;
 
+  const currentTerm = terms.find((term) => term.id === selectedTerm);
+
+  const now = dayjs();
+
+  const isTermNotStarted =
+    currentTerm?.startDate && dayjs(currentTerm.startDate).isAfter(now);
+
+  const isTermEnded =
+    currentTerm?.endDate && dayjs(currentTerm.endDate).isBefore(now);
+
+  const isDeadlineDisabled = isTermNotStarted || isTermEnded;
   /* ================= LOAD TERM ================= */
 
   useEffect(() => {
     const loadTerms = async () => {
       try {
         const res = await TermAPI.getAllTermForTeacherLayout();
+        console.log("🚀 ~ loadTerms ~ res:", res)
 
         setTerms(res.data);
 
@@ -235,7 +247,7 @@ export default function DeadlineManage() {
           >
             {terms.map((term) => (
               <Option key={term.id} value={term.id}>
-                {term.name}
+                {term.name} ({term.academicYear})
               </Option>
             ))}
           </Select>
@@ -244,16 +256,19 @@ export default function DeadlineManage() {
         <Col>
           <Button
             type="primary"
+            disabled={isDeadlineDisabled}
             onClick={() => {
+              if (isDeadlineDisabled) {
+                message.warning("Học kỳ chưa bắt đầu hoặc đã kết thúc!");
+                return;
+              }
+
               setEditing(null);
-
               form.resetFields();
-
               form.setFieldsValue({
                 type: "REPORT",
                 internshipTermId: selectedTerm,
               });
-
               setOpen(true);
             }}
           >

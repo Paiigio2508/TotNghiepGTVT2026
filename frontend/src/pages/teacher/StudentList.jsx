@@ -163,7 +163,7 @@ export default function StudentList() {
           >
             {terms.map((term) => (
               <Option key={term.id} value={term.id}>
-                {term.name}
+                {term.name} ({term.academicYear})
               </Option>
             ))}
           </Select>

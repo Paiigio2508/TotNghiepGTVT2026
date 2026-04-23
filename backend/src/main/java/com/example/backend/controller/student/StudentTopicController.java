@@ -4,10 +4,11 @@ import com.example.backend.dto.request.TopicRequest;
 import com.example.backend.entity.Topic;
 import com.example.backend.service.TopicService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/student")
@@ -17,37 +18,58 @@ public class StudentTopicController {
 
     private final TopicService topicService;
 
-    // Lấy danh sách đề tài của chính mình
+    // ================= GET =================
     @GetMapping("/topic/{userId}")
-    public List<Topic> getByUser(@PathVariable String userId) {
-        return topicService.getTopicsByUser(userId);
+    public ResponseEntity<?> getByUser(@PathVariable String userId) {
+        List<Topic> topics = topicService.getTopicsByUser(userId);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "data", topics
+        ));
     }
 
-    // Tạo đề tài
+    // ================= CREATE =================
     @PostMapping("/topic/{userId}")
-    public Topic createTopic(
+    public ResponseEntity<?> createTopic(
             @PathVariable String userId,
             @RequestBody TopicRequest request
     ) {
-        return topicService.createTopicByUser(userId, request);
+        topicService.createTopicByUser(userId, request);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đăng ký đề tài thành công"
+        ));
     }
 
-    // Update
+    // ================= UPDATE =================
     @PutMapping("/topic/{topicId}/{userId}")
-    public Topic updateTopic(
+    public ResponseEntity<?> updateTopic(
             @PathVariable String topicId,
             @PathVariable String userId,
             @RequestBody TopicRequest request
     ) {
-        return topicService.updateTopicByUser(topicId, userId, request);
+        Topic topic = topicService.updateTopicByUser(topicId, userId, request);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Cập nhật đề tài thành công",
+                "data", topic
+        ));
     }
 
-    // Cancel
+    // ================= CANCEL =================
     @PutMapping("/topic/cancel/{topicId}/{userId}")
-    public void cancelTopic(
+    public ResponseEntity<?> cancelTopic(
             @PathVariable String topicId,
             @PathVariable String userId
     ) {
         topicService.cancelTopicByUser(topicId, userId);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Hủy đề tài thành công"
+        ));
     }
 }

@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface TopicRepository extends JpaRepository<Topic, String> {
 
-    List<Topic> findByStudent(Student student);
+    List<Topic> findByStudentOrderByCreatedAtDesc(Student student);
 
     boolean existsByStudentAndStatus(Student student, TopicStatus status);
 

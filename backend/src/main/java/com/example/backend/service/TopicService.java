@@ -5,14 +5,15 @@ import com.example.backend.dto.response.TopicAdminView;
 import com.example.backend.dto.response.TopicTeacherView;
 import com.example.backend.entity.*;
 import com.example.backend.exception.AppException;
-import com.example.backend.repository.*;
+import com.example.backend.repository.AdvisorAssignmentRepository;
+import com.example.backend.repository.StudentRepository;
+import com.example.backend.repository.TopicRepository;
 import com.example.backend.util.status.NotificationType;
 import com.example.backend.util.status.TopicStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -24,16 +25,17 @@ public class TopicService {
     private final AdvisorAssignmentRepository advisorAssignmentRepository;
     private final AdvisorAssignmentService advisorAssignmentService;
     private final NotificationService notificationService;
+
     public List<Topic> getTopicsByUser(String userId) {
 
         Student student = studentRepository
                 .findByUser_Id(userId)
                 .orElseThrow(() -> new AppException("Không tìm thấy sinh viên"));
 
-        return topicRepository.findByStudent(student);
+        return topicRepository.findByStudentOrderByCreatedAtDesc(student);
     }
 
-    public Topic createTopicByUser(String userId, TopicRequest request) {
+    public void createTopicByUser(String userId, TopicRequest request) {
 
         Student student = studentRepository
                 .findByUser_Id(userId)
@@ -42,12 +44,13 @@ public class TopicService {
         AdvisorAssignment assignment = advisorAssignmentRepository
                 .findByStudent(student)
                 .orElseThrow(() -> new AppException("Sinh viên chưa được phân công"));
+
         InternshipTerm term = assignment.getTerm();
-        boolean existsApproved = topicRepository
-                .existsByStudentAndStatus(
-                        student,
-                        TopicStatus.APPROVED_BY_ADMIN
-                );
+
+        boolean existsApproved = topicRepository.existsByStudentAndStatus(
+                student,
+                TopicStatus.APPROVED_BY_ADMIN
+        );
 
         if (existsApproved) {
             throw new AppException("Bạn đã có đề tài được duyệt!");
@@ -59,7 +62,8 @@ public class TopicService {
         topic.setStudent(student);
         topic.setStatus(TopicStatus.PENDING);
         topic.setTerm(term);
-        return topicRepository.save(topic);
+
+        topicRepository.save(topic);
     }
 
     /* ================= SINH VIÊN CẬP NHẬT ================= */
@@ -109,9 +113,11 @@ public class TopicService {
 
         topicRepository.save(topic);
     }
+
     public List<TopicTeacherView> findTopicsByTeacherAndTerm(String userID, String termID) {
-        return topicRepository.findTopicsByTeacherAndTerm(userID,termID);
+        return topicRepository.findTopicsByTeacherAndTerm(userID, termID);
     }
+
     /* ================= GIẢNG VIÊN DUYỆT ================= */
     @Transactional
     public void approveTopic(String topicId) {
@@ -143,6 +149,7 @@ public class TopicService {
 
         notificationService.sendNotification(notification);
     }
+
     /* ================= GIẢNG VIÊN TỪ CHỐI ================= */
     @Transactional
     public void rejectTopic(String topicId) {
@@ -159,9 +166,10 @@ public class TopicService {
         topicRepository.save(topic);
     }
 
-    public List<TopicAdminView> findTopicForAdmin( String termID) {
+    public List<TopicAdminView> findTopicForAdmin(String termID) {
         return topicRepository.findForAdmin(termID);
     }
+
     @Transactional
     public void adminApproveTopic(String topicId) {
 

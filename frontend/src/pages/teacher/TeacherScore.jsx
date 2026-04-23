@@ -143,19 +143,17 @@ export default function TeacherScore() {
 
   };
 
-  return(
-
+  return (
     <Card title="📊 Bảng điểm sinh viên">
-
       <Select
-        style={{width:250,marginBottom:20}}
+        style={{ width: 250, marginBottom: 20 }}
         placeholder="Chọn kỳ thực tập"
         allowClear
-        onChange={(v)=>setTermId(v)}
+        onChange={(v) => setTermId(v)}
       >
-        {terms.map(t=>(
+        {terms.map((t) => (
           <Option key={t.id} value={t.id}>
-            {t.name}
+            {t.name} ({t.academicYear})
           </Option>
         ))}
       </Select>
@@ -165,11 +163,9 @@ export default function TeacherScore() {
         dataSource={data}
         pagination={false}
         bordered
-        scroll={{x:1200}}
+        scroll={{ x: 1200 }}
       />
-
     </Card>
-
   );
 
 }
