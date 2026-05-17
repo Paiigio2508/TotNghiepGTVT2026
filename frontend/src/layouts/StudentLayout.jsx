@@ -1,5 +1,13 @@
-
-import { Layout, Menu, Button, FloatButton, Badge, Dropdown, List, notification } from "antd";
+import {
+  Layout,
+  Menu,
+  Button,
+  FloatButton,
+  Badge,
+  Dropdown,
+  List,
+  notification,
+} from "antd";
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -11,6 +19,7 @@ import { FaClock, FaHome, FaUserGraduate } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
+import ChangePasswordModal from "./ChangePasswordModal";
 import { ChatAPI } from "../api/ChatAPI";
 import { NotificationAPI } from "../api/NotificationAPI";
 import { connectSocket } from "../socket/chatSocket";
@@ -23,10 +32,10 @@ dayjs.extend(relativeTime);
 const { Header, Sider, Content } = Layout;
 
 export default function StudentLayout() {
-
   const [collapsed, setCollapsed] = useState(false);
   const [roomId, setRoomId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
+  const [openChangePassword, setOpenChangePassword] = useState(false);
 
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -34,10 +43,11 @@ export default function StudentLayout() {
   const location = useLocation();
   const nav = useNavigate();
 
-  const userData = JSON.parse(localStorage.getItem("userData"));
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
+      localStorage.removeItem("token");
       localStorage.removeItem("userData");
       nav("/login", { replace: true });
     }
@@ -46,7 +56,6 @@ export default function StudentLayout() {
   /* ================= ICON THEO TYPE ================= */
 
   const getIcon = (type) => {
-
     switch (type) {
       case "DEADLINE_CREATED":
         return "⏰";
@@ -65,13 +74,10 @@ export default function StudentLayout() {
   /* ================= LOAD CHAT ROOM ================= */
 
   useEffect(() => {
-
     if (!userData?.userId) return;
 
     const fetchRoom = async () => {
-
       try {
-
         const res = await ChatAPI.getRoomByStudent(userData.userId);
 
         const room = res.data?.data || res.data;
@@ -79,97 +85,74 @@ export default function StudentLayout() {
         if (room?.id) {
           setRoomId(room.id);
         }
-
       } catch (err) {
         console.error(err);
       }
-
     };
 
     fetchRoom();
-
   }, []);
 
   /* ================= LOAD NOTIFICATION ================= */
 
   useEffect(() => {
-
     if (!userData?.userId) return;
 
     const loadNotifications = async () => {
-
       try {
-
         const res = await NotificationAPI.getByUser(userData.userId);
-        setNotifications(res.data);
+        setNotifications(res.data || []);
 
         const countRes = await NotificationAPI.countUnread(userData.userId);
-        setUnreadCount(countRes.data);
-
+        setUnreadCount(countRes.data || 0);
       } catch (err) {
         console.error(err);
       }
-
     };
 
     loadNotifications();
-
   }, []);
 
   /* ================= SOCKET ================= */
 
   useEffect(() => {
-
     if (!userData?.userId) return;
 
     connectSocket(
       roomId,
       userData.userId,
 
-
       /* NOTIFICATION */
       (notificationData) => {
-
         setNotifications((prev) => [notificationData, ...prev]);
         setUnreadCount((prev) => prev + 1);
-
-        /* POPUP */
 
         notification.open({
           message: notificationData.title,
           description: notificationData.content,
           placement: "topRight",
         });
-
       }
-
     );
-
   }, [roomId]);
 
   /* ================= CLICK NOTIFICATION ================= */
 
   const handleClickNotification = async (item) => {
-
     try {
-
       await NotificationAPI.markRead(item.id);
 
       setUnreadCount((prev) => Math.max(prev - 1, 0));
 
       setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === item.id ? { ...n, isRead: true } : n
-        )
+        prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n))
       );
-
     } catch (err) {
       console.error(err);
     }
-
   };
 
-  /* ================= DROPDOWN ================= */
+  /* ================= DROPDOWN THÔNG BÁO ================= */
 
   const notificationMenu = (
     <List
@@ -177,7 +160,6 @@ export default function StudentLayout() {
       dataSource={notifications}
       locale={{ emptyText: "Không có thông báo" }}
       renderItem={(item) => (
-
         <List.Item
           onClick={() => handleClickNotification(item)}
           style={{
@@ -185,21 +167,14 @@ export default function StudentLayout() {
             background: item.isRead ? "#fff" : "#f6f6f6",
             borderRadius: 8,
             marginBottom: 6,
-            padding: 10
+            padding: 10,
           }}
         >
-
           <div style={{ display: "flex", gap: 10, width: "100%" }}>
-
-            <div style={{ fontSize: 20 }}>
-              {getIcon(item.type)}
-            </div>
+            <div style={{ fontSize: 20 }}>{getIcon(item.type)}</div>
 
             <div style={{ flex: 1 }}>
-
-              <div style={{ fontWeight: 600 }}>
-                {item.title}
-              </div>
+              <div style={{ fontWeight: 600 }}>{item.title}</div>
 
               <div style={{ fontSize: 12, color: "#666" }}>
                 {item.content}
@@ -208,7 +183,6 @@ export default function StudentLayout() {
               <div style={{ fontSize: 11, color: "#999", marginTop: 3 }}>
                 {dayjs(item.createdAt).fromNow()}
               </div>
-
             </div>
 
             {!item.isRead && (
@@ -218,25 +192,19 @@ export default function StudentLayout() {
                   height: 8,
                   borderRadius: "50%",
                   background: "#1677ff",
-                  marginTop: 6
+                  marginTop: 6,
                 }}
               />
             )}
-
           </div>
-
         </List.Item>
-
       )}
     />
   );
 
   return (
-
     <Layout style={{ minHeight: "100vh" }}>
-
       <Sider collapsible collapsed={collapsed} trigger={null} width={220}>
-
         <div
           style={{
             height: collapsed ? 80 : 160,
@@ -247,31 +215,44 @@ export default function StudentLayout() {
             justifyContent: "center",
           }}
         >
-
-          <img
-            src={userData?.avatar || "https://i.pravatar.cc/150"}
-            alt="avatar"
+          <div
             style={{
-              width: collapsed ? 45 : 90,
-              height: collapsed ? 45 : 90,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "3px solid #fff",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
-          />
-
-          {!collapsed && (
-            <span
+            onClick={() => setOpenChangePassword(true)}
+            title="Đổi mật khẩu"
+          >
+            <img
+              src={
+                userData?.avatar ||
+                userData?.urlImage ||
+                "https://i.pravatar.cc/150"
+              }
+              alt="avatar"
               style={{
-                marginTop: 10,
-                fontWeight: "bold",
-                fontSize: 14,
+                width: collapsed ? 45 : 90,
+                height: collapsed ? 45 : 90,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "3px solid #fff",
               }}
-            >
-              {userData?.username}
-            </span>
-          )}
+            />
 
+            {!collapsed && (
+              <span
+                style={{
+                  marginTop: 10,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                }}
+              >
+                {userData?.username || userData?.fullName || "Tài khoản"}
+              </span>
+            )}
+          </div>
         </div>
 
         <Menu
@@ -281,11 +262,9 @@ export default function StudentLayout() {
           items={studentMenu}
           onClick={({ key }) => nav(key)}
         />
-
       </Sider>
 
       <Layout>
-
         <Header
           style={{
             background: "#4E4336",
@@ -294,7 +273,6 @@ export default function StudentLayout() {
             alignItems: "center",
           }}
         >
-
           <Button
             type="text"
             icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
@@ -302,11 +280,14 @@ export default function StudentLayout() {
           />
 
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-
             <Dropdown trigger={["click"]} dropdownRender={() => notificationMenu}>
               <Badge count={unreadCount}>
                 <BellOutlined
-                  style={{ fontSize: 20, color: "#fff", cursor: "pointer" }}
+                  style={{
+                    fontSize: 20,
+                    color: "#fff",
+                    cursor: "pointer",
+                  }}
                 />
               </Badge>
             </Dropdown>
@@ -319,16 +300,18 @@ export default function StudentLayout() {
             >
               Đăng xuất
             </Button>
-
           </div>
-
         </Header>
 
         <Content style={{ padding: 16 }}>
           <Outlet />
         </Content>
-
       </Layout>
+
+      <ChangePasswordModal
+        open={openChangePassword}
+        onClose={() => setOpenChangePassword(false)}
+      />
 
       {openChat && roomId && (
         <ChatWidget
@@ -345,7 +328,6 @@ export default function StudentLayout() {
       />
 
       <FloatButton.BackTop />
-
     </Layout>
   );
 }
@@ -360,4 +342,3 @@ const studentMenu = [
     label: "Bảng điểm theo tuần",
   },
 ];
-
