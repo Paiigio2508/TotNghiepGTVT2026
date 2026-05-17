@@ -352,7 +352,7 @@ export default function StudentLayout() {
 
 const studentMenu = [
   { key: "/student", icon: <FaUserGraduate />, label: "Thông tin" },
-  { key: "/student/topic", icon: <FaHome />, label: "Đăng ký đề tài" },
+  { key: "/student/topic", icon: <FaHome />, label: "Đề tài" },
   { key: "/student/deadlines", icon: <FaClock />, label: "Deadlines" },
   {
     key: "/student/scores",

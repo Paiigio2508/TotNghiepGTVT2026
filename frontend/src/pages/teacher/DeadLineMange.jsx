@@ -44,24 +44,55 @@ export default function DeadlineManage() {
   const now = dayjs();
 
   const isTermNotStarted =
-    currentTerm?.startDate && dayjs(currentTerm.startDate).isAfter(now);
+    currentTerm?.startDate &&
+    now.isBefore(dayjs(currentTerm.startDate), "day");
 
   const isTermEnded =
-    currentTerm?.endDate && dayjs(currentTerm.endDate).isBefore(now);
+    currentTerm?.endDate &&
+    now.isAfter(dayjs(currentTerm.endDate), "day");
 
   const isDeadlineDisabled = isTermNotStarted || isTermEnded;
+
+  /* ================= CHECK KỲ ĐANG DIỄN RA ================= */
+
+  const getCurrentTerm = (termList) => {
+    const today = dayjs();
+
+    return termList.find((term) => {
+      // Ưu tiên theo status từ backend
+      if (term.status === "DANG_DIEN_RA") return true;
+
+      // Nếu backend trả status tiếng Việt
+      if (term.status === "Đang diễn ra") return true;
+
+      // Nếu status chưa chuẩn thì check theo ngày
+      if (!term.startDate || !term.endDate) return false;
+
+      const startDate = dayjs(term.startDate);
+      const endDate = dayjs(term.endDate);
+
+      return (
+        !today.isBefore(startDate, "day") &&
+        !today.isAfter(endDate, "day")
+      );
+    });
+  };
+
   /* ================= LOAD TERM ================= */
 
   useEffect(() => {
     const loadTerms = async () => {
       try {
         const res = await TermAPI.getAllTermForTeacherLayout();
-        console.log("🚀 ~ loadTerms ~ res:", res)
 
-        setTerms(res.data);
+        const termList = res.data || [];
+        setTerms(termList);
 
-        if (res.data.length > 0) {
-          setSelectedTerm(res.data[0].id);
+        if (termList.length > 0) {
+          const currentTerm = getCurrentTerm(termList);
+
+          // Ưu tiên kỳ đang diễn ra, nếu không có thì lấy kỳ đầu tiên
+          setSelectedTerm(currentTerm?.id || termList[0].id);
         }
       } catch {
         message.error("Tải danh sách học kỳ thất bại!");
@@ -162,7 +193,9 @@ export default function DeadlineManage() {
               onMouseEnter={(e) =>
                 (e.target.style.textDecoration = "underline")
               }
-              onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+              onMouseLeave={(e) =>
+                (e.target.style.textDecoration = "none")
+              }
             >
               {part}
             </a>
@@ -193,14 +226,22 @@ export default function DeadlineManage() {
       render: (date, record) =>
         record.type === "ANNOUNCEMENT"
           ? "-"
-          : dayjs(date).format("DD/MM/YYYY HH:mm"),
+          : date
+          ? dayjs(date).format("DD/MM/YYYY HH:mm")
+          : "-",
     },
     {
       title: "Hành động",
       render: (_, record) => (
         <Space>
           <Button
+            disabled={isDeadlineDisabled}
             onClick={() => {
+              if (isDeadlineDisabled) {
+                message.warning("Học kỳ chưa bắt đầu hoặc đã kết thúc!");
+                return;
+              }
+
               setEditing(record);
 
               form.setFieldsValue({
@@ -219,7 +260,9 @@ export default function DeadlineManage() {
           {record.type === "REPORT" && (
             <Button
               type="primary"
-              onClick={() => navigate(`/teacher/deadline/${record.id}/reports`)}
+              onClick={() =>
+                navigate(`/teacher/deadline/${record.id}/reports`)
+              }
             >
               Xem
             </Button>
@@ -244,6 +287,7 @@ export default function DeadlineManage() {
             value={selectedTerm}
             style={{ width: 250 }}
             onChange={(value) => setSelectedTerm(value)}
+            placeholder="Chọn kỳ thực tập"
           >
             {terms.map((term) => (
               <Option key={term.id} value={term.id}>
@@ -277,6 +321,20 @@ export default function DeadlineManage() {
         </Col>
       </Row>
 
+      {/* THÔNG BÁO TRẠNG THÁI KỲ */}
+
+      {currentTerm && isTermNotStarted && (
+        <Tag color="orange" style={{ marginBottom: 12 }}>
+          Học kỳ chưa bắt đầu, không thể thêm hoặc sửa deadline
+        </Tag>
+      )}
+
+      {currentTerm && isTermEnded && (
+        <Tag color="red" style={{ marginBottom: 12 }}>
+          Học kỳ đã kết thúc, không thể thêm hoặc sửa deadline
+        </Tag>
+      )}
+
       {/* TABLE */}
 
       <Table
@@ -293,7 +351,11 @@ export default function DeadlineManage() {
       <Modal
         open={open}
         title={editing ? "Chỉnh sửa Deadline" : "Tạo Deadline"}
-        onCancel={() => setOpen(false)}
+        onCancel={() => {
+          setOpen(false);
+          setEditing(null);
+          form.resetFields();
+        }}
         onOk={onSubmit}
         centered
       >
@@ -301,12 +363,12 @@ export default function DeadlineManage() {
           <Form.Item
             name="internshipTermId"
             label="Kỳ thực tập"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn kỳ thực tập" }]}
           >
             <Select>
               {terms.map((term) => (
                 <Option key={term.id} value={term.id}>
-                  {term.name}
+                  {term.name} ({term.academicYear})
                 </Option>
               ))}
             </Select>
@@ -316,7 +378,7 @@ export default function DeadlineManage() {
             name="type"
             label="Loại"
             initialValue="REPORT"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: "Vui lòng chọn loại" }]}
           >
             <Radio.Group>
               <Radio value="REPORT">Deadline báo cáo</Radio>
@@ -341,7 +403,11 @@ export default function DeadlineManage() {
             }
           </Form.Item>
 
-          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true }]}>
+          <Form.Item
+            name="title"
+            label="Tiêu đề"
+            rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
+          >
             <Input />
           </Form.Item>
 
@@ -358,7 +424,9 @@ export default function DeadlineManage() {
                 <Form.Item
                   name="dueDate"
                   label="Hạn nộp"
-                  rules={[{ required: true }]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn hạn nộp" },
+                  ]}
                 >
                   <DatePicker
                     showTime
