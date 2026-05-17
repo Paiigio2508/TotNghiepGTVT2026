@@ -32,6 +32,7 @@ export default function DeadlineManage() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   const [form] = Form.useForm();
   const navigate = useNavigate();
@@ -59,13 +60,10 @@ export default function DeadlineManage() {
     const today = dayjs();
 
     return termList.find((term) => {
-      // Ưu tiên theo status từ backend
       if (term.status === "DANG_DIEN_RA") return true;
 
-      // Nếu backend trả status tiếng Việt
       if (term.status === "Đang diễn ra") return true;
 
-      // Nếu status chưa chuẩn thì check theo ngày
       if (!term.startDate || !term.endDate) return false;
 
       const startDate = dayjs(term.startDate);
@@ -76,6 +74,38 @@ export default function DeadlineManage() {
         !today.isAfter(endDate, "day")
       );
     });
+  };
+
+  /* ================= TỰ TĂNG TUẦN ================= */
+
+  const getNextWeekNo = () => {
+    const weekNumbers = data
+      .filter((item) => item.type === "REPORT")
+      .map((item) => Number(item.weekNo))
+      .filter((week) => !Number.isNaN(week));
+
+    if (weekNumbers.length === 0) return 1;
+
+    return Math.max(...weekNumbers) + 1;
+  };
+
+  /* ================= VALIDATE HẠN NỘP ================= */
+
+  const disabledDueDate = (current) => {
+    // Không cho chọn hôm nay và các ngày trong quá khứ
+    return current && !current.isAfter(dayjs(), "day");
+  };
+
+  const validateDueDate = (_, value) => {
+    if (!value) {
+      return Promise.reject(new Error("Vui lòng chọn hạn nộp"));
+    }
+
+    if (!value.isAfter(dayjs(), "day")) {
+      return Promise.reject(new Error("Hạn nộp phải sau ngày hiện tại"));
+    }
+
+    return Promise.resolve();
   };
 
   /* ================= LOAD TERM ================= */
@@ -90,8 +120,6 @@ export default function DeadlineManage() {
 
         if (termList.length > 0) {
           const currentTerm = getCurrentTerm(termList);
-
-          // Ưu tiên kỳ đang diễn ra, nếu không có thì lấy kỳ đầu tiên
           setSelectedTerm(currentTerm?.id || termList[0].id);
         }
       } catch {
@@ -125,6 +153,41 @@ export default function DeadlineManage() {
     loadDeadlines();
   }, [selectedTerm, userId]);
 
+  /* ================= SEARCH ================= */
+
+  const filteredData = data.filter((item) => {
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    if (!keyword) return true;
+
+    const typeText =
+      item.type === "ANNOUNCEMENT"
+        ? "thông báo announcement"
+        : "deadline báo cáo report";
+
+    const weekText =
+      item.type === "REPORT" && item.weekNo
+        ? `tuần ${item.weekNo} week ${item.weekNo} w${item.weekNo}`
+        : "";
+
+    const dueDateText = item.dueDate
+      ? dayjs(item.dueDate).format("DD/MM/YYYY HH:mm")
+      : "";
+
+    const searchableText = [
+      item.title,
+      item.description,
+      typeText,
+      weekText,
+      dueDateText,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(keyword);
+  });
+
   /* ================= SUBMIT ================= */
 
   const onSubmit = async () => {
@@ -155,7 +218,9 @@ export default function DeadlineManage() {
       setEditing(null);
       form.resetFields();
       loadDeadlines();
-    } catch {
+    } catch (error) {
+      if (error?.errorFields) return;
+
       message.error("Lỗi hệ thống!");
     }
   };
@@ -179,11 +244,12 @@ export default function DeadlineManage() {
       width: 380,
       render: (text) => {
         const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const onlyUrlRegex = /^https?:\/\/[^\s]+$/;
 
         if (!text) return "-";
 
         return text.split(urlRegex).map((part, index) =>
-          urlRegex.test(part) ? (
+          onlyUrlRegex.test(part) ? (
             <a
               key={index}
               href={part}
@@ -193,9 +259,7 @@ export default function DeadlineManage() {
               onMouseEnter={(e) =>
                 (e.target.style.textDecoration = "underline")
               }
-              onMouseLeave={(e) =>
-                (e.target.style.textDecoration = "none")
-              }
+              onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
             >
               {part}
             </a>
@@ -276,25 +340,41 @@ export default function DeadlineManage() {
     <>
       <Divider>
         <Title level={3}>Quản lý Deadline</Title>
-        <Text type="secondary">Tổng deadline: {data.length}</Text>
+        <Text type="secondary">
+          Tổng deadline: {filteredData.length}/{data.length}
+        </Text>
       </Divider>
 
-      {/* TERM SELECT */}
+      {/* TERM + SEARCH + BUTTON */}
 
-      <Row justify="space-between" className="mb-3">
+      <Row justify="space-between" className="mb-3" gutter={[12, 12]}>
         <Col>
-          <Select
-            value={selectedTerm}
-            style={{ width: 250 }}
-            onChange={(value) => setSelectedTerm(value)}
-            placeholder="Chọn kỳ thực tập"
-          >
-            {terms.map((term) => (
-              <Option key={term.id} value={term.id}>
-                {term.name} ({term.academicYear})
-              </Option>
-            ))}
-          </Select>
+          <Space wrap>
+            <Select
+              value={selectedTerm}
+              style={{ width: 250 }}
+              onChange={(value) => {
+                setSelectedTerm(value);
+                setSearchKeyword("");
+              }}
+              placeholder="Chọn kỳ thực tập"
+            >
+              {terms.map((term) => (
+                <Option key={term.id} value={term.id}>
+                  {term.name} ({term.academicYear})
+                </Option>
+              ))}
+            </Select>
+
+            <Input.Search
+              value={searchKeyword}
+              placeholder="Tìm tiêu đề, mô tả, tuần..."
+              allowClear
+              style={{ width: 320 }}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              onSearch={(value) => setSearchKeyword(value)}
+            />
+          </Space>
         </Col>
 
         <Col>
@@ -309,10 +389,13 @@ export default function DeadlineManage() {
 
               setEditing(null);
               form.resetFields();
+
               form.setFieldsValue({
                 type: "REPORT",
                 internshipTermId: selectedTerm,
+                weekNo: getNextWeekNo(),
               });
+
               setOpen(true);
             }}
           >
@@ -339,7 +422,7 @@ export default function DeadlineManage() {
 
       <Table
         rowKey="id"
-        dataSource={data}
+        dataSource={filteredData}
         columns={columns}
         loading={loading}
         bordered
@@ -363,7 +446,12 @@ export default function DeadlineManage() {
           <Form.Item
             name="internshipTermId"
             label="Kỳ thực tập"
-            rules={[{ required: true, message: "Vui lòng chọn kỳ thực tập" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn kỳ thực tập",
+              },
+            ]}
           >
             <Select>
               {terms.map((term) => (
@@ -378,9 +466,33 @@ export default function DeadlineManage() {
             name="type"
             label="Loại"
             initialValue="REPORT"
-            rules={[{ required: true, message: "Vui lòng chọn loại" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng chọn loại",
+              },
+            ]}
           >
-            <Radio.Group>
+            <Radio.Group
+              onChange={(e) => {
+                const type = e.target.value;
+
+                if (type === "REPORT") {
+                  const currentWeek = form.getFieldValue("weekNo");
+
+                  form.setFieldsValue({
+                    weekNo: currentWeek || getNextWeekNo(),
+                  });
+                }
+
+                if (type === "ANNOUNCEMENT") {
+                  form.setFieldsValue({
+                    weekNo: null,
+                    dueDate: null,
+                  });
+                }
+              }}
+            >
               <Radio value="REPORT">Deadline báo cáo</Radio>
               <Radio value="ANNOUNCEMENT">Thông báo</Radio>
             </Radio.Group>
@@ -395,7 +507,12 @@ export default function DeadlineManage() {
                 <Form.Item
                   name="weekNo"
                   label="Tuần"
-                  rules={[{ required: true, message: "Nhập tuần" }]}
+                  rules={[
+                    {
+                      required: true,
+                      message: "Nhập tuần",
+                    },
+                  ]}
                 >
                   <Input type="number" min={1} />
                 </Form.Item>
@@ -406,7 +523,12 @@ export default function DeadlineManage() {
           <Form.Item
             name="title"
             label="Tiêu đề"
-            rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
+            rules={[
+              {
+                required: true,
+                message: "Vui lòng nhập tiêu đề",
+              },
+            ]}
           >
             <Input />
           </Form.Item>
@@ -425,13 +547,16 @@ export default function DeadlineManage() {
                   name="dueDate"
                   label="Hạn nộp"
                   rules={[
-                    { required: true, message: "Vui lòng chọn hạn nộp" },
+                    {
+                      validator: validateDueDate,
+                    },
                   ]}
                 >
                   <DatePicker
                     showTime
                     format="DD/MM/YYYY HH:mm"
                     style={{ width: "100%" }}
+                    disabledDate={disabledDueDate}
                   />
                 </Form.Item>
               ) : null

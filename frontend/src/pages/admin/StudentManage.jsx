@@ -1,4 +1,4 @@
-
+import { useState, useEffect } from "react";
 import {
   Table,
   Button,
@@ -15,7 +15,7 @@ import {
   Tag,
   Upload,
   Radio,
-  DatePicker
+  DatePicker,
 } from "antd";
 
 import {
@@ -23,10 +23,9 @@ import {
   RetweetOutlined,
   UploadOutlined,
   CloseCircleOutlined,
-  CheckCircleOutlined
+  CheckCircleOutlined,
 } from "@ant-design/icons";
 
-import { useState, useEffect } from "react";
 import { FaUserGraduate } from "react-icons/fa";
 import { StudentAPI } from "../../api/StudentAPI";
 import "./css/UserManage.css";
@@ -35,84 +34,110 @@ import { toast } from "react-toastify";
 import dayjs from "dayjs";
 
 export default function StudentManage() {
+  const [data, setData] = useState([]);
+  const [dataGoc, setDataGoc] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const [importFile, setImportFile] = useState(null);
 
-  const [data,setData] = useState([]);
-  const [dataGoc,setDataGoc] = useState([]);
-  const [open,setOpen] = useState(false);
-  const [editing,setEditing] = useState(null);
-  const [imageUrl,setImageUrl] = useState(null);
-  const [form] = Form.useForm();
-  const [importFile,setImportFile] = useState(null);
+  const [searchForm] = Form.useForm();
+  const [studentForm] = Form.useForm();
 
   /* ================= LOAD DATA ================= */
 
   const loadStudent = async () => {
-    try{
+    try {
       const res = await StudentAPI.getAll();
-      setData(res.data);
-      setDataGoc(res.data);
-    }catch{
+
+      const studentList = Array.isArray(res.data) ? res.data : [];
+
+      setData(studentList);
+      setDataGoc(studentList);
+    } catch {
       message.error("Tải danh sách sinh viên thất bại!");
     }
   };
 
-  useEffect(()=>{
+  useEffect(() => {
     loadStudent();
-  },[]);
+  }, []);
 
   /* ================= SEARCH ================= */
 
-  const handleSearch = (keyword)=>{
-    if(!keyword || keyword.trim()===""){
+  const handleSearch = (keyword) => {
+    if (!keyword || keyword.trim() === "") {
       setData(dataGoc);
       return;
     }
 
+    const lowerKeyword = keyword.toLowerCase();
+
     const ketQua = dataGoc.filter(
-      item =>
-        item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.className?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+      (item) =>
+        item.userCode?.toLowerCase().includes(lowerKeyword) ||
+        item.name?.toLowerCase().includes(lowerKeyword) ||
+        item.className?.toLowerCase().includes(lowerKeyword) ||
+        item.phone?.toLowerCase().includes(lowerKeyword) ||
+        item.email?.toLowerCase().includes(lowerKeyword)
     );
 
     setData(ketQua);
   };
 
-  /* ================= DELETE ================= */
+  /* ================= DELETE / CHANGE STATUS ================= */
 
-  const onDelete = async (id)=>{
-    try{
+  const onDelete = async (id) => {
+    try {
       await StudentAPI.deleteStudent(id);
       toast.success("Cập nhật trạng thái thành công!");
       loadStudent();
-    }catch{
+    } catch {
       toast.error("Cập nhật trạng thái thất bại!");
     }
   };
 
   /* ================= EDIT ================= */
 
-  const onEdit = (record)=>{
-
+  const onEdit = (record) => {
     setEditing(record);
     setImageUrl(record.urlImage);
 
-    form.setFieldsValue({
+    studentForm.setFieldsValue({
       ...record,
-      ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null
+      ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
+      urlImage: record.urlImage || null,
     });
 
     setOpen(true);
   };
 
+  /* ================= VALIDATE DATE ================= */
+
+  const disabledBirthDate = (current) => {
+    // Ngày sinh không được lớn hơn ngày hiện tại
+    return current && current.isAfter(dayjs(), "day");
+  };
+
+  const validateBirthDate = (_, value) => {
+    if (!value) {
+      return Promise.reject(new Error("Vui lòng chọn ngày sinh!"));
+    }
+
+    if (value.isAfter(dayjs(), "day")) {
+      return Promise.reject(
+        new Error("Ngày sinh không được lớn hơn ngày hiện tại!")
+      );
+    }
+
+    return Promise.resolve();
+  };
+
   /* ================= SUBMIT ================= */
 
-  const onSubmit = async ()=>{
-
-    try{
-
-      const values = await form.validateFields();
+  const onSubmit = async () => {
+    try {
+      const values = await studentForm.validateFields();
 
       const payload = {
         userCode: values.userCode,
@@ -124,213 +149,214 @@ export default function StudentManage() {
         gender: values.gender,
         ngaySinh: values.ngaySinh
           ? values.ngaySinh.format("YYYY-MM-DD")
-          : null
+          : null,
       };
 
       let res;
 
-      if(editing){
-        res = await StudentAPI.updateStudent(editing.id,payload);
-      }else{
+      if (editing) {
+        res = await StudentAPI.updateStudent(editing.id, payload);
+      } else {
         res = await StudentAPI.createStudent(payload);
       }
 
-      if(res.data?.success === false){
-        toast.error(res.data.message);
+      if (res.data?.success === false) {
+        toast.error(res.data.message || "Thao tác thất bại!");
         return;
       }
 
       toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
       setOpen(false);
-      form.resetFields();
+      studentForm.resetFields();
       setImageUrl(null);
       setEditing(null);
 
       loadStudent();
+    } catch (error) {
+      // Nếu là lỗi validate form thì không hiện lỗi hệ thống
+      if (error?.errorFields) return;
 
-    }catch{
       toast.error("Lỗi hệ thống!");
     }
   };
 
   /* ================= IMPORT ================= */
 
-  const handleImport = async ()=>{
-
-    if(!importFile){
+  const handleImport = async () => {
+    if (!importFile) {
       toast.warning("Vui lòng chọn file!");
       return;
     }
 
     const formData = new FormData();
-    formData.append("file",importFile);
+    formData.append("file", importFile);
 
-    try{
+    try {
       const res = await StudentAPI.importStudent(formData);
-      toast.success(res.data);
+
+      toast.success(res.data || "Import thành công!");
       setImportFile(null);
       loadStudent();
-    }catch(err){
-      toast.error(err.response?.data?.message || "Import thất bại");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Import thất bại!");
     }
   };
 
   /* ================= COLUMNS ================= */
 
   const columns = [
-
-    { title:"Mã SV", dataIndex:"userCode" },
-
     {
-      title:"Ảnh",
-      dataIndex:"urlImage",
-      render:(url)=>(
+      title: "Mã SV",
+      dataIndex: "userCode",
+    },
+    {
+      title: "Ảnh",
+      dataIndex: "urlImage",
+      render: (url) => (
         <Image
           src={url}
           width={70}
           height={70}
-          style={{objectFit:"cover",borderRadius:"50%"}}
+          style={{ objectFit: "cover", borderRadius: "50%" }}
           fallback="https://via.placeholder.com/70"
         />
-      )
+      ),
     },
-
-    { title:"Họ tên", dataIndex:"name" },
-
     {
-      title:"Giới tính",
-      dataIndex:"gender",
-      render:(gender)=>
-        gender==="Nam"
-          ? <Tag color="blue">Nam</Tag>
-          : <Tag color="pink">Nữ</Tag>
+      title: "Họ tên",
+      dataIndex: "name",
     },
-
     {
-      title:"Ngày sinh",
-      dataIndex:"ngaySinh",
-      render:(date)=> date ? dayjs(date).format("DD/MM/YYYY") : ""
+      title: "Giới tính",
+      dataIndex: "gender",
+      render: (gender) =>
+        gender === "Nam" ? (
+          <Tag color="blue">Nam</Tag>
+        ) : gender === "Nữ" ? (
+          <Tag color="pink">Nữ</Tag>
+        ) : (
+          <Tag>Không rõ</Tag>
+        ),
     },
-
-    { title:"Lớp", dataIndex:"className" },
-
-    { title:"Email", dataIndex:"email" },
-
-    { title:"SĐT", dataIndex:"phone" },
-
     {
-      title:"Trạng thái",
-      dataIndex:"status",
-      render:(status)=>
-        status==="DU_DIEU_KIEN"
-          ? <Tag color="#00cc00">Đủ điều kiện</Tag>
-          : <Tag color="red">Không đủ điều kiện</Tag>
+      title: "Ngày sinh",
+      dataIndex: "ngaySinh",
+      render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : "-"),
     },
-
     {
-      title:"Hành động",
-      render:(_,record)=>(
+      title: "Lớp",
+      dataIndex: "className",
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
+    {
+      title: "SĐT",
+      dataIndex: "phone",
+      render: (phone) => phone || "-",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      render: (status) =>
+        status === "DU_DIEU_KIEN" ? (
+          <Tag color="#00cc00">Đủ điều kiện</Tag>
+        ) : (
+          <Tag color="red">Không đủ điều kiện</Tag>
+        ),
+    },
+    {
+      title: "Hành động",
+      render: (_, record) => (
         <Space>
-
-          <Button
-            onClick={()=>onEdit(record)}
-            icon={<EditOutlined />}
-          >
+          <Button onClick={() => onEdit(record)} icon={<EditOutlined />}>
             Sửa
           </Button>
 
           <Popconfirm
             title="Đổi trạng thái sinh viên?"
-            onConfirm={()=>onDelete(record.id)}
+            okText="Đồng ý"
+            cancelText="Hủy"
+            onConfirm={() => onDelete(record.id)}
           >
             <Button
               icon={
-                record.status==="DU_DIEU_KIEN"
-                  ? <CloseCircleOutlined/>
-                  : <CheckCircleOutlined/>
+                record.status === "DU_DIEU_KIEN" ? (
+                  <CloseCircleOutlined />
+                ) : (
+                  <CheckCircleOutlined />
+                )
               }
-              type={record.status==="DU_DIEU_KIEN" ? "default":"primary"}
-              danger={record.status==="DU_DIEU_KIEN"}
+              type={record.status === "DU_DIEU_KIEN" ? "default" : "primary"}
+              danger={record.status === "DU_DIEU_KIEN"}
             >
-              {record.status==="DU_DIEU_KIEN"
+              {record.status === "DU_DIEU_KIEN"
                 ? "Không đủ điều kiện"
                 : "Đủ điều kiện"}
             </Button>
-
           </Popconfirm>
-
         </Space>
-      )
-    }
-
+      ),
+    },
   ];
 
-  return(
+  return (
     <>
-
       <Divider titlePlacement="center">
         <h2 className="fw-bold">
-          <FaUserGraduate/> Quản lý sinh viên
+          <FaUserGraduate /> Quản lý sinh viên
         </h2>
       </Divider>
 
       {/* SEARCH */}
 
       <div className="form-header">
-
         <Form
-          form={form}
-          onValuesChange={(changedValues)=>handleSearch(changedValues.timKiem)}
+          form={searchForm}
+          onValuesChange={(changedValues) =>
+            handleSearch(changedValues.timKiem)
+          }
         >
-
           <div className="d-flex justify-content-center gap-4">
-
             <Form.Item label="Tìm kiếm" name="timKiem">
-
               <Input
                 maxLength={30}
-                placeholder="Mã / tên / SĐT..."
+                placeholder="Mã / tên / SĐT / email..."
                 allowClear
               />
-
             </Form.Item>
 
             <Form.Item>
-
               <Button
                 type="primary"
-                icon={<RetweetOutlined/>}
-                onClick={()=>{
-                  form.resetFields();
+                icon={<RetweetOutlined />}
+                onClick={() => {
+                  searchForm.resetFields();
                   setData(dataGoc);
                 }}
               >
                 Làm mới
               </Button>
-
             </Form.Item>
-
           </div>
-
         </Form>
-
       </div>
 
       {/* IMPORT + ADD */}
 
       <Space className="float-end mt-4 mb-4">
-
         <Upload
           accept=".xlsx"
           maxCount={1}
-          beforeUpload={(file)=>{
+          beforeUpload={(file) => {
             setImportFile(file);
             return false;
           }}
-          onRemove={()=>setImportFile(null)}
+          onRemove={() => setImportFile(null)}
         >
-          <Button icon={<UploadOutlined/>}>Chọn file Excel</Button>
+          <Button icon={<UploadOutlined />}>Chọn file Excel</Button>
         </Upload>
 
         <Button type="primary" onClick={handleImport}>
@@ -339,16 +365,15 @@ export default function StudentManage() {
 
         <Button
           type="primary"
-          onClick={()=>{
+          onClick={() => {
             setEditing(null);
-            form.resetFields();
-            setOpen(true);
+            studentForm.resetFields();
             setImageUrl(null);
+            setOpen(true);
           }}
         >
           Thêm sinh viên
         </Button>
-
       </Space>
 
       {/* TABLE */}
@@ -359,8 +384,8 @@ export default function StudentManage() {
         columns={columns}
         rowKey="id"
         pagination={{
-          showQuickJumper:true,
-          defaultPageSize:5
+          showQuickJumper: true,
+          defaultPageSize: 5,
         }}
       />
 
@@ -368,51 +393,73 @@ export default function StudentManage() {
 
       <Modal
         open={open}
-        title={editing ? "Sửa sinh viên":"Thêm sinh viên"}
-        onCancel={()=>setOpen(false)}
+        title={editing ? "Sửa sinh viên" : "Thêm sinh viên"}
+        onCancel={() => {
+          setOpen(false);
+          setEditing(null);
+          studentForm.resetFields();
+          setImageUrl(null);
+        }}
         footer={null}
         width={1000}
         centered
       >
-
         <Row gutter={24}>
-
           <Col span={10} className="d-flex justify-content-center pt-5">
-
             <UpLoadImage
               defaultImage={imageUrl}
-              onFileUpload={(url)=>{
+              onFileUpload={(url) => {
                 setImageUrl(url);
-                form.setFieldsValue({urlImage:url});
+                studentForm.setFieldsValue({ urlImage: url });
               }}
             />
-
           </Col>
 
           <Col span={14}>
-
-            <Form form={form} layout="vertical" onFinish={onSubmit}>
-
+            <Form form={studentForm} layout="vertical" onFinish={onSubmit}>
               <Form.Item
                 name="userCode"
                 label="Mã sinh viên"
-                rules={[{required:true},{pattern:/^[0-9]{7}$/}]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập mã sinh viên!",
+                  },
+                  {
+                    pattern: /^[0-9]{7}$/,
+                    message: "Mã sinh viên phải gồm đúng 7 chữ số!",
+                  },
+                ]}
               >
-                <Input/>
+                <Input placeholder="Nhập mã sinh viên" />
               </Form.Item>
 
               <Form.Item
                 name="name"
                 label="Họ tên"
-                rules={[{required:true}]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập họ tên!",
+                  },
+                  {
+                    whitespace: true,
+                    message: "Họ tên không được chỉ chứa khoảng trắng!",
+                  },
+                ]}
               >
-                <Input/>
+                <Input placeholder="Nhập họ tên sinh viên" />
               </Form.Item>
 
               <Form.Item
                 name="gender"
                 label="Giới tính"
-                rules={[{required:true}]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn giới tính!",
+                  },
+                ]}
               >
                 <Radio.Group>
                   <Radio value="Nam">Nam</Radio>
@@ -423,29 +470,52 @@ export default function StudentManage() {
               <Form.Item
                 name="ngaySinh"
                 label="Ngày sinh"
-                rules={[{required:true,message:"Vui lòng chọn ngày sinh"}]}
+                rules={[
+                  {
+                    validator: validateBirthDate,
+                  },
+                ]}
               >
                 <DatePicker
-                  style={{width:"100%"}}
+                  style={{ width: "100%" }}
                   format="DD/MM/YYYY"
-                  disabledDate={(current)=> current && current > dayjs().endOf("day")}
+                  placeholder="Chọn ngày sinh"
+                  disabledDate={disabledBirthDate}
                 />
               </Form.Item>
 
               <Form.Item
                 name="className"
                 label="Lớp"
-                rules={[{required:true}]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập lớp!",
+                  },
+                  {
+                    whitespace: true,
+                    message: "Lớp không được chỉ chứa khoảng trắng!",
+                  },
+                ]}
               >
-                <Input/>
+                <Input placeholder="Nhập lớp" />
               </Form.Item>
 
               <Form.Item
                 name="email"
                 label="Email"
-                rules={[{required:true},{type:"email"}]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng nhập email!",
+                  },
+                  {
+                    type: "email",
+                    message: "Email không đúng định dạng!",
+                  },
+                ]}
               >
-                <Input/>
+                <Input placeholder="Nhập email" />
               </Form.Item>
 
               <Form.Item
@@ -453,31 +523,25 @@ export default function StudentManage() {
                 label="SĐT"
                 rules={[
                   {
-                    pattern:/^0[0-9]{9}$/,
-                    message:"SĐT phải gồm 10 số và bắt đầu bằng 0!"
-                  }
+                    pattern: /^0[0-9]{9}$/,
+                    message: "SĐT phải gồm 10 số và bắt đầu bằng 0!",
+                  },
                 ]}
               >
-                <Input/>
+                <Input placeholder="Nhập số điện thoại" maxLength={10} />
               </Form.Item>
 
               <Form.Item name="urlImage" hidden>
-                <Input/>
+                <Input />
               </Form.Item>
 
               <Button type="primary" htmlType="submit">
-                {editing ? "Cập nhật":"Thêm"}
+                {editing ? "Cập nhật" : "Thêm"}
               </Button>
-
             </Form>
-
           </Col>
-
         </Row>
-
       </Modal>
-
     </>
   );
 }
-

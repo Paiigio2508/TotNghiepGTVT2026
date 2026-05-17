@@ -9,6 +9,8 @@ import {
   message,
   Segmented,
   Select,
+  Input,
+  Empty,
 } from "antd";
 import {
   FileTextOutlined,
@@ -32,6 +34,7 @@ export default function StudentDeadlineList() {
 
   const [filterType, setFilterType] = useState("ALL");
   const [sortType, setSortType] = useState("NEWEST");
+  const [searchKeyword, setSearchKeyword] = useState("");
 
   useEffect(() => {
     const userData = localStorage.getItem("userData");
@@ -67,35 +70,93 @@ export default function StudentDeadlineList() {
     return <Tag color="blue">Chưa nộp</Tag>;
   };
 
+  const getStatusText = (status, dueDate) => {
+    const isExpired = dueDate ? dayjs().isAfter(dayjs(dueDate)) : false;
+
+    if (status === "SUBMITTED") return "đã nộp submitted";
+    if (status === "LATE") return "nộp trễ late";
+    if (isExpired) return "quá hạn expired";
+    return "chưa nộp pending";
+  };
+
   const isLink = (text) => {
     return text && (text.startsWith("http://") || text.startsWith("https://"));
   };
 
-  // FILTER
+  /* ================= FILTER + SEARCH ================= */
+
   let filteredDeadlines = deadlines.filter((item) => {
-    if (filterType === "ALL") return true;
-    return item.type === filterType;
+    const matchType = filterType === "ALL" ? true : item.type === filterType;
+
+    const keyword = searchKeyword.trim().toLowerCase();
+
+    const typeText =
+      item.type === "ANNOUNCEMENT"
+        ? "thông báo announcement"
+        : "deadline báo cáo report";
+
+    const weekText =
+      item.type === "REPORT" && item.weekNo
+        ? `tuần ${item.weekNo} week ${item.weekNo} w${item.weekNo}`
+        : "";
+
+    const dueDateText = item.dueDate
+      ? dayjs(item.dueDate).format("DD/MM/YYYY HH:mm")
+      : "";
+
+    const searchableText = [
+      item.title,
+      item.description,
+      typeText,
+      weekText,
+      dueDateText,
+      getStatusText(item.status, item.dueDate),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    const matchSearch = keyword ? searchableText.includes(keyword) : true;
+
+    return matchType && matchSearch;
   });
 
-  // SORT
+  /* ================= SORT ================= */
+
+  if (sortType === "NEWEST") {
+    filteredDeadlines = [...filteredDeadlines].sort((a, b) => {
+      const dateA = a.createdAt || a.dueDate || a.id;
+      const dateB = b.createdAt || b.dueDate || b.id;
+
+      return new Date(dateB) - new Date(dateA);
+    });
+  }
+
   if (sortType === "OLDEST") {
-    filteredDeadlines = [...filteredDeadlines].reverse();
+    filteredDeadlines = [...filteredDeadlines].sort((a, b) => {
+      const dateA = a.createdAt || a.dueDate || a.id;
+      const dateB = b.createdAt || b.dueDate || b.id;
+
+      return new Date(dateA) - new Date(dateB);
+    });
   }
 
   if (sortType === "DUE_DATE") {
-    filteredDeadlines = filteredDeadlines
+    filteredDeadlines = [...filteredDeadlines]
       .filter((item) => item.type === "REPORT")
       .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
   }
 
   return (
     <div className="deadline-container">
-      {/* FILTER + SORT */}
+      {/* FILTER + SORT + SEARCH */}
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
+          gap: 12,
           marginBottom: 20,
+          flexWrap: "wrap",
         }}
       >
         <Segmented
@@ -108,21 +169,38 @@ export default function StudentDeadlineList() {
           onChange={setFilterType}
         />
 
-        <Select
-          value={sortType}
-          onChange={setSortType}
-          style={{ width: 220 }}
-          options={[
-            { value: "NEWEST", label: "Mới nhất" },
-            { value: "OLDEST", label: "Cũ nhất" },
-            { value: "DUE_DATE", label: "Deadline gần nhất" },
-          ]}
-        />
+        <Space wrap>
+          <Input.Search
+            value={searchKeyword}
+            placeholder="Tìm tiêu đề, mô tả, tuần..."
+            allowClear
+            style={{ width: 300 }}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onSearch={(value) => setSearchKeyword(value)}
+          />
+
+          <Select
+            value={sortType}
+            onChange={setSortType}
+            style={{ width: 220 }}
+            options={[
+              { value: "NEWEST", label: "Mới nhất" },
+              { value: "OLDEST", label: "Cũ nhất" },
+              { value: "DUE_DATE", label: "Deadline gần nhất" },
+            ]}
+          />
+        </Space>
       </div>
+
+      {filteredDeadlines.length === 0 && (
+        <Empty description="Không tìm thấy deadline hoặc thông báo phù hợp" />
+      )}
 
       {filteredDeadlines.map((item) => {
         const isAnnouncement = item.type === "ANNOUNCEMENT";
-        const isExpired = dayjs().isAfter(dayjs(item.dueDate));
+        const isExpired = item.dueDate
+          ? dayjs().isAfter(dayjs(item.dueDate))
+          : false;
 
         const menuItems = [
           {
@@ -187,7 +265,9 @@ export default function StudentDeadlineList() {
                   <>
                     <div className="deadline-date">
                       Hạn nộp:{" "}
-                      {dayjs(item.dueDate).format("DD MMM YYYY • HH:mm")}
+                      {item.dueDate
+                        ? dayjs(item.dueDate).format("DD MMM YYYY • HH:mm")
+                        : "-"}
                     </div>
 
                     <div className="deadline-status">
