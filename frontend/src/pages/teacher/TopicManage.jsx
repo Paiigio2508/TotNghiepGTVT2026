@@ -42,6 +42,7 @@ const loadInternShipTerm = async () => {
   try {
     const res = await TermAPI.getAllTermForTeacherLayout();
     const termList = res.data || [];
+    console.log("🚀 ~ loadInternShipTerm ~ termList:", termList)
 
     setTerms(termList);
 
@@ -237,7 +238,7 @@ const loadInternShipTerm = async () => {
         >
           {terms.map((term) => (
             <Option key={term.id} value={term.id}>
-              {term.name}
+              {term.name} ({term.academicYear})
             </Option>
           ))}
         </Select>

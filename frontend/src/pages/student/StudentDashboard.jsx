@@ -135,7 +135,7 @@ export default function StudentDashboard() {
   return (
     <>
       <Title level={2} className="text-center mb-6">
-        🎓 Dashboard Sinh Viên
+        🎓 Thông Tin Sinh Viên
       </Title>
 
       <Row gutter={[24, 24]}>
