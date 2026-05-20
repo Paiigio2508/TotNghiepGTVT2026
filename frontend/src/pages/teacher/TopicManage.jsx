@@ -38,17 +38,27 @@ export default function TopicManage() {
     loadInternShipTerm();
   }, []);
 
-  const loadInternShipTerm = async () => {
-    try {
-      const res = await TermAPI.getAllTermForTeacherLayout();
-      setTerms(res.data);
-      if (res.data.length > 0) {
-        setSelectedTerm(res.data[0].id);
-      }
-    } catch {
-      message.error("Tải danh sách học kỳ thất bại!");
+const loadInternShipTerm = async () => {
+  try {
+    const res = await TermAPI.getAllTermForTeacherLayout();
+    const termList = res.data || [];
+
+    setTerms(termList);
+
+    if (termList.length > 0) {
+      // Ưu tiên kỳ đang diễn ra theo status
+      const currentTerm = termList.find(
+        (term) =>
+          term.status === "DANG_DIEN_RA"
+      );
+
+      // Nếu không có kỳ đang diễn ra thì lấy kỳ đầu tiên
+      setSelectedTerm(currentTerm ? currentTerm.id : termList[0].id);
     }
-  };
+  } catch {
+    message.error("Tải danh sách học kỳ thất bại!");
+  }
+};
 
   /* ================= LOAD TOPIC ================= */
   const loadTopics = async (teacherId, termId) => {

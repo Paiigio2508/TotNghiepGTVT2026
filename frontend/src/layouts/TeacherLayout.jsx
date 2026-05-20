@@ -11,21 +11,27 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { LuNotepadText } from "react-icons/lu";
 import { MdAssignmentInd } from "react-icons/md";
+import ChangePasswordModal from "./ChangePasswordModal";
 
 const { Header, Sider, Content } = Layout;
 
 export default function TeacherLayout() {
   const [collapsed, setCollapsed] = useState(false);
+  const [openChangePassword, setOpenChangePassword] = useState(false);
 
   const location = useLocation();
   const nav = useNavigate();
 
-  const userData = JSON.parse(localStorage.getItem("userData"));
+  const userData = JSON.parse(localStorage.getItem("userData") || "{}");
   const role = userData?.role;
 
   const teacherMenu = [
-    { key: "/teacher", icon: <FaHome />, label: "Dashboard" },
-        ...(role === "HEAD_OF_DEPARTMENT"
+    {
+      key: "/teacher",
+      icon: <FaHome />,
+      label: "Dashboard",
+    },
+    ...(role === "HEAD_OF_DEPARTMENT"
       ? [
           {
             key: "/teacher/assign-teachers",
@@ -34,20 +40,36 @@ export default function TeacherLayout() {
           },
         ]
       : []),
-    { key: "/teacher/students", icon: <FaUserGraduate />, label: "Sinh viên" },
-    { key: "/teacher/topics", icon: <IoIosListBox />, label: "Đề tài" },
-    { key: "/teacher/deadlines", icon: <FaClock />, label: "Deadlines" },
+    {
+      key: "/teacher/students",
+      icon: <FaUserGraduate />,
+      label: "Sinh viên",
+    },
+    {
+      key: "/teacher/topics",
+      icon: <IoIosListBox />,
+      label: "Đề tài",
+    },
+    {
+      key: "/teacher/deadlines",
+      icon: <FaClock />,
+      label: "Deadlines",
+    },
     {
       key: "/teacher/scores",
       icon: <LuNotepadText />,
       label: "Bảng điểm sinh viên",
     },
-    { key: "/teacher/chats", icon: <FaFacebookMessenger />, label: "Tin nhắn" },
-
+    {
+      key: "/teacher/chats",
+      icon: <FaFacebookMessenger />,
+      label: "Tin nhắn",
+    },
   ];
 
   const handleLogout = () => {
     if (window.confirm("Bạn có chắc muốn đăng xuất?")) {
+      localStorage.removeItem("token");
       localStorage.removeItem("userData");
       nav("/login", { replace: true });
     }
@@ -67,31 +89,46 @@ export default function TeacherLayout() {
             transition: "0.3s",
           }}
         >
-          <img
-            src={userData?.avatar || "https://i.pravatar.cc/150"}
-            alt="avatar"
+          <div
             style={{
-              width: collapsed ? 45 : 90,
-              height: collapsed ? 45 : 90,
-              borderRadius: "50%",
-              objectFit: "cover",
-              border: "3px solid #fff",
-              transition: "0.3s",
+              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
-          />
-
-          {!collapsed && (
-            <span
+            onClick={() => setOpenChangePassword(true)}
+            title="Đổi mật khẩu"
+          >
+            <img
+              src={
+                userData?.avatar ||
+                userData?.urlImage ||
+                "https://i.pravatar.cc/150"
+              }
+              alt="avatar"
               style={{
-                marginTop: 10,
-                fontWeight: "bold",
-                fontSize: 14,
-                textAlign: "center",
+                width: collapsed ? 45 : 90,
+                height: collapsed ? 45 : 90,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "3px solid #fff",
+                transition: "0.3s",
               }}
-            >
-              {userData?.username}
-            </span>
-          )}
+            />
+
+            {!collapsed && (
+              <span
+                style={{
+                  marginTop: 10,
+                  fontWeight: "bold",
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+              >
+                {userData?.username || userData?.fullName || "Tài khoản"}
+              </span>
+            )}
+          </div>
         </div>
 
         <Menu
@@ -127,6 +164,11 @@ export default function TeacherLayout() {
           <Outlet />
         </Content>
       </Layout>
+
+      <ChangePasswordModal
+        open={openChangePassword}
+        onClose={() => setOpenChangePassword(false)}
+      />
 
       <FloatButton.BackTop />
     </Layout>

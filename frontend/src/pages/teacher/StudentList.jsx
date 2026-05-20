@@ -17,6 +17,7 @@ import {
 import { RetweetOutlined } from "@ant-design/icons";
 import { AssignmentsAPI } from "../../api/AssignmentsAPI";
 import { TermAPI } from "../../api/TermAPI";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -31,21 +32,51 @@ export default function StudentList() {
   const [form] = Form.useForm();
 
   /* ================= LẤY TEACHER ================= */
+
   useEffect(() => {
     const userData = localStorage.getItem("userData");
+
     if (userData) {
       const parsed = JSON.parse(userData);
       setTeacherId(parsed.userId);
     }
   }, []);
 
+  /* ================= CHECK KỲ ĐANG DIỄN RA ================= */
+
+  const getCurrentTerm = (termList) => {
+    const today = dayjs();
+
+    return termList.find((term) => {
+      if (term.status === "DANG_DIEN_RA") return true;
+
+      if (term.status === "Đang diễn ra") return true;
+
+      if (!term.startDate || !term.endDate) return false;
+
+      const startDate = dayjs(term.startDate);
+      const endDate = dayjs(term.endDate);
+
+      return (
+        !today.isBefore(startDate, "day") &&
+        !today.isAfter(endDate, "day")
+      );
+    });
+  };
+
   /* ================= LOAD TERM ================= */
+
   const loadInternShipTerm = async () => {
     try {
       const res = await TermAPI.getAllTermForTeacherLayout();
-      setTerms(res.data);
-      if (res.data.length > 0) {
-        setSelectedTerm(res.data[0].id);
+
+      const termList = res.data || [];
+      setTerms(termList);
+
+      if (termList.length > 0) {
+        const currentTerm = getCurrentTerm(termList);
+
+        setSelectedTerm(currentTerm?.id || termList[0].id);
       }
     } catch {
       message.error("Tải danh sách học kỳ thất bại!");
@@ -55,20 +86,29 @@ export default function StudentList() {
   useEffect(() => {
     loadInternShipTerm();
   }, []);
+
   /* ================= LOAD STUDENTS ================= */
+
   useEffect(() => {
     if (!selectedTerm || !teacherId) return;
+
     const fetchStudents = async () => {
       try {
         setLoading(true);
+
         const res = await AssignmentsAPI.getStudentsByTerm(
           teacherId,
           selectedTerm
         );
-        setStudents(res.data);
-        setStudentsGoc(res.data);
+
+        const studentList = Array.isArray(res.data) ? res.data : [];
+
+        setStudents(studentList);
+        setStudentsGoc(studentList);
       } catch {
         message.error("Tải danh sách sinh viên thất bại!");
+        setStudents([]);
+        setStudentsGoc([]);
       } finally {
         setLoading(false);
       }
@@ -78,18 +118,23 @@ export default function StudentList() {
   }, [selectedTerm, teacherId]);
 
   /* ================= SEARCH ================= */
+
   const handleSearch = (keyword) => {
     if (!keyword || keyword.trim() === "") {
       setStudents(studentsGoc);
       return;
     }
 
+    const lowerKeyword = keyword.toLowerCase();
+
     const result = studentsGoc.filter(
       (item) =>
-        item.studentCode?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.email?.toLowerCase().includes(keyword.toLowerCase())
+        item.studentCode?.toLowerCase().includes(lowerKeyword) ||
+        item.name?.toLowerCase().includes(lowerKeyword) ||
+        item.phone?.toLowerCase().includes(lowerKeyword) ||
+        item.email?.toLowerCase().includes(lowerKeyword) ||
+        item.className?.toLowerCase().includes(lowerKeyword) ||
+        item.major?.toLowerCase().includes(lowerKeyword)
     );
 
     setStudents(result);
@@ -99,8 +144,12 @@ export default function StudentList() {
     terms.find((term) => term.id === selectedTerm)?.name || "";
 
   /* ================= COLUMNS ================= */
+
   const columns = [
-    { title: "MSSV", dataIndex: "studentCode" },
+    {
+      title: "MSSV",
+      dataIndex: "studentCode",
+    },
     {
       title: "Ảnh",
       dataIndex: "urlImage",
@@ -114,21 +163,38 @@ export default function StudentList() {
         />
       ),
     },
-    { title: "Họ tên", dataIndex: "name" },
+    {
+      title: "Họ tên",
+      dataIndex: "name",
+    },
     {
       title: "Giới tính",
       dataIndex: "gender",
       render: (gender) =>
         gender === "Nam" ? (
           <Tag color="blue">Nam</Tag>
-        ) : (
+        ) : gender === "Nữ" ? (
           <Tag color="pink">Nữ</Tag>
+        ) : (
+          <Tag>Không rõ</Tag>
         ),
     },
-    { title: "Email", dataIndex: "email" },
-    { title: "SĐT", dataIndex: "phone" },
-    { title: "Lớp", dataIndex: "className" },
-    { title: "Ngành", dataIndex: "major" },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
+    {
+      title: "SĐT",
+      dataIndex: "phone",
+    },
+    {
+      title: "Lớp",
+      dataIndex: "className",
+    },
+    {
+      title: "Ngành",
+      dataIndex: "major",
+    },
   ];
 
   return (
@@ -155,10 +221,13 @@ export default function StudentList() {
         <Col span={6} className="text-end">
           <Select
             value={selectedTerm}
-            style={{ width: 200 }}
+            style={{ width: 220 }}
+            placeholder="Chọn kỳ thực tập"
             onChange={(value) => {
               setSelectedTerm(value);
               form.resetFields();
+              setStudents([]);
+              setStudentsGoc([]);
             }}
           >
             {terms.map((term) => (
@@ -173,12 +242,17 @@ export default function StudentList() {
       {/* SEARCH */}
       <Form
         form={form}
-        onValuesChange={(changedValues) => handleSearch(changedValues.timKiem)}
+        onValuesChange={(changedValues) =>
+          handleSearch(changedValues.timKiem)
+        }
       >
         <Row gutter={16} className="mb-3">
           <Col span={8}>
             <Form.Item name="timKiem">
-              <Input placeholder="Tìm MSSV / Tên / Email / SĐT..." allowClear />
+              <Input
+                placeholder="Tìm MSSV / Tên / Email / SĐT / Lớp / Ngành..."
+                allowClear
+              />
             </Form.Item>
           </Col>
 

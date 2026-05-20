@@ -8,22 +8,50 @@ import {
   message,
   Tag,
 } from "antd";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FaBook } from "react-icons/fa";
 import { TopicAPI } from "../../api/TopicAPI";
 import { TermAPI } from "../../api/TermAPI";
 import { toast } from "react-toastify";
+import dayjs from "dayjs";
 
 const { Option } = Select;
 
 export default function TopicManage() {
   const [data, setData] = useState([]);
-  const [dataGoc, setDataGoc] = useState([]);
   const [terms, setTerms] = useState([]);
   const [selectedTerm, setSelectedTerm] = useState(null);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  /* ================= CHECK KỲ ĐANG DIỄN RA ================= */
+
+  const getCurrentTerm = (termList) => {
+    const today = dayjs();
+
+    return termList.find((term) => {
+      // Ưu tiên status từ backend
+      if (term.status === "DANG_DIEN_RA") return true;
+
+      // Nếu backend trả tiếng Việt
+      if (term.status === "Đang diễn ra") return true;
+
+      // Nếu status chưa chuẩn thì check theo ngày
+      if (!term.startDate || !term.endDate) return false;
+
+      const startDate = dayjs(term.startDate);
+      const endDate = dayjs(term.endDate);
+
+      return (
+        !today.isBefore(startDate, "day") &&
+        !today.isAfter(endDate, "day")
+      );
+    });
+  };
 
   /* ================= LOAD TERM ================= */
+
   useEffect(() => {
     loadTerms();
   }, []);
@@ -31,9 +59,15 @@ export default function TopicManage() {
   const loadTerms = async () => {
     try {
       const res = await TermAPI.getAll();
-      setTerms(res.data);
-      if (res.data.length > 0) {
-        setSelectedTerm(res.data[0].id);
+
+      const termList = res.data || [];
+      setTerms(termList);
+
+      if (termList.length > 0) {
+        const currentTerm = getCurrentTerm(termList);
+
+        // Ưu tiên kỳ đang diễn ra, nếu không có thì lấy kỳ đầu tiên
+        setSelectedTerm(currentTerm?.id || termList[0].id);
       }
     } catch {
       message.error("Tải kỳ thực tập thất bại!");
@@ -41,24 +75,32 @@ export default function TopicManage() {
   };
 
   /* ================= LOAD TOPIC ================= */
+
   useEffect(() => {
     if (selectedTerm) {
       loadTopics(selectedTerm);
+    } else {
+      setData([]);
     }
   }, [selectedTerm]);
 
   const loadTopics = async (termId) => {
     try {
+      setLoading(true);
+
       const res = await TopicAPI.findTopicsByAdmin(termId);
-      console.log("🚀 ~ loadTopics ~ res:", res)
-      setData(res.data);
-      setDataGoc(res.data);
+
+      setData(Array.isArray(res.data) ? res.data : []);
     } catch {
       message.error("Tải danh sách đề tài thất bại!");
+      setData([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   /* ================= APPROVE ================= */
+
   const handleApprove = async (record) => {
     try {
       await TopicAPI.adminApproveTopic(record.id);
@@ -69,57 +111,90 @@ export default function TopicManage() {
     }
   };
 
-  /* ================= FILTER ================= */
-  const handleFilterTeacher = (teacherName) => {
-    setSelectedTeacher(teacherName);
-
-    if (!teacherName) {
-      setData(dataGoc);
-      return;
-    }
-
-    const filtered = dataGoc.filter((item) => item.teacherName === teacherName);
-
-    setData(filtered);
-  };
-
-  /* ================= SEARCH ================= */
-  const handleSearch = (keyword) => {
-    if (!keyword) {
-      setData(dataGoc);
-      return;
-    }
-
-    const filtered = dataGoc.filter(
-      (item) =>
-        item.studentCode?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.fullName?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.title?.toLowerCase().includes(keyword.toLowerCase())
-    );
-
-    setData(filtered);
-  };
-
   /* ================= UNIQUE TEACHER LIST ================= */
-  const teacherOptions = [...new Set(dataGoc.map((item) => item.teacherName))];
+
+  const teacherOptions = useMemo(() => {
+    return [
+      ...new Set(
+        data
+          .map((item) => item.teacherName)
+          .filter((teacherName) => teacherName)
+      ),
+    ];
+  }, [data]);
+
+  /* ================= FILTER + SEARCH ================= */
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      const matchTeacher = selectedTeacher
+        ? item.teacherName === selectedTeacher
+        : true;
+
+      const keyword = searchKeyword.trim().toLowerCase();
+
+      const matchSearch = keyword
+        ? item.studentCode?.toLowerCase().includes(keyword) ||
+          item.fullName?.toLowerCase().includes(keyword) ||
+          item.title?.toLowerCase().includes(keyword)
+        : true;
+
+      return matchTeacher && matchSearch;
+    });
+  }, [data, selectedTeacher, searchKeyword]);
 
   /* ================= COLUMNS ================= */
+
   const columns = [
-    { title: "Mã SV", dataIndex: "studentCode" },
-    { title: "Tên SV", dataIndex: "fullName" },
-    { title: "Lớp", dataIndex: "className" },
-    { title: "Đề tài", dataIndex: "title" },
-    { title: "Giảng viên", dataIndex: "teacherName" },
-    { title: "Mã GV", dataIndex: "teacherCode" },
-    { title: "Khóa", dataIndex: "academicYear" },
+    {
+      title: "Mã SV",
+      dataIndex: "studentCode",
+    },
+    {
+      title: "Tên SV",
+      dataIndex: "fullName",
+    },
+    {
+      title: "Lớp",
+      dataIndex: "className",
+    },
+    {
+      title: "Đề tài",
+      dataIndex: "title",
+      render: (text) => (
+        <div
+          style={{
+            whiteSpace: "normal",
+            wordBreak: "break-word",
+            lineHeight: "1.4",
+          }}
+        >
+          {text || "-"}
+        </div>
+      ),
+    },
+    {
+      title: "Giảng viên",
+      dataIndex: "teacherName",
+    },
+    {
+      title: "Mã GV",
+      dataIndex: "teacherCode",
+    },
+    {
+      title: "Khóa",
+      dataIndex: "academicYear",
+    },
     {
       title: "Trạng thái",
       dataIndex: "status",
       render: (status) =>
         status === "APPROVED_BY_TEACHER" ? (
           <Tag color="blue">Chờ Admin duyệt</Tag>
-        ) : (
+        ) : status === "APPROVED_BY_ADMIN" ? (
           <Tag color="green">Đã duyệt</Tag>
+        ) : (
+          <Tag color="default">{status}</Tag>
         ),
     },
     {
@@ -148,22 +223,28 @@ export default function TopicManage() {
         {/* TERM FILTER */}
         <Select
           value={selectedTerm}
-          style={{ width: 200 }}
-          onChange={(value) => setSelectedTerm(value)}
+          style={{ width: 220 }}
+          placeholder="Chọn kỳ thực tập"
+          onChange={(value) => {
+            setSelectedTerm(value);
+            setSelectedTeacher(null);
+            setSearchKeyword("");
+          }}
         >
           {terms.map((term) => (
             <Option key={term.id} value={term.id}>
-              {term.name}
+              {term.name} ({term.academicYear})
             </Option>
           ))}
         </Select>
 
         {/* TEACHER FILTER */}
         <Select
+          value={selectedTeacher}
           allowClear
           placeholder="Lọc theo giảng viên"
           style={{ width: 220 }}
-          onChange={handleFilterTeacher}
+          onChange={(value) => setSelectedTeacher(value || null)}
         >
           {teacherOptions.map((teacher) => (
             <Option key={teacher} value={teacher}>
@@ -174,14 +255,23 @@ export default function TopicManage() {
 
         {/* SEARCH */}
         <Input.Search
+          value={searchKeyword}
           placeholder="Tìm mã SV / tên SV / đề tài..."
           allowClear
-          onSearch={handleSearch}
+          onChange={(e) => setSearchKeyword(e.target.value)}
+          onSearch={(value) => setSearchKeyword(value)}
           style={{ width: 300 }}
         />
       </Space>
 
-      <Table dataSource={data} columns={columns} rowKey="id" />
+      <Table
+        dataSource={filteredData}
+        columns={columns}
+        rowKey="id"
+        loading={loading}
+        bordered
+        pagination={{ pageSize: 6 }}
+      />
     </>
   );
 }

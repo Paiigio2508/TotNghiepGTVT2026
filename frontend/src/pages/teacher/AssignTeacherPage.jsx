@@ -19,6 +19,7 @@ import {
 import { MdAssignmentInd } from "react-icons/md";
 import { SpecializationAPI } from "../../api/SpecializationAPI";
 import { TermAPI } from "../../api/TermAPI";
+import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -49,6 +50,31 @@ export default function AssignTeacherPage() {
     if (Array.isArray(response?.data?.data)) return response.data.data;
     if (Array.isArray(response?.data?.result)) return response.data.result;
     return [];
+  };
+
+  const normalizeTermStatus = (status) => {
+    return String(status || "").trim().toUpperCase();
+  };
+
+  const getCurrentTerm = (termList) => {
+    const today = dayjs();
+
+    return termList.find((term) => {
+      const status = normalizeTermStatus(term.status);
+
+      if (status === "DANG_DIEN_RA") return true;
+      if (term.status === "Đang diễn ra") return true;
+
+      if (!term.startDate || !term.endDate) return false;
+
+      const startDate = dayjs(term.startDate);
+      const endDate = dayjs(term.endDate);
+
+      return (
+        !today.isBefore(startDate, "day") &&
+        !today.isAfter(endDate, "day")
+      );
+    });
   };
 
   const mapTeacherData = (teacherData) => {
@@ -89,8 +115,11 @@ export default function AssignTeacherPage() {
       );
 
       if (termData.length > 0) {
-        const defaultTermId = termData[0].id;
+        const currentTerm = getCurrentTerm(termData);
+        const defaultTermId = currentTerm?.id || termData[0].id;
+
         setSelectedTermId(defaultTermId);
+
         await loadTeacherAssignments(defaultTermId);
         await loadStudentStats();
       }
@@ -109,8 +138,10 @@ export default function AssignTeacherPage() {
 
     try {
       setLoading(true);
+
       const res = await SpecializationAPI.getTeacherSpecializationTerm(termId);
       const teacherData = getArrayData(res);
+
       setTeachers(mapTeacherData(teacherData));
     } catch (error) {
       message.error("Không tải được danh sách phân công theo kỳ");
@@ -123,7 +154,6 @@ export default function AssignTeacherPage() {
   const loadStudentStats = async () => {
     try {
       const res = await SpecializationAPI.getStudentStats();
-      console.log("🚀 ~ loadStudentStats ~ res:", res)
       setStudentStats(getArrayData(res));
     } catch (error) {
       setStudentStats([]);
@@ -138,9 +168,11 @@ export default function AssignTeacherPage() {
 
     try {
       setHistoryLoading(true);
+
       const res = await SpecializationAPI.getTeacherSpecializationHistory(
         selectedTermId
       );
+
       setHistoryData(getArrayData(res));
       setHistoryOpen(true);
     } catch (error) {
@@ -153,6 +185,9 @@ export default function AssignTeacherPage() {
 
   const handleTermChange = async (value) => {
     setSelectedTermId(value);
+    setKeyword("");
+    setFilterStatus("all");
+
     await loadTeacherAssignments(value);
     await loadStudentStats();
   };
@@ -160,10 +195,6 @@ export default function AssignTeacherPage() {
   const selectedTerm = useMemo(() => {
     return terms.find((item) => item.id === selectedTermId);
   }, [terms, selectedTermId]);
-
-  const normalizeTermStatus = (status) => {
-    return String(status || "").trim().toUpperCase();
-  };
 
   const TERM_STATUS_CONFIG = {
     SAP_DIEN_RA: {
@@ -177,6 +208,11 @@ export default function AssignTeacherPage() {
       editable: true,
     },
     KET_THUC: {
+      label: "Đã kết thúc",
+      color: "default",
+      editable: false,
+    },
+    DA_KET_THUC: {
       label: "Đã kết thúc",
       color: "default",
       editable: false,
@@ -212,6 +248,7 @@ export default function AssignTeacherPage() {
               ...item,
               strengths: values.map((value) => {
                 const found = strengthOptions.find((opt) => opt.value === value);
+
                 return {
                   id: value,
                   name: found?.label || "",
@@ -240,7 +277,9 @@ export default function AssignTeacherPage() {
         termId: selectedTermId,
         specializationIds: record.strengths.map((item) => item.id),
       };
+
       await SpecializationAPI.saveTeacherSpecializationTerm(payload);
+
       message.success(`Đã lưu phân công cho ${record.name}`);
       await loadTeacherAssignments(selectedTermId);
     } catch (error) {
@@ -265,7 +304,9 @@ export default function AssignTeacherPage() {
         termId: selectedTermId,
         specializationIds: item.strengths.map((s) => s.id),
       }));
+
       await SpecializationAPI.saveTeacherSpecializationTermBulk(payload);
+
       message.success("Đã lưu toàn bộ phân công");
       await loadTeacherAssignments(selectedTermId);
     } catch (error) {
@@ -277,11 +318,17 @@ export default function AssignTeacherPage() {
     const q = keyword.trim().toLowerCase();
 
     return teachers.filter((item) => {
+      const strengthText = item.strengths
+        ?.map((s) => s.name)
+        .join(" ")
+        .toLowerCase();
+
       const matchKeyword =
         !q ||
         item.name?.toLowerCase().includes(q) ||
         item.code?.toLowerCase().includes(q) ||
-        item.email?.toLowerCase().includes(q);
+        item.email?.toLowerCase().includes(q) ||
+        strengthText?.includes(q);
 
       const assigned = item.strengths?.length > 0;
 
@@ -532,9 +579,11 @@ export default function AssignTeacherPage() {
       >
         <div style={{ width: 420, maxWidth: "100%" }}>
           <Search
-            placeholder="Tìm theo mã giảng viên, tên hoặc email..."
+            value={keyword}
+            placeholder="Tìm theo mã giảng viên, tên, email hoặc chuyên môn..."
             allowClear
             onChange={(e) => setKeyword(e.target.value)}
+            onSearch={(value) => setKeyword(value)}
           />
         </div>
 
@@ -594,6 +643,7 @@ export default function AssignTeacherPage() {
             <Button onClick={loadHistory} disabled={!selectedTermId}>
               Xem lịch sử
             </Button>
+
             <Button
               type="primary"
               onClick={handleSaveAll}
@@ -609,6 +659,7 @@ export default function AssignTeacherPage() {
             <Text style={{ display: "block", marginBottom: 6 }}>
               Kỳ thực tập
             </Text>
+
             <Select
               style={{ width: "100%" }}
               placeholder="Chọn kỳ thực tập"
@@ -642,9 +693,11 @@ export default function AssignTeacherPage() {
                     <Tag color="purple">
                       {selectedTerm.name || "Chưa có tên kỳ"}
                     </Tag>
+
                     <Tag>
                       {selectedTerm.academicYear || "Chưa có năm học"}
                     </Tag>
+
                     <Tag color={getTermStatusColor(selectedTerm.status)}>
                       {getVietnameseTermStatus(selectedTerm.status)}
                     </Tag>
