@@ -29,7 +29,7 @@ export default function TeacherLayout() {
     {
       key: "/teacher",
       icon: <FaHome />,
-      label: "Dashboard",
+      label: "Thống kê",
     },
     ...(role === "HEAD_OF_DEPARTMENT"
       ? [

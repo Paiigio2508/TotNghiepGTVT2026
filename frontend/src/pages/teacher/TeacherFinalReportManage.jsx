@@ -175,9 +175,7 @@ export default function TeacherFinalReportManage() {
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
-      const matchStatus = selectedStatus
-        ? item.status === selectedStatus
-        : true;
+      const matchStatus = selectedStatus ? item.status === selectedStatus : true;
 
       const keyword = searchKeyword.trim().toLowerCase();
 
@@ -212,6 +210,13 @@ export default function TeacherFinalReportManage() {
     return status === "SUBMITTED";
   };
 
+  const ellipsisStyle = {
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  };
+
   const columns = [
     {
       title: "Mã SV",
@@ -224,14 +229,7 @@ export default function TeacherFinalReportManage() {
       width: 160,
       render: (text) => (
         <Tooltip title={text}>
-          <div
-            style={{
-              maxWidth: 140,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <div style={{ ...ellipsisStyle, maxWidth: 140 }}>
             {text || "-"}
           </div>
         </Tooltip>
@@ -243,14 +241,7 @@ export default function TeacherFinalReportManage() {
       width: 240,
       render: (text) => (
         <Tooltip title={text}>
-          <div
-            style={{
-              maxWidth: 220,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <div style={{ ...ellipsisStyle, maxWidth: 220 }}>
             {text || "-"}
           </div>
         </Tooltip>
@@ -328,7 +319,7 @@ export default function TeacherFinalReportManage() {
       title: "Hành động",
       width: 230,
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Tooltip title="Yêu cầu sinh viên sửa lại">
             <Button
               icon={<EditOutlined />}
@@ -361,66 +352,125 @@ export default function TeacherFinalReportManage() {
     },
   ];
 
+  const filterItemStyle = {
+    flex: "1 1 220px",
+    minWidth: 0,
+    maxWidth: 320,
+  };
+
   return (
-    <>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+      }}
+    >
       <Divider>
-        <h2 className="fw-bold">
-          <FaFileAlt /> Duyệt báo cáo cuối kỳ
+        <h2
+          className="fw-bold"
+          style={{
+            margin: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            whiteSpace: "nowrap",
+            fontSize: 24,
+            lineHeight: 1.2,
+          }}
+        >
+          <FaFileAlt />
+          <span>Duyệt báo cáo cuối kỳ</span>
         </h2>
       </Divider>
 
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Select
-          value={selectedTerm}
-          style={{ width: 240 }}
-          placeholder="Chọn kỳ thực tập"
-          onChange={(value) => {
-            setSelectedTerm(value);
-            setSelectedStatus(null);
-            setSearchKeyword("");
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          marginBottom: 16,
+          width: "100%",
+          maxWidth: "100%",
+        }}
+      >
+        <div style={filterItemStyle}>
+          <Select
+            value={selectedTerm}
+            style={{ width: "100%" }}
+            placeholder="Chọn kỳ thực tập"
+            onChange={(value) => {
+              setSelectedTerm(value);
+              setSelectedStatus(null);
+              setSearchKeyword("");
+            }}
+          >
+            {terms.map((term) => (
+              <Option key={term.id} value={term.id}>
+                {term.name} ({term.academicYear})
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div style={filterItemStyle}>
+          <Select
+            value={selectedStatus}
+            allowClear
+            placeholder="Lọc theo trạng thái"
+            style={{ width: "100%" }}
+            onChange={(value) => setSelectedStatus(value || null)}
+          >
+            {statusOptions.map((status) => (
+              <Option key={status.value} value={status.value}>
+                {status.label}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div
+          style={{
+            flex: "1 1 280px",
+            minWidth: 0,
+            maxWidth: 420,
           }}
         >
-          {terms.map((term) => (
-            <Option key={term.id} value={term.id}>
-              {term.name} ({term.academicYear})
-            </Option>
-          ))}
-        </Select>
+          <Input.Search
+            value={searchKeyword}
+            placeholder="Tìm mã SV / tên SV / đề tài..."
+            allowClear
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onSearch={(value) => setSearchKeyword(value)}
+            style={{ width: "100%" }}
+          />
+        </div>
+      </div>
 
-        <Select
-          value={selectedStatus}
-          allowClear
-          placeholder="Lọc theo trạng thái"
-          style={{ width: 220 }}
-          onChange={(value) => setSelectedStatus(value || null)}
-        >
-          {statusOptions.map((status) => (
-            <Option key={status.value} value={status.value}>
-              {status.label}
-            </Option>
-          ))}
-        </Select>
-
-        <Input.Search
-          value={searchKeyword}
-          placeholder="Tìm mã SV / tên SV / đề tài..."
-          allowClear
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          onSearch={(value) => setSearchKeyword(value)}
-          style={{ width: 320 }}
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+          overflowX: "auto",
+          overflowY: "hidden",
+        }}
+      >
+        <Table
+          dataSource={filteredData}
+          columns={columns}
+          rowKey="id"
+          loading={loading}
+          bordered
+          size="middle"
+          tableLayout="fixed"
+          pagination={{
+            pageSize: 6,
+            showSizeChanger: false,
+          }}
+          scroll={{ x: 1515 }}
         />
-      </Space>
-
-      <Table
-        dataSource={filteredData}
-        columns={columns}
-        rowKey="id"
-        loading={loading}
-        bordered
-        size="middle"
-        tableLayout="fixed"
-        pagination={{ pageSize: 6 }}
-      />
+      </div>
 
       <Modal
         title="Yêu cầu sinh viên chỉnh sửa báo cáo"
@@ -434,6 +484,7 @@ export default function TeacherFinalReportManage() {
         okText="Gửi yêu cầu"
         cancelText="Hủy"
         confirmLoading={submittingRevision}
+        width="min(520px, 92vw)"
       >
         <div style={{ marginBottom: 12 }}>
           <b>Sinh viên:</b> {selectedRecord?.studentName || "-"}
@@ -443,7 +494,12 @@ export default function TeacherFinalReportManage() {
           <b>Mã sinh viên:</b> {selectedRecord?.studentCode || "-"}
         </div>
 
-        <div style={{ marginBottom: 12 }}>
+        <div
+          style={{
+            marginBottom: 12,
+            wordBreak: "break-word",
+          }}
+        >
           <b>Đề tài:</b> {selectedRecord?.topicTitle || "-"}
         </div>
 
@@ -454,6 +510,6 @@ export default function TeacherFinalReportManage() {
           placeholder="Nhập nhận xét/yêu cầu chỉnh sửa cho sinh viên..."
         />
       </Modal>
-    </>
+    </div>
   );
 }

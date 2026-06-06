@@ -36,6 +36,7 @@ import AssignTeacherPage from "./pages/teacher/AssignTeacherPage";
 import AdminFinalReportManage from "./pages/admin/AdminFinalReportManage";
 import StudentFinalReport from "./pages/student/StudentFinalReport";
 import TeacherFinalReportManage from "./pages/teacher/TeacherFinalReportManage";
+import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 
 export default function App() {
   return (
@@ -70,6 +71,7 @@ export default function App() {
             element={<RequireRole roles={["TEACHER", "HEAD_OF_DEPARTMENT"]} />}
           >
             <Route path="/teacher" element={<TeacherLayout />}>
+            <Route index element={<TeacherDashboard />} />
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />

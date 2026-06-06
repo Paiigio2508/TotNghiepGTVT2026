@@ -98,7 +98,7 @@ const menuItems = [
   {
     key: "/admin",
     icon: <FaHome />,
-    label: "Dashboard",
+    label: "Thống kê",
   },
   {
     key: "/admin/hoc-ky",

@@ -36,8 +36,6 @@ export default function AdminFinalReportManage() {
   const [score, setScore] = useState(null);
   const [grading, setGrading] = useState(false);
 
-  /* ================= CHECK KỲ ĐANG DIỄN RA ================= */
-
   const getCurrentTerm = (termList) => {
     const today = dayjs();
 
@@ -53,8 +51,6 @@ export default function AdminFinalReportManage() {
       return !today.isBefore(startDate, "day") && !today.isAfter(endDate, "day");
     });
   };
-
-  /* ================= LOAD TERM ================= */
 
   useEffect(() => {
     loadTerms();
@@ -76,8 +72,6 @@ export default function AdminFinalReportManage() {
       message.error("Tải kỳ thực tập thất bại!");
     }
   };
-
-  /* ================= LOAD FINAL REPORT ================= */
 
   useEffect(() => {
     if (selectedTerm) {
@@ -103,8 +97,6 @@ export default function AdminFinalReportManage() {
     }
   };
 
-  /* ================= ACTIONS ================= */
-
   const handleAdminApprove = async (record) => {
     try {
       await FinalReportAPI.adminApprove(record.id);
@@ -112,9 +104,7 @@ export default function AdminFinalReportManage() {
       toast.success("Admin duyệt báo cáo thành công!");
       loadFinalReports(selectedTerm);
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Duyệt báo cáo thất bại!"
-      );
+      toast.error(error?.response?.data?.message || "Duyệt báo cáo thất bại!");
     }
   };
 
@@ -150,9 +140,7 @@ export default function AdminFinalReportManage() {
 
       loadFinalReports(selectedTerm);
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Chấm điểm thất bại!"
-      );
+      toast.error(error?.response?.data?.message || "Chấm điểm thất bại!");
     } finally {
       setGrading(false);
     }
@@ -167,42 +155,21 @@ export default function AdminFinalReportManage() {
     window.open(fileUrl, "_blank");
   };
 
-  /* ================= OPTIONS ================= */
-
   const teacherOptions = useMemo(() => {
     return [
       ...new Set(
-        data
-          .map((item) => item.teacherName)
-          .filter((teacherName) => teacherName)
+        data.map((item) => item.teacherName).filter((teacherName) => teacherName)
       ),
     ];
   }, [data]);
 
   const statusOptions = [
-    {
-      value: "SUBMITTED",
-      label: "Đã nộp",
-    },
-    {
-      value: "NEED_REVISION",
-      label: "Cần sửa lại",
-    },
-    {
-      value: "TEACHER_APPROVED",
-      label: "Chờ Admin duyệt",
-    },
-    {
-      value: "ADMIN_APPROVED",
-      label: "Admin đã duyệt",
-    },
-    {
-      value: "GRADED",
-      label: "Đã chấm điểm",
-    },
+    { value: "SUBMITTED", label: "Đã nộp" },
+    { value: "NEED_REVISION", label: "Cần sửa lại" },
+    { value: "TEACHER_APPROVED", label: "Chờ Admin duyệt" },
+    { value: "ADMIN_APPROVED", label: "Admin đã duyệt" },
+    { value: "GRADED", label: "Đã chấm điểm" },
   ];
-
-  /* ================= FILTER + SEARCH ================= */
 
   const filteredData = useMemo(() => {
     return data.filter((item) => {
@@ -210,9 +177,7 @@ export default function AdminFinalReportManage() {
         ? item.teacherName === selectedTeacher
         : true;
 
-      const matchStatus = selectedStatus
-        ? item.status === selectedStatus
-        : true;
+      const matchStatus = selectedStatus ? item.status === selectedStatus : true;
 
       const keyword = searchKeyword.trim().toLowerCase();
 
@@ -227,31 +192,29 @@ export default function AdminFinalReportManage() {
     });
   }, [data, selectedTeacher, selectedStatus, searchKeyword]);
 
-  /* ================= STATUS TAG ================= */
-
   const renderStatus = (status) => {
     switch (status) {
       case "SUBMITTED":
         return <Tag color="blue">Đã nộp</Tag>;
-
       case "NEED_REVISION":
         return <Tag color="orange">Cần sửa lại</Tag>;
-
       case "TEACHER_APPROVED":
         return <Tag color="purple">Chờ Admin duyệt</Tag>;
-
       case "ADMIN_APPROVED":
         return <Tag color="green">Admin đã duyệt</Tag>;
-
       case "GRADED":
         return <Tag color="cyan">Đã chấm điểm</Tag>;
-
       default:
         return <Tag color="default">{status || "Chưa rõ"}</Tag>;
     }
   };
 
-  /* ================= COLUMNS ================= */
+  const ellipsisStyle = {
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  };
 
   const columns = [
     {
@@ -265,14 +228,7 @@ export default function AdminFinalReportManage() {
       width: 150,
       render: (text) => (
         <Tooltip title={text}>
-          <div
-            style={{
-              maxWidth: 150,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <div style={{ ...ellipsisStyle, maxWidth: 130 }}>
             {text || "-"}
           </div>
         </Tooltip>
@@ -284,14 +240,7 @@ export default function AdminFinalReportManage() {
       width: 150,
       render: (text) => (
         <Tooltip title={text}>
-          <div
-            style={{
-              maxWidth: 130,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <div style={{ ...ellipsisStyle, maxWidth: 130 }}>
             {text || "-"}
           </div>
         </Tooltip>
@@ -303,14 +252,7 @@ export default function AdminFinalReportManage() {
       width: 230,
       render: (text) => (
         <Tooltip title={text}>
-          <div
-            style={{
-              maxWidth: 210,
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <div style={{ ...ellipsisStyle, maxWidth: 210 }}>
             {text || "-"}
           </div>
         </Tooltip>
@@ -364,7 +306,7 @@ export default function AdminFinalReportManage() {
       title: "Hành động",
       width: 210,
       render: (_, record) => (
-        <Space>
+        <Space wrap>
           <Tooltip title="Admin duyệt cuối">
             <Popconfirm
               title="Xác nhận duyệt báo cáo này?"
@@ -400,70 +342,118 @@ export default function AdminFinalReportManage() {
     },
   ];
 
+  const filterItemStyle = {
+    flex: "1 1 220px",
+    minWidth: 0,
+    maxWidth: 320,
+  };
+
   return (
-    <>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: "100%",
+        overflowX: "hidden",
+      }}
+    >
       <Divider>
-        <h2 className="fw-bold">
-          <FaFileAlt /> Quản lý báo cáo cuối kỳ
+        <h2
+          className="fw-bold"
+          style={{
+            margin: 0,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            whiteSpace: "nowrap",
+            fontSize: 24,
+            lineHeight: 1.2,
+          }}
+        >
+          <FaFileAlt />
+          <span>Quản lý báo cáo cuối kỳ</span>
         </h2>
       </Divider>
 
-      <Space style={{ marginBottom: 16 }} wrap>
-        <Select
-          value={selectedTerm}
-          style={{ width: 240 }}
-          placeholder="Chọn kỳ thực tập"
-          onChange={(value) => {
-            setSelectedTerm(value);
-            setSelectedTeacher(null);
-            setSelectedStatus(null);
-            setSearchKeyword("");
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 12,
+          marginBottom: 16,
+          width: "100%",
+          maxWidth: "100%",
+        }}
+      >
+        <div style={filterItemStyle}>
+          <Select
+            value={selectedTerm}
+            style={{ width: "100%" }}
+            placeholder="Chọn kỳ thực tập"
+            onChange={(value) => {
+              setSelectedTerm(value);
+              setSelectedTeacher(null);
+              setSelectedStatus(null);
+              setSearchKeyword("");
+            }}
+          >
+            {terms.map((term) => (
+              <Option key={term.id} value={term.id}>
+                {term.name} ({term.academicYear})
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div style={filterItemStyle}>
+          <Select
+            value={selectedTeacher}
+            allowClear
+            placeholder="Lọc theo giảng viên"
+            style={{ width: "100%" }}
+            onChange={(value) => setSelectedTeacher(value || null)}
+          >
+            {teacherOptions.map((teacher) => (
+              <Option key={teacher} value={teacher}>
+                {teacher}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div style={filterItemStyle}>
+          <Select
+            value={selectedStatus}
+            allowClear
+            placeholder="Lọc theo trạng thái"
+            style={{ width: "100%" }}
+            onChange={(value) => setSelectedStatus(value || null)}
+          >
+            {statusOptions.map((status) => (
+              <Option key={status.value} value={status.value}>
+                {status.label}
+              </Option>
+            ))}
+          </Select>
+        </div>
+
+        <div
+          style={{
+            flex: "1 1 280px",
+            minWidth: 0,
+            maxWidth: 420,
           }}
         >
-          {terms.map((term) => (
-            <Option key={term.id} value={term.id}>
-              {term.name} ({term.academicYear})
-            </Option>
-          ))}
-        </Select>
-
-        <Select
-          value={selectedTeacher}
-          allowClear
-          placeholder="Lọc theo giảng viên"
-          style={{ width: 220 }}
-          onChange={(value) => setSelectedTeacher(value || null)}
-        >
-          {teacherOptions.map((teacher) => (
-            <Option key={teacher} value={teacher}>
-              {teacher}
-            </Option>
-          ))}
-        </Select>
-
-        <Select
-          value={selectedStatus}
-          allowClear
-          placeholder="Lọc theo trạng thái"
-          style={{ width: 200 }}
-          onChange={(value) => setSelectedStatus(value || null)}
-        >
-          {statusOptions.map((status) => (
-            <Option key={status.value} value={status.value}>
-              {status.label}
-            </Option>
-          ))}
-        </Select>
-
-        <Input.Search
-          value={searchKeyword}
-          placeholder="Tìm mã SV / tên SV / đề tài..."
-          allowClear
-          onChange={(e) => setSearchKeyword(e.target.value)}
-          onSearch={(value) => setSearchKeyword(value)}
-          style={{ width: 320 }}
-        />
-      </Space>
+          <Input.Search
+            value={searchKeyword}
+            placeholder="Tìm mã SV / tên SV / đề tài..."
+            allowClear
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            onSearch={(value) => setSearchKeyword(value)}
+            style={{ width: "100%" }}
+          />
+        </div>
+      </div>
 
       <Table
         dataSource={filteredData}
@@ -473,7 +463,15 @@ export default function AdminFinalReportManage() {
         bordered
         size="middle"
         tableLayout="fixed"
-        pagination={{ pageSize: 6 }}
+        pagination={{
+          pageSize: 6,
+          showSizeChanger: false,
+        }}
+        scroll={{ x: 1430 }}
+        style={{
+          width: "100%",
+          maxWidth: "100%",
+        }}
       />
 
       <Modal
@@ -488,6 +486,7 @@ export default function AdminFinalReportManage() {
         okText="Lưu điểm"
         cancelText="Hủy"
         confirmLoading={grading}
+        width="min(520px, 92vw)"
       >
         <div style={{ marginBottom: 12 }}>
           <b>Sinh viên:</b> {selectedRecord?.studentName || "-"}
@@ -497,7 +496,12 @@ export default function AdminFinalReportManage() {
           <b>Mã sinh viên:</b> {selectedRecord?.studentCode || "-"}
         </div>
 
-        <div style={{ marginBottom: 12 }}>
+        <div
+          style={{
+            marginBottom: 12,
+            wordBreak: "break-word",
+          }}
+        >
           <b>Đề tài:</b> {selectedRecord?.topicTitle || "-"}
         </div>
 
@@ -511,6 +515,6 @@ export default function AdminFinalReportManage() {
           placeholder="Nhập điểm từ 0 đến 10"
         />
       </Modal>
-    </>
+    </div>
   );
 }
