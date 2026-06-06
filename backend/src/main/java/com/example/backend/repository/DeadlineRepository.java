@@ -116,4 +116,20 @@ public interface DeadlineRepository extends JpaRepository<Deadline, String> {
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );
+
+
+
+    @Query(value = """
+    SELECT d.*
+    FROM deadlines d
+    JOIN teachers t ON d.teacher_id = t.id
+    WHERE t.user_id = :idUserGiangVien
+      AND d.internship_term_id = :idKy
+      AND d.type = 'REPORT'
+    ORDER BY d.due_date ASC
+""", nativeQuery = true)
+    List<Deadline> findAllByGiangVienAndKy(
+            @Param("idUserGiangVien") String idUserGiangVien,
+            @Param("idKy") String idKy
+    );
 }

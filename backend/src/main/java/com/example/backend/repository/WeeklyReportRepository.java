@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WeeklyReportRepository extends JpaRepository<WeeklyReport, String> {
+
     boolean existsByAdvisorAssignmentAndDeadline(
             AdvisorAssignment advisorAssignment,
             Deadline deadline
@@ -22,16 +23,27 @@ public interface WeeklyReportRepository extends JpaRepository<WeeklyReport, Stri
     );
 
     @Query("""
-                SELECT wr
-                FROM WeeklyReport wr
-                JOIN wr.deadline d
-                JOIN d.teacher t
-                WHERE d.id = :deadlineId
-                  AND t.user.id = :userId
-                  AND wr.fileUrl IS NOT NULL
-            """)
+        SELECT wr
+        FROM WeeklyReport wr
+        JOIN wr.deadline d
+        JOIN d.teacher t
+        WHERE d.id = :deadlineId
+          AND t.user.id = :userId
+          AND wr.fileUrl IS NOT NULL
+    """)
     List<WeeklyReport> findAllByDeadlineAndTeacher(
             @Param("deadlineId") String deadlineId,
             @Param("userId") String userId
+    );
+
+    @Query(value = """
+        SELECT wr.*
+        FROM weekly_reports wr
+        WHERE wr.advisor_assignment_id IN (:danhSachIdPhanCong)
+          AND wr.deadline_id IN (:danhSachIdDeadline)
+    """, nativeQuery = true)
+    List<WeeklyReport> findAllByDanhSachPhanCongAndDeadline(
+            @Param("danhSachIdPhanCong") List<String> danhSachIdPhanCong,
+            @Param("danhSachIdDeadline") List<String> danhSachIdDeadline
     );
 }

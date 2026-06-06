@@ -5,6 +5,7 @@ import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.StudentCurrentAssignmentView;
 import com.example.backend.dto.response.StudentProjection;
 import com.example.backend.entity.AdvisorAssignment;
+import com.example.backend.entity.InternshipTerm;
 import com.example.backend.entity.Student;
 import com.example.backend.util.status.TermStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -152,4 +153,20 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
             @Param("userId") String userId,
             @Param("status") TermStatus status
     );
+
+
+    @Query(value = """
+    SELECT aa.*
+    FROM advisor_assignments aa
+    JOIN teachers t ON aa.teacher_id = t.id
+    WHERE t.user_id = :idUserGiangVien
+      AND aa.term_id = :idKy
+""", nativeQuery = true)
+    List<AdvisorAssignment> findAllByGiangVienAndKy(
+            @Param("idUserGiangVien") String idUserGiangVien,
+            @Param("idKy") String idKy
+    );
+
+
+
 }

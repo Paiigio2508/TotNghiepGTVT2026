@@ -196,4 +196,14 @@ public interface FinalReportRepository extends JpaRepository<FinalReport, String
     Optional<FinalReportView> findViewByAdvisorAssignmentId(
             @Param("advisorAssignmentId") String advisorAssignmentId
     );
+
+
+    @Query(value = """
+        SELECT fr.*
+        FROM final_reports fr
+        WHERE fr.advisor_assignment_id IN (:danhSachIdPhanCong)
+    """, nativeQuery = true)
+    List<FinalReport> findAllByDanhSachPhanCong(
+            @Param("danhSachIdPhanCong") List<String> danhSachIdPhanCong
+    );
 }
