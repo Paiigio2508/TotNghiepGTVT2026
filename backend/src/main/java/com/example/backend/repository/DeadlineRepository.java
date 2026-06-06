@@ -3,11 +3,13 @@ package com.example.backend.repository;
 import com.example.backend.dto.response.DeadlineProjection;
 import com.example.backend.dto.response.TeacherWeeklyReportProjection;
 import com.example.backend.entity.Deadline;
+import com.example.backend.util.status.DeadlineType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -102,4 +104,16 @@ public interface DeadlineRepository extends JpaRepository<Deadline, String> {
     List<TeacherWeeklyReportProjection> findReportsByWeekAndDeadline(
 
             @Param("deadlineId") String deadlineId, @Param("userId") String userId);
+    @Query("""
+    SELECT d
+    FROM Deadline d
+    WHERE d.type = :type
+      AND d.dueDate >= :startOfDay
+      AND d.dueDate < :endOfDay
+""")
+    List<Deadline> findWeeklyDeadlineDueToday(
+            @Param("type") DeadlineType type,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
 }

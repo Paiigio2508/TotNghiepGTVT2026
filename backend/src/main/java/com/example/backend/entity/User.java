@@ -21,7 +21,6 @@ public class User extends BaseEntity {
 
     private String username;
     private String password;
-//    private String role;   // ADMIN, STUDENT, TEACHER
     private LocalDate ngaySinh;
     @Column(unique = true)
     private String email;
