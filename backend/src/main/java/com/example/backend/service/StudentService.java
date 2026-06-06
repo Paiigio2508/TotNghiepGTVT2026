@@ -1,6 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.UserRequest;
+import com.example.backend.dto.response.ImportStudentResponse;
 import com.example.backend.dto.response.StudentStatResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Specialization;
@@ -62,10 +63,10 @@ public class StudentService {
             throw new AppException("Mã sinh viên đã tồn tại");
         }
 
-        String rawPassword = support.generatePassword();
+        String rawPassword = "gtvt@" + LocalDate.now().getYear();
 
         User user = new User();
-        user.setUsername(request.getEmail());
+        user.setUsername(request.getUserCode());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
         user.setRole(RoleStatus.STUDENT);
@@ -170,9 +171,13 @@ public class StudentService {
         userRepository.save(user);
     }
 
-    public void importStudent(MultipartFile file) {
+    public ImportStudentResponse importStudent(MultipartFile file) {
 
         String defaultImage = "https://www.shutterstock.com/image-vector/default-avatar-social-media-display-600nw-2632690107.jpg";
+
+        int successCount = 0;
+        int failCount = 0;
+        List<String> errors = new java.util.ArrayList<>();
 
         try (Workbook workbook = new XSSFWorkbook(file.getInputStream())) {
 
@@ -185,27 +190,65 @@ public class StudentService {
                 try {
                     UserRequest request = new UserRequest();
 
-                    request.setUserCode(support.getCellValue(row, 0));
-                    request.setFullName(support.getCellValue(row, 1));
-                    request.setGender(support.getCellValue(row, 2));
-                    request.setClassName(support.getCellValue(row, 3));
-                    request.setEmail(support.getCellValue(row, 4));
-                    request.setPhone(support.getCellValue(row, 5));
-                    request.setNgaySinh(LocalDate.parse(support.getCellValue(row, 7)));
+                    String userCode = support.getCellValue(row, 0);
+                    String fullName = support.getCellValue(row, 1);
+                    String gender = support.getCellValue(row, 2);
+                    String className = support.getCellValue(row, 3);
+                    String email = support.getCellValue(row, 4);
+                    String phone = support.getCellValue(row, 5);
                     String image = support.getCellValue(row, 6);
-                    request.setUrlImage(image.isEmpty() ? defaultImage : image);
+                    String ngaySinh = support.getCellValue(row, 7);
+
+                    request.setUserCode(userCode);
+                    request.setFullName(fullName);
+                    request.setGender(gender);
+                    request.setClassName(className);
+                    request.setEmail(email);
+                    request.setPhone(phone);
+                    request.setUrlImage(image == null || image.isBlank() ? defaultImage : image);
+
+                    if (ngaySinh != null && !ngaySinh.isBlank()) {
+                        request.setNgaySinh(LocalDate.parse(ngaySinh));
+                    }
 
                     createStudent(request);
+                    successCount++;
 
                 } catch (Exception e) {
-                    System.out.println("Lỗi dòng: " + row.getRowNum());
-                    e.printStackTrace();
+                    failCount++;
+
+                    errors.add(
+                            "Dòng " + (row.getRowNum() + 1) + ": " +
+                                    (e.getMessage() == null ? "Dữ liệu không hợp lệ" : e.getMessage())
+                    );
                 }
             }
 
         } catch (Exception e) {
-            throw new AppException("Import thất bại");
+            throw new AppException("Import thất bại: File không hợp lệ hoặc không đọc được");
         }
+
+        if (successCount == 0 && failCount > 0) {
+            throw new AppException(
+                    "Import thất bại: toàn bộ dữ liệu bị lỗi. " +
+                            String.join(" | ", errors)
+            );
+        }
+
+        String message;
+
+        if (failCount > 0) {
+            message = "Import hoàn tất: thành công " + successCount + " dòng, lỗi " + failCount + " dòng.";
+        } else {
+            message = "Import thành công " + successCount + " sinh viên.";
+        }
+
+        return ImportStudentResponse.builder()
+                .successCount(successCount)
+                .failCount(failCount)
+                .message(message)
+                .errors(errors)
+                .build();
     }
     public List<StudentStatResponse> getStudentStats() {
         return studentRepository.getStudentStats();

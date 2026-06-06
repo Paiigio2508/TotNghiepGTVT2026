@@ -39,7 +39,9 @@ export default function StudentManage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
+
   const [importFile, setImportFile] = useState(null);
+  const [importing, setImporting] = useState(false);
 
   const [searchForm] = Form.useForm();
   const [studentForm] = Form.useForm();
@@ -115,7 +117,6 @@ export default function StudentManage() {
   /* ================= VALIDATE DATE ================= */
 
   const disabledBirthDate = (current) => {
-    // Ngày sinh không được lớn hơn ngày hiện tại
     return current && current.isAfter(dayjs(), "day");
   };
 
@@ -174,7 +175,6 @@ export default function StudentManage() {
 
       loadStudent();
     } catch (error) {
-      // Nếu là lỗi validate form thì không hiện lỗi hệ thống
       if (error?.errorFields) return;
 
       toast.error("Lỗi hệ thống!");
@@ -183,25 +183,45 @@ export default function StudentManage() {
 
   /* ================= IMPORT ================= */
 
-  const handleImport = async () => {
-    if (!importFile) {
-      toast.warning("Vui lòng chọn file!");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("file", importFile);
-
-    try {
-      const res = await StudentAPI.importStudent(formData);
-
-      toast.success(res.data || "Import thành công!");
-      setImportFile(null);
-      loadStudent();
-    } catch (err) {
-      toast.error(err.response?.data?.message || "Import thất bại!");
-    }
+  const handleChooseImportFile = (file) => {
+    setImportFile(file);
+    return false;
   };
+
+  const handleClearImportFile = () => {
+    setImportFile(null);
+  };
+
+const handleImport = async () => {
+  if (!importFile) {
+    toast.warning("Vui lòng chọn file!");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", importFile);
+
+  try {
+    setImporting(true);
+
+    const res = await StudentAPI.importStudent(formData);
+    const result = res.data;
+
+    if (result?.failCount > 0) {
+      toast.warning(result.message || "Import hoàn tất nhưng có dòng bị lỗi!");
+      console.warn("Import errors:", result.errors);
+    } else {
+      toast.success(result?.message || "Import thành công!");
+    }
+
+    setImportFile(null);
+    await loadStudent();
+  } catch (err) {
+    toast.error(err.response?.data?.message || "Import thất bại!");
+  } finally {
+    setImporting(false);
+  }
+};
 
   /* ================= COLUMNS ================= */
 
@@ -346,20 +366,40 @@ export default function StudentManage() {
 
       {/* IMPORT + ADD */}
 
-      <Space className="float-end mt-4 mb-4">
-        <Upload
-          accept=".xlsx"
-          maxCount={1}
-          beforeUpload={(file) => {
-            setImportFile(file);
-            return false;
-          }}
-          onRemove={() => setImportFile(null)}
-        >
-          <Button icon={<UploadOutlined />}>Chọn file Excel</Button>
-        </Upload>
+      <div className="student-action-bar">
+        <div className="student-import-box">
+          <Upload
+            accept=".xlsx"
+            maxCount={1}
+            showUploadList={false}
+            beforeUpload={handleChooseImportFile}
+          >
+            <Button icon={<UploadOutlined />} disabled={importing}>
+              Chọn file Excel
+            </Button>
+          </Upload>
 
-        <Button type="primary" onClick={handleImport}>
+          {importFile && (
+            <div className="selected-import-file">
+              <span title={importFile.name}>{importFile.name}</span>
+
+              <Button
+                type="text"
+                size="small"
+                icon={<CloseCircleOutlined />}
+                onClick={handleClearImportFile}
+                disabled={importing}
+              />
+            </div>
+          )}
+        </div>
+
+        <Button
+          type="primary"
+          onClick={handleImport}
+          loading={importing}
+          disabled={!importFile}
+        >
           Import
         </Button>
 
@@ -374,7 +414,7 @@ export default function StudentManage() {
         >
           Thêm sinh viên
         </Button>
-      </Space>
+      </div>
 
       {/* TABLE */}
 

@@ -1,6 +1,7 @@
 package com.example.backend.controller.admin;
 
 import com.example.backend.dto.request.UserRequest;
+import com.example.backend.dto.response.ImportStudentResponse;
 import com.example.backend.service.StudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,9 +27,9 @@ public class AdminStudentController {
         return ResponseEntity.ok("Tạo sinh viên thành công");
     }
     @PostMapping("/import")
-    public ResponseEntity<?> importStudent(@RequestParam("file") MultipartFile file) {
-        studentService.importStudent(file);
-        return ResponseEntity.ok("Import thành công");
+    public ImportStudentResponse
+    importStudent(@RequestParam("file") MultipartFile file) {
+        return studentService.importStudent(file);
     }
     @PutMapping("/{id}")
     public ResponseEntity<?> update(
