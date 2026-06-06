@@ -25,7 +25,6 @@ public class WeeklyReport extends BaseEntity {
     @Column(nullable = false)
     private String originalFileName;
     private LocalDateTime submitDate;
-    private Double score;
     @Column(columnDefinition = "TEXT")
     private String comment;
 

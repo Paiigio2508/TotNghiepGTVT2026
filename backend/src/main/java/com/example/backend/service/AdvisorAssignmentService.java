@@ -1,10 +1,7 @@
 package com.example.backend.service;
 
 import com.example.backend.dto.request.ChangeTeacherRequest;
-import com.example.backend.dto.response.InternshipStudentView;
-import com.example.backend.dto.response.InternshipTermResponse;
-import com.example.backend.dto.response.StudentProjection;
-import com.example.backend.dto.response.TeacherProjection;
+import com.example.backend.dto.response.*;
 import com.example.backend.entity.*;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.*;
@@ -347,5 +344,14 @@ public class AdvisorAssignmentService {
         }
 
         advisorAssignmentRepository.save(assignment);
+    }
+
+
+
+
+    public StudentCurrentAssignmentView getCurrentAssignmentByStudentUser(String userId) {
+        return advisorAssignmentRepository
+                .findCurrentAssignmentByStudentUserId(userId, TermStatus.DANG_DIEN_RA)
+                .orElseThrow(() -> new AppException("Không tìm thấy phân công giảng viên hướng dẫn trong kỳ hiện tại"));
     }
 }

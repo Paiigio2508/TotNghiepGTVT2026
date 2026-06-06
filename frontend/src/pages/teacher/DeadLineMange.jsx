@@ -238,37 +238,50 @@ export default function DeadlineManage() {
       title: "Tiêu đề",
       dataIndex: "title",
     },
-    {
-      title: "Mô tả",
-      dataIndex: "description",
-      width: 380,
-      render: (text) => {
-        const urlRegex = /(https?:\/\/[^\s]+)/g;
-        const onlyUrlRegex = /^https?:\/\/[^\s]+$/;
+{
+  title: "Mô tả",
+  dataIndex: "description",
+  width: 420,
+  render: (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const onlyUrlRegex = /^https?:\/\/[^\s]+$/;
 
-        if (!text) return "-";
+    if (!text) return "-";
 
-        return text.split(urlRegex).map((part, index) =>
+    return (
+      <div
+        style={{
+          maxWidth: 420,
+          whiteSpace: "normal",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+          lineHeight: "22px",
+        }}
+      >
+        {text.split(urlRegex).map((part, index) =>
           onlyUrlRegex.test(part) ? (
             <a
               key={index}
               href={part}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: "#1677ff", textDecoration: "none" }}
-              onMouseEnter={(e) =>
-                (e.target.style.textDecoration = "underline")
-              }
-              onMouseLeave={(e) => (e.target.style.textDecoration = "none")}
+              style={{
+                color: "#1677ff",
+                textDecoration: "none",
+                wordBreak: "break-word",
+                overflowWrap: "anywhere",
+              }}
             >
               {part}
             </a>
           ) : (
-            part
+            <span key={index}>{part}</span>
           )
-        );
-      },
-    },
+        )}
+      </div>
+    );
+  },
+},
     {
       title: "Loại",
       dataIndex: "type",

@@ -33,6 +33,9 @@ import TeacherScore from "./pages/teacher/TeacherScore";
 import AdminStudentScore from "./pages/admin/AdminStudentScore";
 import AdminSpecialization from "./pages/admin/AdminSpecialization";
 import AssignTeacherPage from "./pages/teacher/AssignTeacherPage";
+import AdminFinalReportManage from "./pages/admin/AdminFinalReportManage";
+import StudentFinalReport from "./pages/student/StudentFinalReport";
+import TeacherFinalReportManage from "./pages/teacher/TeacherFinalReportManage";
 
 export default function App() {
   return (
@@ -58,6 +61,7 @@ export default function App() {
               <Route path="assignments/:termId" element={<PhanCongManage />} />
               <Route path="topic" element={<TopicManageAdmin />} />
               <Route path="scores" element={<AdminStudentScore />} />
+               <Route path="final-reports" element={<AdminFinalReportManage />} />
             </Route>
           </Route>
 
@@ -66,8 +70,6 @@ export default function App() {
             element={<RequireRole roles={["TEACHER", "HEAD_OF_DEPARTMENT"]} />}
           >
             <Route path="/teacher" element={<TeacherLayout />}>
-              {/* <Route index element={<TeacherSpecialization />} />
-              <Route path="specialization" element={<TeacherSpecialization />} /> */}
               <Route path="students" element={<StudentList />} />
               <Route path="topics" element={<TopicManage />} />
               <Route path="deadlines" element={<DeadlineManage />} />
@@ -75,6 +77,7 @@ export default function App() {
                 path="deadline/:deadlineId/reports"
                 element={<DeadlineReports />}
               />
+              <Route path="final-reports" element={<TeacherFinalReportManage />} />
               <Route path="scores" element={<TeacherScore />} />
               <Route path="chats" element={<TeacherChatPage />} />
 
@@ -93,6 +96,7 @@ export default function App() {
                 element={<StudentDeadlineDetail />}
               />
               <Route path="scores" element={<StudentScore />} />
+                 <Route path="final-report" element={<StudentFinalReport />} />
             </Route>
           </Route>
           {/* 404 */}

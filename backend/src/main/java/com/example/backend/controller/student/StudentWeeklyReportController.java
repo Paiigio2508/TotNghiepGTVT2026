@@ -24,10 +24,8 @@ public class StudentWeeklyReportController {
             @RequestParam("userId") String userId,
             @RequestParam(required = false) String comment
     ) throws IOException {
-
         WeeklyReport report =
                 weeklyReportService.submitReport(file, deadlineId,comment, userId);
-
         return ResponseEntity.ok(report);
     }
 }

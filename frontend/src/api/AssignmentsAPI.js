@@ -23,4 +23,10 @@ export class AssignmentsAPI {
       `/api/teacher/assignments/students/${teacherId}/${termId}`,
     );
   };
+
+  static getCurrentByStudentUser = (userId) => {
+    return request.get(
+      `/api/student/advisor-assignments/student-user/${userId}`
+    );
+  };
 }

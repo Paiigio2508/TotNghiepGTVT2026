@@ -12,7 +12,7 @@ import { useState } from "react";
 import { LuNotepadText } from "react-icons/lu";
 import { MdAssignmentInd } from "react-icons/md";
 import ChangePasswordModal from "./ChangePasswordModal";
-
+import { FaFileAlt } from "react-icons/fa";
 const { Header, Sider, Content } = Layout;
 
 export default function TeacherLayout() {
@@ -33,12 +33,12 @@ export default function TeacherLayout() {
     },
     ...(role === "HEAD_OF_DEPARTMENT"
       ? [
-          {
-            key: "/teacher/assign-teachers",
-            icon: <MdAssignmentInd />,
-            label: "Phân giảng viên",
-          },
-        ]
+        {
+          key: "/teacher/assign-teachers",
+          icon: <MdAssignmentInd />,
+          label: "Phân giảng viên",
+        },
+      ]
       : []),
     {
       key: "/teacher/students",
@@ -54,6 +54,11 @@ export default function TeacherLayout() {
       key: "/teacher/deadlines",
       icon: <FaClock />,
       label: "Deadlines",
+    },
+    {
+      key: "/teacher/final-reports",
+      icon: <FaFileAlt />,
+      label: "Báo cáo cuối kỳ",
     },
     {
       key: "/teacher/scores",

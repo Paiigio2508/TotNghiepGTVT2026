@@ -2,11 +2,14 @@ package com.example.backend.repository;
 
 import com.example.backend.dto.response.InternshipStudentView;
 import com.example.backend.dto.response.InternshipTermResponse;
+import com.example.backend.dto.response.StudentCurrentAssignmentView;
 import com.example.backend.dto.response.StudentProjection;
 import com.example.backend.entity.AdvisorAssignment;
 import com.example.backend.entity.Student;
+import com.example.backend.util.status.TermStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
@@ -109,6 +112,44 @@ public interface AdvisorAssignmentRepository extends JpaRepository<AdvisorAssign
             String studentId,
             String termId
     );
-
+    List<AdvisorAssignment> findByTerm_Id(String termId);
     List<AdvisorAssignment> findByTerm_IdAndTeacher_Id(String termId, String teacherId);
+
+
+
+
+    @Query("""
+        SELECT 
+            aa.id AS id,
+
+            s.id AS studentId,
+            s.fullName AS studentName,
+            s.studentCode AS studentCode,
+
+            t.id AS teacherId,
+            t.fullName AS teacherName,
+            t.teacherCode AS teacherCode,
+
+            term.id AS termId,
+            term.name AS termName,
+            term.academicYear AS academicYear,
+            term.startDate AS startDate,
+            term.endDate AS endDate,
+
+            topic.id AS topicId,
+            topic.title AS topicTitle
+
+        FROM AdvisorAssignment aa
+        JOIN aa.student s
+        JOIN s.user u
+        JOIN aa.teacher t
+        JOIN aa.term term
+        LEFT JOIN aa.topic topic
+        WHERE u.id = :userId
+          AND term.status = :status
+    """)
+    Optional<StudentCurrentAssignmentView> findCurrentAssignmentByStudentUserId(
+            @Param("userId") String userId,
+            @Param("status") TermStatus status
+    );
 }

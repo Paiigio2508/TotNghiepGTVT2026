@@ -9,5 +9,8 @@ public enum NotificationType {
     WEEKLY_REPORT_DUE_SOON,      // báo cáo tuần sắp hết hạn
     WEEKLY_REPORT_GRADED,        // giảng viên chấm báo cáo tuần
 
-    FINAL_REPORT_GRADED          // giảng viên chấm báo cáo cuối
+    FINAL_REPORT_GRADED,         // giảng viên chấm báo cáo cuối
+    FINAL_REPORT_NEED_REVISION,
+    FINAL_REPORT_TEACHER_APPROVED,
+    FINAL_REPORT_ADMIN_APPROVED
 }

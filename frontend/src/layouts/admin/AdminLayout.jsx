@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import "./AdminLayout.css";
 import { LuNotepadText } from "react-icons/lu";
-
+import { FaFileAlt } from "react-icons/fa";
 const { Header, Sider, Content } = Layout;
 
 export default function AdminLayout() {
@@ -133,9 +133,15 @@ const menuItems = [
     icon: <FaBook />,
     label: "Danh sách đề tài",
   },
+    {
+  key: "/admin/final-reports",
+  icon: <FaFileAlt />,
+  label: "Báo cáo cuối kỳ",
+},
   {
     key: "/admin/scores",
     icon: <LuNotepadText />,
     label: "Danh sách điểm",
   },
+
 ];

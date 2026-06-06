@@ -15,7 +15,7 @@ import {
   MessageOutlined,
   BellOutlined,
 } from "@ant-design/icons";
-import { FaClock, FaHome, FaUserGraduate } from "react-icons/fa";
+import { FaClock, FaHome, FaUserGraduate, FaFileAlt } from "react-icons/fa";
 import { useState, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import ChatWidget from "../components/ChatWidget";
@@ -65,7 +65,14 @@ export default function StudentLayout() {
 
       case "TOPIC_APPROVED_BY_TEACHER":
         return "📚";
+      case "FINAL_REPORT_NEED_REVISION":
+        return "📝";
 
+      case "FINAL_REPORT_TEACHER_APPROVED":
+        return "✅";
+
+      case "FINAL_REPORT_ADMIN_APPROVED":
+        return "🏁";
       default:
         return "🔔";
     }
@@ -336,6 +343,11 @@ const studentMenu = [
   { key: "/student", icon: <FaUserGraduate />, label: "Thông tin" },
   { key: "/student/topic", icon: <FaHome />, label: "Đề tài" },
   { key: "/student/deadlines", icon: <FaClock />, label: "Deadlines" },
+  {
+    key: "/student/final-report",
+    icon: <FaFileAlt />,
+    label: "Báo cáo cuối kỳ",
+  },
   {
     key: "/student/scores",
     icon: <LuNotepadText />,

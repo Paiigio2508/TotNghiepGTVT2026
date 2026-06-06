@@ -4,6 +4,7 @@ import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.InternshipTerm;
 import com.example.backend.entity.TeacherSpecializationTerm;
+import com.example.backend.util.status.TermStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,9 +20,5 @@ public interface InternshipTermRepository extends JpaRepository<InternshipTerm, 
             """, nativeQuery = true)
     List<InternshipTermResponse> getALL();
     Optional<InternshipTerm> findByNameAndAcademicYear(String name, String academicYear);
-
-//    List<TeacherSpecializationTerm> findByTermId(String termId);
-//    List<TeacherSpecializationTerm> findByTeacherIdAndTermId(String teacherId, Long termId);
-//
-//    void deleteByTeacherIdAndTermId(String teacherId, Long termId);
+    List<InternshipTerm> findByStatus(TermStatus status);
 }
