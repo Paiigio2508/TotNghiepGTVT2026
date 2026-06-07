@@ -135,10 +135,43 @@ export default function StudentFinalReport() {
     }
   };
 
-  const disableSubmit =
+  const getFinalReportRange = () => {
+    if (!currentTerm?.endDate) {
+      return {
+        openDate: null,
+        dueDate: null,
+      };
+    }
+
+    // Mở nộp trước ngày kết thúc kỳ 1 tháng
+    const openDate = dayjs(currentTerm.endDate).subtract(1, "month");
+
+    // Hạn nộp = ngày mở nộp + 21 ngày
+    const dueDate = openDate.add(21, "day");
+
+    return {
+      openDate,
+      dueDate,
+    };
+  };
+
+  const { openDate, dueDate } = getFinalReportRange();
+
+  const isBeforeSubmitTime = openDate
+    ? dayjs().isBefore(openDate, "day")
+    : true;
+
+  const isAfterSubmitTime = dueDate
+    ? dayjs().isAfter(dueDate, "day")
+    : true;
+
+  const isReportLocked =
     finalReport?.status === "TEACHER_APPROVED" ||
     finalReport?.status === "ADMIN_APPROVED" ||
     finalReport?.status === "GRADED";
+
+  const disableSubmit =
+    isReportLocked || isBeforeSubmitTime || isAfterSubmitTime;
 
   const getSubmitButtonText = () => {
     if (!finalReport) return "Nộp báo cáo cuối kỳ";
@@ -151,19 +184,64 @@ export default function StudentFinalReport() {
   };
 
   const getFinalReportTimeText = () => {
-    if (!currentTerm?.endDate) return "-";
-
-    const openDate = dayjs(currentTerm.endDate).subtract(1, "month");
-    const dueDate = openDate.add(21, "day");
+    if (!openDate || !dueDate) return "-";
 
     return `${openDate.format("DD/MM/YYYY")} - ${dueDate.format(
       "DD/MM/YYYY"
     )}`;
   };
 
+  const getDisableAlert = () => {
+    if (isReportLocked) {
+      return {
+        type: "warning",
+        message: "Báo cáo đã được duyệt",
+        description:
+          "Bạn không thể nộp lại báo cáo sau khi giảng viên hoặc admin đã duyệt/chấm điểm.",
+      };
+    }
+
+    if (isBeforeSubmitTime) {
+      return {
+        type: "info",
+        message: "Chưa đến thời gian nộp báo cáo cuối kỳ",
+        description: `Thời gian nộp bắt đầu từ ngày ${
+          openDate ? openDate.format("DD/MM/YYYY") : "-"
+        }.`,
+      };
+    }
+
+    if (isAfterSubmitTime) {
+      return {
+        type: "error",
+        message: "Đã quá hạn nộp báo cáo cuối kỳ",
+        description: `Hạn nộp báo cáo cuối kỳ là ngày ${
+          dueDate ? dueDate.format("DD/MM/YYYY") : "-"
+        }.`,
+      };
+    }
+
+    return null;
+  };
+
   const handleSubmit = async () => {
     if (!assignment?.id) {
       message.warning("Không tìm thấy phân công giảng viên hướng dẫn!");
+      return;
+    }
+
+    if (disableSubmit) {
+      if (isBeforeSubmitTime) {
+        message.warning("Chưa đến thời gian nộp báo cáo cuối kỳ!");
+        return;
+      }
+
+      if (isAfterSubmitTime) {
+        message.warning("Đã quá hạn nộp báo cáo cuối kỳ!");
+        return;
+      }
+
+      message.warning("Báo cáo đã bị khóa, không thể nộp lại!");
       return;
     }
 
@@ -202,6 +280,8 @@ export default function StudentFinalReport() {
   };
 
   if (loading) return <Spin size="large" />;
+
+  const disableAlert = getDisableAlert();
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
@@ -294,55 +374,56 @@ export default function StudentFinalReport() {
 
             <Divider />
 
-            {disableSubmit ? (
+            {disableAlert && (
+              <Alert
+                type={disableAlert.type}
+                showIcon
+                style={{ marginBottom: 16 }}
+                message={disableAlert.message}
+                description={disableAlert.description}
+              />
+            )}
+
+            {!disableSubmit && finalReport?.status === "NEED_REVISION" && (
               <Alert
                 type="warning"
                 showIcon
-                message="Báo cáo đã được duyệt"
-                description="Bạn không thể nộp lại báo cáo sau khi giảng viên hoặc admin đã duyệt."
+                style={{ marginBottom: 16 }}
+                message="Giảng viên yêu cầu chỉnh sửa"
+                description={finalReport?.comment || "Vui lòng nộp lại báo cáo."}
               />
-            ) : (
-              <>
-                {finalReport?.status === "NEED_REVISION" && (
-                  <Alert
-                    type="warning"
-                    showIcon
-                    style={{ marginBottom: 16 }}
-                    message="Giảng viên yêu cầu chỉnh sửa"
-                    description={
-                      finalReport?.comment || "Vui lòng nộp lại báo cáo."
-                    }
-                  />
-                )}
-
-                <Upload
-                  fileList={fileList}
-                  beforeUpload={(file) => {
-                    setFileList([file]);
-                    return false;
-                  }}
-                  onPreview={(file) => {
-                    if (file.url) {
-                      window.open(file.url, "_blank");
-                    }
-                  }}
-                  onRemove={() => setFileList([])}
-                  maxCount={1}
-                >
-                  <Button icon={<UploadOutlined />}>Chọn file</Button>
-                </Upload>
-
-                <Button
-                  type="primary"
-                  block
-                  style={{ marginTop: 16 }}
-                  onClick={handleSubmit}
-                  loading={submitting}
-                >
-                  {getSubmitButtonText()}
-                </Button>
-              </>
             )}
+
+            <Upload
+              fileList={fileList}
+              beforeUpload={(file) => {
+                setFileList([file]);
+                return false;
+              }}
+              onPreview={(file) => {
+                if (file.url) {
+                  window.open(file.url, "_blank");
+                }
+              }}
+              onRemove={() => setFileList([])}
+              maxCount={1}
+              disabled={disableSubmit}
+            >
+              <Button icon={<UploadOutlined />} disabled={disableSubmit}>
+                Chọn file
+              </Button>
+            </Upload>
+
+            <Button
+              type="primary"
+              block
+              style={{ marginTop: 16 }}
+              onClick={handleSubmit}
+              loading={submitting}
+              disabled={disableSubmit}
+            >
+              {getSubmitButtonText()}
+            </Button>
           </Card>
         </Col>
       </Row>

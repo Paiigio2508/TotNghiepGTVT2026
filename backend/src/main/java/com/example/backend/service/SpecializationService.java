@@ -17,7 +17,7 @@ import java.util.Map;
 public class SpecializationService {
     private final SpecializationRepository specializationRepository;
 
-    private final TeacherSpecializationHistoryRepository teacherSpecializationHistoryRepository;
+
 
     public List<Specialization> getAll() {
         return specializationRepository.findAll();
@@ -38,7 +38,7 @@ public class SpecializationService {
         specialization.setName(name);
 
         if (specialization.getStatus() == null) {
-            specialization.setStatus(0); // nên để 1 = hoạt động
+            specialization.setStatus(0);
         }
 
         return specializationRepository.save(specialization);

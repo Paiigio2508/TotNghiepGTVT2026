@@ -250,12 +250,18 @@ export default function DeadlineManage() {
 
     return (
       <div
+        title={text}
         style={{
           maxWidth: 420,
+          lineHeight: "22px",
+          maxHeight: "44px", // 2 dòng x 22px
+          overflow: "hidden",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
           whiteSpace: "normal",
           wordBreak: "break-word",
           overflowWrap: "anywhere",
-          lineHeight: "22px",
         }}
       >
         {text.split(urlRegex).map((part, index) =>
@@ -311,6 +317,16 @@ export default function DeadlineManage() {
       title: "Hành động",
       render: (_, record) => (
         <Space>
+                {record.type === "REPORT" && (
+            <Button
+              type="primary"
+              onClick={() =>
+                navigate(`/teacher/deadline/${record.id}/reports`)
+              }
+            >
+              Xem
+            </Button>
+          )}
           <Button
             disabled={isDeadlineDisabled}
             onClick={() => {
@@ -334,16 +350,7 @@ export default function DeadlineManage() {
             Sửa
           </Button>
 
-          {record.type === "REPORT" && (
-            <Button
-              type="primary"
-              onClick={() =>
-                navigate(`/teacher/deadline/${record.id}/reports`)
-              }
-            >
-              Xem
-            </Button>
-          )}
+    
         </Space>
       ),
     },

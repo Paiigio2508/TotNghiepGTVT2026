@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Table, Select, Card, message } from "antd";
+import { Table, Select, Card, message, Button } from "antd";
 import { ScoreAPI } from "../../api/ScoreAPI";
 import { TermAPI } from "../../api/TermAPI";
 import dayjs from "dayjs";
+import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
 
 const { Option } = Select;
 
@@ -34,13 +36,9 @@ export default function TeacherScore() {
     const today = dayjs();
 
     return termList.find((term) => {
-      // Ưu tiên status từ backend
       if (term.status === "DANG_DIEN_RA") return true;
-
-      // Nếu backend trả tiếng Việt
       if (term.status === "Đang diễn ra") return true;
 
-      // Nếu status chưa đúng thì check theo ngày
       if (!term.startDate || !term.endDate) return false;
 
       const startDate = dayjs(term.startDate);
@@ -64,8 +62,6 @@ export default function TeacherScore() {
 
       if (termList.length > 0) {
         const currentTerm = getCurrentTerm(termList);
-
-        // Ưu tiên kỳ đang diễn ra, nếu không có thì lấy kỳ đầu tiên
         setTermId(currentTerm?.id || termList[0].id);
       }
     } catch {
@@ -94,8 +90,6 @@ export default function TeacherScore() {
         return;
       }
 
-      /* ===== LẤY DANH SÁCH TUẦN ===== */
-
       const weeks = [...new Set(rows.map((r) => r.week))].sort(
         (a, b) => a - b
       );
@@ -117,8 +111,6 @@ export default function TeacherScore() {
 
       const tableData = Object.values(map);
 
-      /* ===== TÍNH AVG ===== */
-
       tableData.forEach((row) => {
         let sum = 0;
 
@@ -128,8 +120,6 @@ export default function TeacherScore() {
 
         row.avg = weeks.length > 0 ? (sum / weeks.length).toFixed(2) : "0.00";
       });
-
-      /* ===== BASE COLUMNS ===== */
 
       const baseColumns = [
         {
@@ -160,8 +150,6 @@ export default function TeacherScore() {
         },
       ];
 
-      /* ===== WEEK COLUMNS ===== */
-
       const weekColumns = weeks.map((w) => ({
         title: `W${w}`,
         dataIndex: `week${w}`,
@@ -169,8 +157,6 @@ export default function TeacherScore() {
         width: 80,
         render: (score) => score ?? "-",
       }));
-
-      /* ===== AVG COLUMN ===== */
 
       const avgColumn = {
         title: "Avg",
@@ -190,30 +176,127 @@ export default function TeacherScore() {
     }
   };
 
-  return (
-    <Card title="📊 Bảng điểm sinh viên">
-      <Select
-        value={termId}
-        style={{ width: 250, marginBottom: 20 }}
-        placeholder="Chọn kỳ thực tập"
-        allowClear
-        onChange={(v) => setTermId(v)}
-      >
-        {terms.map((t) => (
-          <Option key={t.id} value={t.id}>
-            {t.name} ({t.academicYear})
-          </Option>
-        ))}
-      </Select>
+  /* ================= EXPORT EXCEL ================= */
 
-      <Table
-        columns={columns}
-        dataSource={data}
-        pagination={false}
-        bordered
-        loading={loading}
-        scroll={{ x: 1200 }}
-      />
-    </Card>
+  const handleExportExcel = () => {
+    if (!data || data.length === 0) {
+      message.warning("Không có dữ liệu để xuất!");
+      return;
+    }
+
+    const selectedTerm = terms.find((t) => t.id === termId);
+
+    const weekColumns = columns.filter(
+      (col) =>
+        typeof col.dataIndex === "string" && col.dataIndex.startsWith("week")
+    );
+
+    const exportRows = data.map((row, index) => {
+      const item = {
+        STT: index + 1,
+        "Mã sinh viên": row.studentCode || "",
+        "Họ tên sinh viên": row.studentName || "",
+        "Tên đề tài": row.topicTitle || "",
+      };
+
+      weekColumns.forEach((col) => {
+        item[col.title] = row[col.dataIndex] ?? "-";
+      });
+
+      item["Điểm trung bình"] = row.avg ?? "0.00";
+
+      return item;
+    });
+
+    const titleRows = [
+      ["BẢNG ĐIỂM SINH VIÊN"],
+      [
+        `Kỳ: ${
+          selectedTerm
+            ? `${selectedTerm.name} (${selectedTerm.academicYear})`
+            : ""
+        }`,
+      ],
+      [`Giảng viên: ${user?.fullName || user?.username || ""}`],
+      [`Ngày xuất: ${dayjs().format("DD/MM/YYYY HH:mm")}`],
+      [],
+    ];
+
+    const worksheet = XLSX.utils.aoa_to_sheet(titleRows);
+
+    XLSX.utils.sheet_add_json(worksheet, exportRows, {
+      origin: "A6",
+      skipHeader: false,
+    });
+
+    worksheet["!cols"] = [
+      { wch: 8 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 45 },
+      ...weekColumns.map(() => ({ wch: 10 })),
+      { wch: 18 },
+    ];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Bang diem");
+
+    const termName = selectedTerm?.name
+      ? selectedTerm.name.replace(/[\\/:*?"<>|]/g, "")
+      : "ky_thuc_tap";
+
+    const fileName = `Bang_diem_${termName}_${dayjs().format(
+      "YYYYMMDD_HHmm"
+    )}.xlsx`;
+
+    XLSX.writeFile(workbook, fileName);
+
+    toast.success("Xuất bảng điểm thành công!");
+  };
+
+  return (
+<Card title="📊 Bảng điểm sinh viên">
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 20,
+      gap: 12,
+      flexWrap: "wrap",
+    }}
+  >
+    <Select
+      value={termId}
+      style={{ width: 250 }}
+      placeholder="Chọn kỳ thực tập"
+      allowClear
+      onChange={(v) => setTermId(v)}
+    >
+      {terms.map((t) => (
+        <Option key={t.id} value={t.id}>
+          {t.name} ({t.academicYear})
+        </Option>
+      ))}
+    </Select>
+
+    <Button
+      type="primary"
+      onClick={handleExportExcel}
+      disabled={!data.length}
+    >
+      Xuất Excel
+    </Button>
+  </div>
+
+  <Table
+    columns={columns}
+    dataSource={data}
+    pagination={false}
+    bordered
+    loading={loading}
+    scroll={{ x: 1200 }}
+  />
+</Card>
   );
 }

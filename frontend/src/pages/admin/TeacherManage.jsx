@@ -33,13 +33,15 @@ export default function TeacherManage() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [imageUrl, setImageUrl] = useState(null);
-  const [form] = Form.useForm();
+
+  const [searchForm] = Form.useForm();
+  const [modalForm] = Form.useForm();
 
   /* ================= LOAD DATA ================= */
   const loadTeacher = async () => {
     try {
       const res = await TeacherAPI.getAll();
-      console.log("🚀 ~ loadTeacher ~ res:", res)
+      console.log("🚀 ~ loadTeacher ~ res:", res);
       setData(res.data);
       setDataGoc(res.data);
     } catch (err) {
@@ -58,25 +60,46 @@ export default function TeacherManage() {
       return;
     }
 
+    const key = keyword.trim().toLowerCase();
+
     const result = dataGoc.filter(
       (item) =>
-        item.userCode?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.name?.toLowerCase().includes(keyword.toLowerCase()) ||
-        item.phone?.toLowerCase().includes(keyword.toLowerCase())
+        item.userCode?.toLowerCase().includes(key) ||
+        item.name?.toLowerCase().includes(key) ||
+        item.phone?.toLowerCase().includes(key)
     );
 
     setData(result);
   };
 
-  /* ================= DELETE ================= */
+  /* ================= DELETE / UPDATE STATUS ================= */
   const onDelete = async (id) => {
     try {
       await TeacherAPI.updateTT(id);
       toast.success("Cập nhật giảng viên thành công!");
       loadTeacher();
     } catch {
-      toast.error("Xóa thất bại!");
+      toast.error("Cập nhật trạng thái thất bại!");
     }
+  };
+
+  /* ================= CLOSE MODAL ================= */
+  const handleCloseModal = () => {
+    setOpen(false);
+    setEditing(null);
+    setImageUrl(null);
+    modalForm.resetFields();
+  };
+
+  /* ================= ADD ================= */
+  const onAdd = () => {
+    setEditing(null);
+    setImageUrl(null);
+    modalForm.resetFields();
+    modalForm.setFieldsValue({
+      role: "TEACHER",
+    });
+    setOpen(true);
   };
 
   /* ================= EDIT ================= */
@@ -84,10 +107,15 @@ export default function TeacherManage() {
     setEditing(record);
     setImageUrl(record.urlImage);
 
-    form.setFieldsValue({
-      ...record,
+    modalForm.setFieldsValue({
+      userCode: record.userCode,
+      name: record.name,
       role: record.role || "TEACHER",
+      gender: record.gender,
       ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
+      email: record.email,
+      phone: record.phone,
+      urlImage: record.urlImage,
     });
 
     setOpen(true);
@@ -96,13 +124,13 @@ export default function TeacherManage() {
   /* ================= SUBMIT ================= */
   const onSubmit = async () => {
     try {
-      const values = await form.validateFields();
+      const values = await modalForm.validateFields();
 
       const payload = {
-        userCode: values.userCode,
-        fullName: values.name,
-        phone: values.phone,
-        email: values.email,
+        userCode: values.userCode?.trim(),
+        fullName: values.name?.trim().replace(/\s+/g, " "),
+        phone: values.phone?.trim() || null,
+        email: values.email?.trim(),
         urlImage: values.urlImage,
         gender: values.gender,
         role: values.role,
@@ -126,19 +154,24 @@ export default function TeacherManage() {
 
       toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
-      setOpen(false);
-      form.resetFields();
-      setImageUrl(null);
-      setEditing(null);
+      handleCloseModal();
       loadTeacher();
     } catch (err) {
-      toast.error("Lỗi hệ thống!");
+      // Validate lỗi thì không hiện toast "Lỗi hệ thống"
+      if (err?.errorFields) {
+        return;
+      }
+
+      toast.error(err?.response?.data?.message || "Lỗi hệ thống!");
     }
   };
 
   /* ================= COLUMNS ================= */
   const columns = [
-    { title: "Mã GV", dataIndex: "userCode" },
+    {
+      title: "Mã GV",
+      dataIndex: "userCode",
+    },
     {
       title: "Ảnh",
       dataIndex: "urlImage",
@@ -148,19 +181,24 @@ export default function TeacherManage() {
           width={70}
           height={70}
           style={{ objectFit: "cover", borderRadius: "50%" }}
-          fallback="https://via.placeholder.com/70"
+          fallback="https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
         />
       ),
     },
-    { title: "Họ tên", dataIndex: "name" },
+    {
+      title: "Họ tên",
+      dataIndex: "name",
+    },
     {
       title: "Giới tính",
       dataIndex: "gender",
       render: (gender) =>
         gender === "Nam" ? (
           <Tag color="blue">Nam</Tag>
-        ) : (
+        ) : gender === "Nữ" ? (
           <Tag color="pink">Nữ</Tag>
+        ) : (
+          "-"
         ),
     },
     {
@@ -168,8 +206,14 @@ export default function TeacherManage() {
       dataIndex: "ngaySinh",
       render: (date) => (date ? dayjs(date).format("DD/MM/YYYY") : ""),
     },
-    { title: "Email", dataIndex: "email" },
-    { title: "SĐT", dataIndex: "phone" },
+    {
+      title: "Email",
+      dataIndex: "email",
+    },
+    {
+      title: "SĐT",
+      dataIndex: "phone",
+    },
     {
       title: "Vai trò",
       dataIndex: "role",
@@ -195,6 +239,7 @@ export default function TeacherManage() {
       render: (_, record) => (
         <Space>
           <Button onClick={() => onEdit(record)}>Cập nhật</Button>
+
           <Popconfirm
             title="Cập nhật giảng viên?"
             onConfirm={() => onDelete(record.id)}
@@ -216,7 +261,7 @@ export default function TeacherManage() {
 
       <div className="form-header">
         <Form
-          form={form}
+          form={searchForm}
           onValuesChange={(changedValues) =>
             handleSearch(changedValues.timKiem)
           }
@@ -235,7 +280,7 @@ export default function TeacherManage() {
                 type="primary"
                 icon={<RetweetOutlined />}
                 onClick={() => {
-                  form.resetFields();
+                  searchForm.resetFields();
                   setData(dataGoc);
                 }}
               >
@@ -247,16 +292,7 @@ export default function TeacherManage() {
       </div>
 
       <Space className="float-end mt-4 mb-4">
-        <Button
-          type="primary"
-          onClick={() => {
-            setEditing(null);
-            form.resetFields();
-            form.setFieldsValue({ role: "TEACHER" });
-            setOpen(true);
-            setImageUrl(null);
-          }}
-        >
+        <Button type="primary" onClick={onAdd}>
           Thêm giảng viên
         </Button>
       </Space>
@@ -275,7 +311,7 @@ export default function TeacherManage() {
       <Modal
         open={open}
         title={editing ? "Sửa giảng viên" : "Thêm giảng viên"}
-        onCancel={() => setOpen(false)}
+        onCancel={handleCloseModal}
         onOk={onSubmit}
         width={1000}
         centered
@@ -286,33 +322,70 @@ export default function TeacherManage() {
               defaultImage={imageUrl}
               onFileUpload={(url) => {
                 setImageUrl(url);
-                form.setFieldsValue({ urlImage: url });
+                modalForm.setFieldsValue({ urlImage: url });
               }}
             />
           </Col>
 
           <Col span={14}>
-            <Form form={form} layout="vertical">
+            <Form form={modalForm} layout="vertical">
               <Form.Item
                 name="userCode"
                 label="Mã giảng viên"
-                rules={[{ required: true, message: "Không được để trống!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Không được để trống!",
+                  },
+                ]}
               >
-                <Input />
+                <Input maxLength={30} placeholder="Nhập mã giảng viên" />
               </Form.Item>
 
               <Form.Item
                 name="name"
                 label="Họ tên"
-                rules={[{ required: true, message: "Không được để trống!" }]}
+                validateFirst
+                rules={[
+                  {
+                    required: true,
+                    message: "Không được để trống!",
+                  },
+                  {
+                    validator: (_, value) => {
+                      // Để required xử lý lỗi trống, tránh bị duplicate message
+                      if (!value || value.trim() === "") {
+                        return Promise.resolve();
+                      }
+
+                      // Chỉ cho chữ cái tiếng Việt và khoảng trắng
+                      const nameRegex = /^[\p{L}]+(?:\s+[\p{L}]+)*$/u;
+
+                      if (!nameRegex.test(value.trim())) {
+                        return Promise.reject(
+                          new Error(
+                            "Họ tên chỉ được chứa chữ cái, không được chứa số hoặc ký tự đặc biệt!"
+                          )
+                        );
+                      }
+
+                      return Promise.resolve();
+                    },
+                  },
+                ]}
               >
-                <Input />
+                <Input maxLength={100} placeholder="Nhập họ tên giảng viên" />
               </Form.Item>
 
               <Form.Item
                 name="role"
                 label="Vai trò"
-                rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn vai trò!",
+                  },
+                ]}
               >
                 <Select placeholder="Chọn vai trò">
                   <Option value="TEACHER">Giảng viên</Option>
@@ -323,7 +396,12 @@ export default function TeacherManage() {
               <Form.Item
                 name="gender"
                 label="Giới tính"
-                rules={[{ required: true, message: "Vui lòng chọn giới tính!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn giới tính!",
+                  },
+                ]}
               >
                 <Radio.Group>
                   <Radio value="Nam">Nam</Radio>
@@ -334,20 +412,35 @@ export default function TeacherManage() {
               <Form.Item
                 name="ngaySinh"
                 label="Ngày sinh"
-                rules={[{ required: true, message: "Vui lòng chọn ngày sinh!" }]}
+                rules={[
+                  {
+                    required: true,
+                    message: "Vui lòng chọn ngày sinh!",
+                  },
+                ]}
               >
-                <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                <DatePicker
+                  style={{ width: "100%" }}
+                  format="DD/MM/YYYY"
+                  placeholder="Chọn ngày sinh"
+                />
               </Form.Item>
 
               <Form.Item
                 name="email"
                 label="Email"
                 rules={[
-                  { required: true, message: "Không được để trống!" },
-                  { type: "email", message: "Email không đúng định dạng!" },
+                  {
+                    required: true,
+                    message: "Không được để trống!",
+                  },
+                  {
+                    type: "email",
+                    message: "Email không đúng định dạng!",
+                  },
                 ]}
               >
-                <Input />
+                <Input maxLength={100} placeholder="Nhập email" />
               </Form.Item>
 
               <Form.Item
@@ -360,7 +453,7 @@ export default function TeacherManage() {
                   },
                 ]}
               >
-                <Input />
+                <Input maxLength={10} placeholder="Nhập số điện thoại" />
               </Form.Item>
 
               <Form.Item name="urlImage" hidden>

@@ -73,7 +73,7 @@ export default function StudentManage() {
       return;
     }
 
-    const lowerKeyword = keyword.toLowerCase();
+    const lowerKeyword = keyword.trim().toLowerCase();
 
     const ketQua = dataGoc.filter(
       (item) =>
@@ -99,6 +99,24 @@ export default function StudentManage() {
     }
   };
 
+  /* ================= CLOSE MODAL ================= */
+
+  const handleCloseModal = () => {
+    setOpen(false);
+    setEditing(null);
+    studentForm.resetFields();
+    setImageUrl(null);
+  };
+
+  /* ================= ADD ================= */
+
+  const onAdd = () => {
+    setEditing(null);
+    studentForm.resetFields();
+    setImageUrl(null);
+    setOpen(true);
+  };
+
   /* ================= EDIT ================= */
 
   const onEdit = (record) => {
@@ -106,7 +124,12 @@ export default function StudentManage() {
     setImageUrl(record.urlImage);
 
     studentForm.setFieldsValue({
-      ...record,
+      userCode: record.userCode,
+      name: record.name,
+      className: record.className,
+      phone: record.phone,
+      email: record.email,
+      gender: record.gender,
       ngaySinh: record.ngaySinh ? dayjs(record.ngaySinh) : null,
       urlImage: record.urlImage || null,
     });
@@ -141,11 +164,11 @@ export default function StudentManage() {
       const values = await studentForm.validateFields();
 
       const payload = {
-        userCode: values.userCode,
-        fullName: values.name,
-        className: values.className,
-        phone: values.phone,
-        email: values.email,
+        userCode: values.userCode?.trim(),
+        fullName: values.name?.trim().replace(/\s+/g, " "),
+        className: values.className?.trim().replace(/\s+/g, " "),
+        phone: values.phone?.trim() || null,
+        email: values.email?.trim(),
         urlImage: values.urlImage,
         gender: values.gender,
         ngaySinh: values.ngaySinh
@@ -168,16 +191,14 @@ export default function StudentManage() {
 
       toast.success(editing ? "Cập nhật thành công!" : "Thêm thành công!");
 
-      setOpen(false);
-      studentForm.resetFields();
-      setImageUrl(null);
-      setEditing(null);
-
+      handleCloseModal();
       loadStudent();
     } catch (error) {
-      if (error?.errorFields) return;
+      if (error?.errorFields) {
+        return;
+      }
 
-      toast.error("Lỗi hệ thống!");
+      toast.error(error?.response?.data?.message || "Lỗi hệ thống!");
     }
   };
 
@@ -192,36 +213,36 @@ export default function StudentManage() {
     setImportFile(null);
   };
 
-const handleImport = async () => {
-  if (!importFile) {
-    toast.warning("Vui lòng chọn file!");
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append("file", importFile);
-
-  try {
-    setImporting(true);
-
-    const res = await StudentAPI.importStudent(formData);
-    const result = res.data;
-
-    if (result?.failCount > 0) {
-      toast.warning(result.message || "Import hoàn tất nhưng có dòng bị lỗi!");
-      console.warn("Import errors:", result.errors);
-    } else {
-      toast.success(result?.message || "Import thành công!");
+  const handleImport = async () => {
+    if (!importFile) {
+      toast.warning("Vui lòng chọn file!");
+      return;
     }
 
-    setImportFile(null);
-    await loadStudent();
-  } catch (err) {
-    toast.error(err.response?.data?.message || "Import thất bại!");
-  } finally {
-    setImporting(false);
-  }
-};
+    const formData = new FormData();
+    formData.append("file", importFile);
+
+    try {
+      setImporting(true);
+
+      const res = await StudentAPI.importStudent(formData);
+      const result = res.data;
+
+      if (result?.failCount > 0) {
+        toast.warning(result.message || "Import hoàn tất nhưng có dòng bị lỗi!");
+        console.warn("Import errors:", result.errors);
+      } else {
+        toast.success(result?.message || "Import thành công!");
+      }
+
+      setImportFile(null);
+      await loadStudent();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Import thất bại!");
+    } finally {
+      setImporting(false);
+    }
+  };
 
   /* ================= COLUMNS ================= */
 
@@ -239,7 +260,7 @@ const handleImport = async () => {
           width={70}
           height={70}
           style={{ objectFit: "cover", borderRadius: "50%" }}
-          fallback="https://via.placeholder.com/70"
+          fallback="https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
         />
       ),
     },
@@ -403,15 +424,7 @@ const handleImport = async () => {
           Import
         </Button>
 
-        <Button
-          type="primary"
-          onClick={() => {
-            setEditing(null);
-            studentForm.resetFields();
-            setImageUrl(null);
-            setOpen(true);
-          }}
-        >
+        <Button type="primary" onClick={onAdd}>
           Thêm sinh viên
         </Button>
       </div>
@@ -434,12 +447,7 @@ const handleImport = async () => {
       <Modal
         open={open}
         title={editing ? "Sửa sinh viên" : "Thêm sinh viên"}
-        onCancel={() => {
-          setOpen(false);
-          setEditing(null);
-          studentForm.resetFields();
-          setImageUrl(null);
-        }}
+        onCancel={handleCloseModal}
         footer={null}
         width={1000}
         centered
@@ -460,6 +468,7 @@ const handleImport = async () => {
               <Form.Item
                 name="userCode"
                 label="Mã sinh viên"
+                validateFirst
                 rules={[
                   {
                     required: true,
@@ -471,24 +480,49 @@ const handleImport = async () => {
                   },
                 ]}
               >
-                <Input placeholder="Nhập mã sinh viên" />
+                <Input
+                  placeholder="Nhập mã sinh viên"
+                  maxLength={7}
+                  onChange={(e) => {
+                    const onlyNumber = e.target.value.replace(/\D/g, "");
+                    studentForm.setFieldsValue({ userCode: onlyNumber });
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
                 name="name"
                 label="Họ tên"
+                validateFirst
                 rules={[
                   {
                     required: true,
                     message: "Vui lòng nhập họ tên!",
                   },
                   {
-                    whitespace: true,
-                    message: "Họ tên không được chỉ chứa khoảng trắng!",
+                    validator: (_, value) => {
+                      // Để required xử lý lỗi trống, tránh bị duplicate message
+                      if (!value || value.trim() === "") {
+                        return Promise.resolve();
+                      }
+
+                      // Chỉ cho chữ cái tiếng Việt và khoảng trắng
+                      const nameRegex = /^[\p{L}]+(?:\s+[\p{L}]+)*$/u;
+
+                      if (!nameRegex.test(value.trim())) {
+                        return Promise.reject(
+                          new Error(
+                            "Họ tên chỉ được chứa chữ cái, không được chứa số hoặc ký tự đặc biệt!"
+                          )
+                        );
+                      }
+
+                      return Promise.resolve();
+                    },
                   },
                 ]}
               >
-                <Input placeholder="Nhập họ tên sinh viên" />
+                <Input maxLength={100} placeholder="Nhập họ tên sinh viên" />
               </Form.Item>
 
               <Form.Item
@@ -527,23 +561,38 @@ const handleImport = async () => {
               <Form.Item
                 name="className"
                 label="Lớp"
+                validateFirst
                 rules={[
                   {
                     required: true,
                     message: "Vui lòng nhập lớp!",
                   },
                   {
-                    whitespace: true,
-                    message: "Lớp không được chỉ chứa khoảng trắng!",
+                    validator: (_, value) => {
+                      if (!value || value.trim() === "") {
+                        return Promise.resolve();
+                      }
+
+                      const classRegex = /^[a-zA-Z0-9À-ỹ._\-\s]+$/;
+
+                      if (!classRegex.test(value.trim())) {
+                        return Promise.reject(
+                          new Error("Lớp không được chứa ký tự đặc biệt!")
+                        );
+                      }
+
+                      return Promise.resolve();
+                    },
                   },
                 ]}
               >
-                <Input placeholder="Nhập lớp" />
+                <Input maxLength={50} placeholder="Nhập lớp" />
               </Form.Item>
 
               <Form.Item
                 name="email"
                 label="Email"
+                validateFirst
                 rules={[
                   {
                     required: true,
@@ -555,7 +604,7 @@ const handleImport = async () => {
                   },
                 ]}
               >
-                <Input placeholder="Nhập email" />
+                <Input maxLength={100} placeholder="Nhập email" />
               </Form.Item>
 
               <Form.Item
@@ -568,7 +617,14 @@ const handleImport = async () => {
                   },
                 ]}
               >
-                <Input placeholder="Nhập số điện thoại" maxLength={10} />
+                <Input
+                  placeholder="Nhập số điện thoại"
+                  maxLength={10}
+                  onChange={(e) => {
+                    const onlyNumber = e.target.value.replace(/\D/g, "");
+                    studentForm.setFieldsValue({ phone: onlyNumber });
+                  }}
+                />
               </Form.Item>
 
               <Form.Item name="urlImage" hidden>

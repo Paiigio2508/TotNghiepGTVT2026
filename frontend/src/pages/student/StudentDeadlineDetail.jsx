@@ -113,7 +113,6 @@ export default function StudentDeadlineDetail() {
       toast.success("Nộp bài thành công!");
 
       await loadDetail();
-      setFileList([]);
     } catch (error) {
       console.log(error);
       toast.error("Nộp bài thất bại!");

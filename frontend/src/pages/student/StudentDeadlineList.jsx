@@ -22,7 +22,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { DeadlineAPI } from "../../api/DeadlineAPI";
-import "./StudentDeadlineList.css";
+import "../student/css/StudentDeadlineList.css";
 
 const { Text } = Typography;
 
