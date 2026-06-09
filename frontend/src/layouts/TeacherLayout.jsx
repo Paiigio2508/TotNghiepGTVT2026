@@ -108,7 +108,7 @@ export default function TeacherLayout() {
               src={
                 userData?.avatar ||
                 userData?.urlImage ||
-                "https://i.pravatar.cc/150"
+                "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
               }
               alt="avatar"
               style={{

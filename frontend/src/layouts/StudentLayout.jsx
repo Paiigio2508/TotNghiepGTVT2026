@@ -236,7 +236,7 @@ export default function StudentLayout() {
               src={
                 userData?.avatar ||
                 userData?.urlImage ||
-                "https://i.pravatar.cc/150"
+                "https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
               }
               alt="avatar"
               style={{
@@ -287,7 +287,10 @@ export default function StudentLayout() {
           />
 
           <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-            <Dropdown trigger={["click"]} dropdownRender={() => notificationMenu}>
+            <Dropdown
+              trigger={["click"]}
+              dropdownRender={() => notificationMenu}
+            >
               <Badge count={unreadCount}>
                 <BellOutlined
                   style={{

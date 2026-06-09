@@ -5,6 +5,7 @@ import com.example.backend.dto.response.*;
 import com.example.backend.entity.*;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.*;
+import com.example.backend.util.status.StudentStatus;
 import com.example.backend.util.status.TermStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -209,7 +210,8 @@ public class AdvisorAssignmentService {
             ChatRoom chatRoom = new ChatRoom();
             chatRoom.setAdvisorAssignment(assignment);
             chatRoomRepository.save(chatRoom);
-
+            student.setStatus(StudentStatus.DANG_THUC_TAP);
+            studentRepository.save(student);
             // tăng số lượng sinh viên của giảng viên vừa được gán
             countMap.put(
                     selectedTeacher.getId(),

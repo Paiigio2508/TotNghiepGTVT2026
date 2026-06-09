@@ -3,6 +3,7 @@ package com.example.backend.repository;
 import com.example.backend.dto.response.StudentStatResponse;
 import com.example.backend.dto.response.UserResponse;
 import com.example.backend.entity.Student;
+import com.example.backend.util.status.StudentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -56,4 +57,5 @@ public interface StudentRepository extends JpaRepository<Student, String> {
 
             """, nativeQuery = true)
     List<StudentStatResponse> getStudentStats();
+    List<Student> findByStatusAndUser_EmailIsNotNull(StudentStatus status);
 }

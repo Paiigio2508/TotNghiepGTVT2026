@@ -159,7 +159,7 @@ export default function StudentList() {
           width={50}
           height={50}
           style={{ objectFit: "cover", borderRadius: "50%" }}
-          fallback="https://via.placeholder.com/70"
+          fallback="https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg"
         />
       ),
     },

@@ -2,8 +2,12 @@ package com.example.backend.service;
 
 import com.example.backend.dto.response.InternshipTermResponse;
 import com.example.backend.entity.InternshipTerm;
+import com.example.backend.entity.Student;
 import com.example.backend.exception.AppException;
 import com.example.backend.repository.InternshipTermRepository;
+import com.example.backend.repository.StudentRepository;
+import com.example.backend.util.EmailService;
+import com.example.backend.util.status.StudentStatus;
 import com.example.backend.util.status.TermStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +20,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InternshipTermService {
     private final InternshipTermRepository internshipTermRepository;
+    private final StudentRepository studentRepository;
+    private final EmailService emailService;
 
     public List<InternshipTermResponse> getALL() {
         return internshipTermRepository.getALL();
@@ -29,13 +35,13 @@ public class InternshipTermService {
             throw new AppException("Ngày bắt đầu phải trước ngày kết thúc");
         }
 
-        // 2. Kiểm tra hạn đăng ký nằm trong khoảng thời gian học kỳ
+        // 2. Kiểm tra hạn đăng ký đề tài nằm trong khoảng thời gian học kỳ
         if (term.getRegistrationDeadline().isBefore(term.getStartDate())) {
-            throw new AppException("Hạn đăng ký phải sau ngày bắt đầu");
+            throw new AppException("Hạn đăng ký đề tài phải sau ngày bắt đầu");
         }
 
         if (term.getRegistrationDeadline().isAfter(term.getEndDate())) {
-            throw new AppException("Hạn đăng ký phải trước ngày kết thúc");
+            throw new AppException("Hạn đăng ký đề tài phải trước ngày kết thúc");
         }
 
         // 3. Kiểm tra trùng học kỳ
@@ -57,9 +63,24 @@ public class InternshipTermService {
             term.setStatus(TermStatus.KET_THUC);
         }
 
-        return internshipTermRepository.save(term);
-    }
+        // 5. Lưu kỳ thực tập
+        InternshipTerm savedTerm = internshipTermRepository.save(term);
 
+        // 6. Gửi mail cho sinh viên đủ điều kiện
+        List<Student> students = studentRepository.findByStatusAndUser_EmailIsNotNull(
+                StudentStatus.DU_DIEU_KIEN
+        );
+
+        for (Student student : students) {
+            emailService.sendInternshipTermOpenedMail(
+                    student.getUser().getEmail(),
+                    student.getFullName(),
+                    savedTerm
+            );
+        }
+
+        return savedTerm;
+    }
     public InternshipTerm update(String id, InternshipTerm newTerm) {
 
         InternshipTerm term = internshipTermRepository.findById(id)

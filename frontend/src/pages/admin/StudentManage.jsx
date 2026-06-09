@@ -298,16 +298,37 @@ export default function StudentManage() {
       dataIndex: "phone",
       render: (phone) => phone || "-",
     },
-    {
-      title: "Trạng thái",
-      dataIndex: "status",
-      render: (status) =>
-        status === "DU_DIEU_KIEN" ? (
-          <Tag color="#00cc00">Đủ điều kiện</Tag>
-        ) : (
-          <Tag color="red">Không đủ điều kiện</Tag>
-        ),
-    },
+{
+  title: "Trạng thái",
+  dataIndex: "status",
+  render: (status) => {
+    const statusMap = {
+      DU_DIEU_KIEN: {
+        color: "#00cc00",
+        text: "Đủ điều kiện",
+      },
+      KHONG_DU_DIEU_KIEN: {
+        color: "red",
+        text: "Không đủ điều kiện",
+      },
+      DANG_THUC_TAP: {
+        color: "blue",
+        text: "Đang thực tập",
+      },
+      DA_TOT_NGHIEP: {
+        color: "purple",
+        text: "Đã tốt nghiệp",
+      },
+    };
+
+    const current = statusMap[status] || {
+      color: "default",
+      text: "Không xác định",
+    };
+
+    return <Tag color={current.color}>{current.text}</Tag>;
+  },
+},
     {
       title: "Hành động",
       render: (_, record) => (

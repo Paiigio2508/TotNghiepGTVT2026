@@ -18,10 +18,6 @@ public class InternshipTermScheduler {
 
     private final InternshipTermRepository repository;
 
-    /**
-     * Chạy ngay khi start app
-     * để không phải chờ đến 00:00.
-     */
     @PostConstruct
     public void init() {
         updateTermStatus();
@@ -30,8 +26,8 @@ public class InternshipTermScheduler {
     /**
      * Chạy mỗi ngày lúc 00:00 theo giờ Việt Nam.
      */
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
-//    @Scheduled(fixedRate = 10000)
+//    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "0 * * * * *", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void updateTermStatus() {
         System.out.println("=== InternshipTermScheduler running ===");

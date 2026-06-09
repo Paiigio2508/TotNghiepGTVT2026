@@ -1,6 +1,7 @@
 package com.example.backend.util;
 
 import com.example.backend.entity.Deadline;
+import com.example.backend.entity.InternshipTerm;
 import com.example.backend.util.status.DeadlineType;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +10,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -93,6 +96,44 @@ public class EmailService {
 
             helper.setSubject(subject);
             helper.setText(content, true); // true = HTML
+
+            mailSender.send(message);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @Async
+    public void sendInternshipTermOpenedMail(String to, String studentName, InternshipTerm term) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setTo(to);
+            helper.setSubject("Kỳ thực tập đã mở - Vui lòng chọn thế mạnh");
+
+            LocalDate strengthDeadline = term.getStartDate().plusDays(3);
+
+            String content =
+                    "<p>Chào <b>" + studentName + "</b>,</p>" +
+
+                            "<p><b style='color:green'>Kỳ thực tập mới đã được mở trên hệ thống.</b></p>" +
+
+                            "<p>" +
+                            "<b>Tên kỳ:</b> " + term.getName() + "<br>" +
+                            "<b>Năm học:</b> " + term.getAcademicYear() + "<br>" +
+                            "<b>Thời gian thực tập:</b> " + term.getStartDate() + " đến " + term.getEndDate() + "<br>" +
+                            "<b style='color:red'>Hạn chọn thế mạnh:</b> " + strengthDeadline +
+                            "</p>" +
+
+                            "<p>Sinh viên vui lòng đăng nhập hệ thống và tiến hành <b>chọn thế mạnh</b> để nhà trường phân công giảng viên hướng dẫn phù hợp.</p>" +
+
+                            "<p style='color:red'><b>⚠ Nếu sinh viên không chọn thế mạnh trước hạn, nhà trường sẽ tự động phân công giảng viên ngẫu nhiên.</b></p>" +
+
+                            "<p>Trân trọng,<br>" +
+                            "<b>Hệ thống quản lý thực tập</b></p>";
+
+            helper.setText(content, true);
 
             mailSender.send(message);
 
